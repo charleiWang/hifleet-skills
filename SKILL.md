@@ -3,6 +3,7 @@ name: ship-position
 description: >-
   HiFleet Claw 应用技能：船位、档案、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。
   Use when user asks for vessel position (船位), ship info, port, voyage, route, charter, shipping, weather, fleet, or AIS.
+version: 0.1.1
 ---
 
 # HiFleet Claw 应用技能
