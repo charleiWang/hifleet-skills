@@ -1,6 +1,6 @@
 # 船舶档案 API / Ship Archive API
 
-根据 IMO 号获取船舶档案（含基本信息、尺度、舱容、建造、入级、动力、公司信息、互保协会等）。需配置 usertoken。
+根据 IMO 或 MMSI 获取船舶档案（含基本信息、尺度、舱容、建造、入级、动力、公司信息、互保协会等）。支持内贸船（无 IMO）时仅根据 MMSI 查询。需配置 usertoken。
 
 ## 请求
 
@@ -14,7 +14,10 @@
 | 参数名 | 示例值 | 必选 | 类型 | 说明 |
 |--------|--------|------|------|------|
 | usertoken | (从配置读取) | 是 | string | 授权 token |
-| imo | 1000112 | 是 | string | IMO 号（7 位数字） |
+| imo | 1000112 | 否 | string | IMO 号（7 位数字），与 mmsi 二选一 |
+| mmsi | 412049010 | 否 | string | MMSI 号（9 位数字）；内贸船无 IMO 时仅传 mmsi 即可 |
+
+**imo 与 mmsi 二选一**：有 IMO 传 imo，内贸船无 IMO 时只传 mmsi 搜索。
 
 ## 成功响应
 
@@ -45,8 +48,7 @@
 ## 调用流程
 
 1. 检查 token；无则提示并终止。
-2. 校验 imo（一般为 7 位数字，或 IMO 前缀+7 位）。
-3. 请求：`GET .../shiparchive/getShipArchiveWithEnginAndCompany?imo={imo}&usertoken={usertoken}`。
-4. 若 `status === "1"` 解析 data，按 labelZh 分块展示，字段值优先用 valueZh。
-
-若用户只提供船名或 MMSI，可先调用 `position/shipSearch` 得到船舶列表，取其中的 `imonumber` 再调本接口。
+2. **入参为 IMO**（7 位数字）：请求 `...?imo={imo}&usertoken={usertoken}`。
+3. **入参为 MMSI**（9 位数字）：请求 `...?mmsi={mmsi}&usertoken={usertoken}`，**支持内贸船无 IMO**，无需先 shipSearch。
+4. **船名不支持**直接查档案；若用户只提供船名，需先调用 `position/shipSearch` 得到 MMSI 或 IMO 再调本接口。
+5. 若 `status === "1"` 解析 data，按 labelZh 分块展示，字段值优先用 valueZh。

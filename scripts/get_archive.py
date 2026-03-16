@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-根据 IMO 号获取船舶档案（基本信息、尺度、舱容、建造、入级、动力、公司信息、互保协会等）。
+根据 IMO 或 MMSI 获取船舶档案（基本信息、尺度、舱容、建造、入级、动力、公司信息、互保协会等）。
+接口支持 imo 与 mmsi 二选一；内贸船无 IMO 时仅传 mmsi 即可。船名不支持，需先通过 shipSearch 得到 MMSI/IMO。
 需配置环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN。
 
-用法: python get_archive.py <IMO>
-IMO 一般为 7 位数字（如 1000112）。若只有船名或 MMSI，可先用 get_position 或 shipSearch 查到 IMO 再调用本脚本。
+用法:
+  python get_archive.py <IMO>   # 按 IMO 查档案（7 位）
+  python get_archive.py <MMSI>  # 按 MMSI 查档案（9 位，支持内贸船无 IMO）
 """
 import os
 import sys
@@ -20,9 +22,12 @@ def get_token():
     return os.environ.get("HIFLEET_USER_TOKEN") or os.environ.get("HIFLEET_USERTOKEN")
 
 
-def get_archive(imo: str, usertoken: str) -> dict:
-    """根据 IMO 获取船舶档案。"""
-    params = {"imo": imo.strip(), "usertoken": usertoken}
+def get_archive(usertoken: str, imo: str = None, mmsi: str = None) -> dict:
+    """根据 IMO 或 MMSI 获取船舶档案。imo 与 mmsi 二选一；内贸船无 IMO 时仅传 mmsi。"""
+    if mmsi:
+        params = {"mmsi": mmsi.strip(), "usertoken": usertoken}
+    else:
+        params = {"imo": (imo or "").strip(), "usertoken": usertoken}
     url = ARCHIVE_URL + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
@@ -83,19 +88,31 @@ def main():
         print("请先配置 HiFleet 授权 token（环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN）", file=sys.stderr)
         sys.exit(1)
     if len(sys.argv) < 2:
-        print("用法: python get_archive.py <IMO>", file=sys.stderr)
+        print("用法: python get_archive.py <IMO> 或 python get_archive.py <MMSI>", file=sys.stderr)
         sys.exit(1)
-    imo_raw = sys.argv[1].strip()
-    # 支持纯数字或 IMO 前缀
-    imo = imo_raw.upper().replace("IMO", "").strip() if imo_raw.upper().startswith("IMO") else imo_raw
-    if not imo.isdigit() or len(imo) < 6:
-        print("IMO 应为数字（通常 7 位）", file=sys.stderr)
+    raw_input = sys.argv[1].strip()
+    # 支持 IMO 前缀
+    if raw_input.upper().startswith("IMO"):
+        raw_input = raw_input.upper().replace("IMO", "").strip()
+    if not raw_input.isdigit():
+        print("档案查询仅支持 IMO（7 位）或 MMSI（9 位）数字，不支持船名。请先通过船位/搜船得到 IMO 或 MMSI。", file=sys.stderr)
         sys.exit(1)
-    try:
-        raw = get_archive(imo, token)
-    except Exception as e:
-        print(f"请求失败: {e}", file=sys.stderr)
-        sys.exit(1)
+    # 9 位：MMSI，直接传 mmsi 查档案（支持内贸船无 IMO）；7 位：IMO，传 imo
+    if len(raw_input) == 9:
+        try:
+            raw = get_archive(token, mmsi=raw_input)
+        except Exception as e:
+            print(f"档案请求失败: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        if len(raw_input) < 6:
+            print("IMO 应为数字（通常 7 位）", file=sys.stderr)
+            sys.exit(1)
+        try:
+            raw = get_archive(token, imo=raw_input)
+        except Exception as e:
+            print(f"档案请求失败: {e}", file=sys.stderr)
+            sys.exit(1)
     if raw.get("status") != "1":
         print(json.dumps(raw, ensure_ascii=False, indent=2), file=sys.stderr)
         sys.exit(1)
