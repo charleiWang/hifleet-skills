@@ -3,11 +3,18 @@ name: ship-position
 description: >-
   船位、档案、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, port, voyage, route, charter, shipping, weather, fleet, or AIS.
 version: 0.1.3
+# 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
+optionalEnv:
+  - HIFLEET_USER_TOKEN
+  - HIFLEET_USERTOKEN
+# 来源与联系（便于安全审核）
+homepage: https://www.hifleet.com
+source: https://api.hifleet.com
 ---
 
 # 技能说明
 
-调用 HiFleet API 需配置授权 token。技能列表与触发词见 [references/skills_index.md](references/skills_index.md)。
+不配置鉴权也可使用本技能中不需 token 的部分；**船位、档案等已实现功能需配置 token 后可用**。技能列表与触发词见 [references/skills_index.md](references/skills_index.md)。
 
 | 技能 | 状态 | 说明 |
 |------|------|------|
@@ -25,11 +32,15 @@ version: 0.1.3
 
 ---
 
-## Token 配置（选填）
+## Token 配置（可选，部分接口必填）
 
-1. **环境变量**：`HIFLEET_USER_TOKEN` 或 `HIFLEET_USERTOKEN`
+船位、档案等已实现功能依赖 HiFleet API 鉴权；**不配置 token 时这些接口不可用，但技能中其他不需鉴权的部分仍可使用**。需要用到船位/档案时，请配置：
+
+1. **环境变量**（二选一）：`HIFLEET_USER_TOKEN` 或 `HIFLEET_USERTOKEN`
 2. **项目/ClawHub 配置**：`usertoken` / `userToken`
 3. **请求参数**：接口支持时传入 `usertoken`
+
+建议使用仅限本技能使用的专用 token，停用后及时轮换。
 ---
 
 ## 已实现功能
