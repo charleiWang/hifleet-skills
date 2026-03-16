@@ -2,7 +2,7 @@
 name: ship-position
 description: >-
   船位、档案、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, port, voyage, route, charter, shipping, weather, fleet, or AIS.
-version: 0.1.3
+version: 0.1.4
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
   - HIFLEET_USER_TOKEN
