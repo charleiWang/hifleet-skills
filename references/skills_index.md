@@ -1,6 +1,6 @@
-# HiFleet Claw 技能清单 / Skills Index
+# 技能清单 / Skills Index
 
-中英双语，按序在 ClawHub 实现。
+中英双语。
 
 ---
 

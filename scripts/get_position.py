@@ -47,26 +47,80 @@ def get_position(mmsi: str, usertoken: str) -> dict:
         return json.loads(resp.read().decode())
 
 
+def _min_to_dms(minutes: float, is_lat: bool) -> str:
+    """将「分」转为 度°分′秒″，纬度带 N/S，经度带 E/W。"""
+    deg_float = abs(float(minutes or 0)) / 60
+    d = int(deg_float)
+    m_float = (deg_float - d) * 60
+    m = int(m_float)
+    s = round((m_float - m) * 60)
+    if s >= 60:
+        m, s = m + 1, 0
+    if m >= 60:
+        d, m = d + 1, 0
+    if is_lat:
+        ns = "N" if (minutes and float(minutes) >= 0) else "S"
+        return f"{d}°{m:02d}′{s:02d}″ {ns}"
+    ew = "E" if (minutes and float(minutes) >= 0) else "W"
+    return f"{d}°{m:02d}′{s:02d}″ {ew}"
+
+
 def print_position(data: dict) -> None:
-    """解析位置 API 的 list 并打印可读结果。"""
+    """按截图样式输出船位：更新于、MMSI、IMO、呼号、船首/航迹、航速、状态、纬度、经度、目的港、ETA、船旗、吃水、类型、长/宽。"""
     lst = data.get("list", {})
     if not lst:
         print(json.dumps(data, ensure_ascii=False, indent=2))
         return
-    lat_deg = float(lst.get("la", 0) or 0) / 60
-    lon_deg = float(lst.get("lo", 0) or 0) / 60
-    out = {
-        "mmsi": lst.get("m"),
-        "name": lst.get("n"),
-        "time": lst.get("ti"),
-        "lat_deg": round(lat_deg, 6),
-        "lon_deg": round(lon_deg, 6),
-        "speed_kn": lst.get("sp"),
-        "course_deg": lst.get("co"),
-        "destination": lst.get("destination"),
-        "status": lst.get("status"),
-    }
-    print(json.dumps(out, ensure_ascii=False, indent=2))
+    ti = lst.get("ti") or "-"
+    m = lst.get("m") or "-"
+    imo = lst.get("imonumber") or "-"
+    callsign = lst.get("callsign") or "-"
+    h = lst.get("h") or "-"
+    co = lst.get("co") or "-"
+    sp = lst.get("sp")
+    sp_str = sp if sp and str(sp).strip() else "-"
+    status = lst.get("status") or "-"
+    la_min = lst.get("la")
+    lo_min = lst.get("lo")
+    lat_str = _min_to_dms(la_min, True) if la_min else "-"
+    lon_str = _min_to_dms(lo_min, False) if lo_min else "-"
+    destination = lst.get("destination") or "-"
+    eta = lst.get("eta") or "-"
+    dn = lst.get("dn") or lst.get("fn") or "-"
+    draught = lst.get("draught")
+    draught_str = f"{draught}米" if draught and str(draught).strip() else "-"
+    ship_type = lst.get("type") or "-"
+    l_val = lst.get("l")
+    w_val = lst.get("w")
+    if l_val and w_val:
+        lw_str = f"{l_val}米/{w_val}米"
+    elif l_val:
+        lw_str = f"{l_val}米"
+    elif w_val:
+        lw_str = f"{w_val}米"
+    else:
+        lw_str = "-"
+
+    n = lst.get("n") or "-"
+    lines = [
+        "船名: " + str(n),
+        "更新于: " + ti + " UTC+8",
+        "MMSI: " + str(m),
+        "IMO: " + str(imo),
+        "呼号: " + str(callsign),
+        "船首/航迹: " + str(h) + "°/" + str(co) + "°",
+        "航速: " + (f"{sp_str}节" if sp_str != "-" else "-"),
+        "状态: " + str(status),
+        "纬度: " + lat_str,
+        "经度: " + lon_str,
+        "目的港: " + str(destination),
+        "ETA: " + str(eta),
+        "船旗: " + str(dn),
+        "吃水: " + draught_str,
+        "类型: " + str(ship_type),
+        "长/宽: " + str(lw_str),
+    ]
+    print("\n".join(lines))
 
 
 def main():
