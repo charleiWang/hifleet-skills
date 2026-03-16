@@ -8,6 +8,8 @@
 用法:
   python get_archive.py <IMO>   # 按 IMO 查档案（7 位）
   python get_archive.py <MMSI>  # 按 MMSI 查档案（9 位，支持内贸船无 IMO）
+
+Security: 仅向 https://api.hifleet.com/shiparchive/getShipArchiveWithEnginAndCompany 发起 GET 请求；token 仅用于 API 鉴权，不向第三方发送；仅使用标准库，无 eval/exec。
 """
 import os
 import sys

@@ -66,10 +66,15 @@ version: 0.1.2
 
 ---
 
+## 安全与合规
+
+本技能仅向 `https://api.hifleet.com` 的船位/档案接口发起只读 GET 请求，token 仅用于 API 鉴权。详见 [SECURITY.md](SECURITY.md)。
+
 ## 参考资料与脚本
 
 | 路径 | 说明 |
 |------|------|
+| [SECURITY.md](SECURITY.md) | 安全说明（网络行为、Token 用途、无动态代码） |
 | [references/skills_index.md](references/skills_index.md) | 技能清单（中英双语、触发词） |
 | [references/position_api.md](references/position_api.md) | 船位 API 完整说明与响应字段 |
 | [references/archive_api.md](references/archive_api.md) | 档案 API 说明与 data 分类 |

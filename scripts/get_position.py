@@ -9,6 +9,8 @@
   python get_position.py <MMSI>              # 直接查位（9 位 MMSI）
   python get_position.py <船名或关键字>        # 先搜船：1 条则直接查位，多条则列出并提示指定 MMSI
   python get_position.py <关键字> <MMSI>     # 多条命中时，用第二个参数指定要查的 MMSI
+
+Security: 仅向 https://api.hifleet.com 的 position 相关接口发起 GET 请求；token 仅用于 API 鉴权，不向第三方发送；仅使用标准库，无 eval/exec。
 """
 import os
 import sys
