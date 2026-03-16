@@ -12,12 +12,12 @@
 | 描述 | 查询船舶实时或历史位置，支持 AIS 报位、锚位、靠泊等。 |
 | 触发词 | 船位、位置、报位、在哪、轨迹、AIS 位置 / ship position, vessel position, location, AIS position, track, where is |
 
-## 2. 档案 / Archive
+## 2. 档案 / Archive ✅
 
 | 中文 | 英文 |
 |------|------|
 | 名称 | 档案 / Archive (Vessel Profile) |
-| 描述 | 船舶与公司档案：船籍、船型、建造年份、船东、管理公司等。 |
+| 描述 | 船舶与公司档案：船籍、船型、建造年份、船东、管理公司等。按 IMO 查询。 |
 | 触发词 | 档案、船舶信息、船籍、船型、船东、管理公司 / archive, vessel profile, ship info, flag, ship type, owner, manager |
 
 ## 3. 港口 / Port

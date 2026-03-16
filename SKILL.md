@@ -12,7 +12,7 @@ version: 0.1.1
 | 技能 | 状态 | 说明 |
 |------|------|------|
 | 船位 Ship Position | ✅ 已实现 | 获取最新船舶位置 |
-| 档案 Archive | 待实现 | 船舶/公司档案 |
+| 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
 | 港口 Port | 待实现 | 港口、泊位、锚地 |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
@@ -53,6 +53,17 @@ version: 0.1.1
 
 若用户已提供 **9 位数字 MMSI**，可省略第一步，直接调用 `position/position/get/token`。展示时经纬度需将接口返回的 la/lo 除以 60 转为度。
 
+### 档案 / Archive
+
+根据 IMO 号获取船舶档案（基本信息、尺度、舱容、建造、入级、动力、公司信息、互保协会等）。
+
+- **触发**：档案、船舶信息、船籍、船型、船东、管理公司、archive、vessel profile、ship info
+- **输入**：IMO（7 位数字，必填）；usertoken 从配置读取
+- **API 详情**：[references/archive_api.md](references/archive_api.md)
+- **脚本**：`scripts/get_archive.py`（按 IMO 查档案，需 token）
+
+**调用流程**：检查 token → 校验 IMO → GET `shiparchive/getShipArchiveWithEnginAndCompany`（imo、usertoken）→ 解析 data，按 labelZh 分块展示，字段值用 valueZh。若用户仅提供船名或 MMSI，可先调用 `position/shipSearch` 得到列表中的 `imonumber`，再调档案接口。
+
 ---
 
 ## 参考资料与脚本
@@ -61,4 +72,6 @@ version: 0.1.1
 |------|------|
 | [references/skills_index.md](references/skills_index.md) | 技能清单（中英双语、触发词） |
 | [references/position_api.md](references/position_api.md) | 船位 API 完整说明与响应字段 |
+| [references/archive_api.md](references/archive_api.md) | 档案 API 说明与 data 分类 |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 token） |
+| scripts/get_archive.py | 按 IMO 获取船舶档案（需 token） |
