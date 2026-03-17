@@ -20,7 +20,23 @@
 | 描述 | 船舶与公司档案：船籍、船型、建造年份、船东、管理公司等。按 IMO 查询。 |
 | 触发词 | 档案、船舶信息、船籍、船型、船东、管理公司 / archive, vessel profile, ship info, flag, ship type, owner, manager |
 
-## 3. 港口 / Port
+## 3. 红海/波斯湾海峡通航 / Strait Traffic ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 红海/波斯湾海峡通航 / Strait Traffic |
+| 描述 | 曼德海峡、苏伊士运河、好望角、霍尔木兹海峡船舶通航情况，支持时间区间；无 token 限最近 1 周，有 token 不限。 |
+| 触发词 | 红海、波斯湾、海峡通航、曼德、苏伊士、好望角、霍尔木兹 / Red Sea, Persian Gulf, strait traffic, Suez, Cape of Good Hope, Hormuz |
+
+## 4. 区域船舶 / Area Traffic ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 区域船舶 / Area Traffic |
+| 描述 | 查询指定矩形区域内的当前船舶列表，需 token；支持 bbox（左下/右上经纬度）。 |
+| 触发词 | 区域船舶、范围内船舶、区域船位、某区域有多少船 / area traffic, vessels in area, ships in region |
+
+## 5. 港口 / Port
 
 | 中文 | 英文 |
 |------|------|
@@ -28,7 +44,7 @@
 | 描述 | 港口列表、泊位、锚地、靠离泊计划与港口动态。 |
 | 触发词 | 港口、泊位、锚地、靠港、离港、港口信息 / port, berth, anchorage, port call, arrival, departure, port info |
 
-## 4. 性能 / Performance
+## 6. 性能 / Performance
 
 | 中文 | 英文 |
 |------|------|
@@ -36,7 +52,7 @@
 | 描述 | 航速、油耗、主机负荷、能效（EEOI）及性能报告。 |
 | 触发词 | 性能、油耗、航速、主机、能效、EEOI / performance, fuel consumption, speed, main engine, EEOI, efficiency |
 
-## 5. 航程 / Voyage
+## 7. 航程 / Voyage
 
 | 中文 | 英文 |
 |------|------|
@@ -44,7 +60,7 @@
 | 描述 | 航次、航程段、挂港顺序、ETA/ETD、航程统计。 |
 | 触发词 | 航程、航次、挂港、ETA、ETD、航程段 / voyage, voyage leg, port call, ETA, ETD, voyage segment |
 
-## 6. 航线 / Route
+## 8. 航线 / Route
 
 | 中文 | 英文 |
 |------|------|
@@ -52,7 +68,7 @@
 | 描述 | 推荐航线、航路点、距离与航时、历史航线对比。 |
 | 触发词 | 航线、航路、推荐航线、距离、航时、航路点 / route, shipping route, recommended route, distance, sailing time, waypoint |
 
-## 7. 租船 / Charter
+## 9. 租船 / Charter
 
 | 中文 | 英文 |
 |------|------|
@@ -60,7 +76,7 @@
 | 描述 | 租约、租家、租金、租期、合同条款及租船市场。 |
 | 触发词 | 租船、租约、租家、租金、租期、合同 / charter, charter party, charterer, hire, period, contract |
 
-## 8. 航运 / Shipping
+## 10. 航运 / Shipping
 
 | 中文 | 英文 |
 |------|------|
@@ -68,7 +84,7 @@
 | 描述 | 运价、运力、市场动态、船舶买卖、航运新闻与行业数据。 |
 | 触发词 | 航运、运价、运力、市场、买卖、航运新闻 / shipping, freight rate, tonnage, market, sale and purchase, shipping news |
 
-## 9. 气象海况 / Weather & Sea Conditions
+## 11. 气象海况 / Weather & Sea Conditions
 
 | 中文 | 英文 |
 |------|------|
@@ -76,7 +92,7 @@
 | 描述 | 风、浪、涌、能见度、台风/气旋路径及航行气象建议。 |
 | 触发词 | 气象、海况、风、浪、台风、能见度 / weather, sea conditions, wind, wave, typhoon, visibility |
 
-## 10. 船队 / Fleet
+## 12. 船队 / Fleet
 
 | 中文 | 英文 |
 |------|------|
@@ -84,7 +100,7 @@
 | 描述 | 多船监控、船队分布、统计、报警汇总及船队报表。 |
 | 触发词 | 船队、多船、船队分布、船队统计、船队报表 / fleet, multi-vessel, fleet distribution, fleet statistics, fleet report |
 
-## 11. AIS
+## 13. AIS
 
 | 中文 | 英文 |
 |------|------|

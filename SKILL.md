@@ -1,7 +1,7 @@
 ---
 name: ship-position
 description: >-
-  船位、档案、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, port, voyage, route, charter, shipping, weather, fleet, or AIS.
+  船位、档案、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
 version: 0.1.4
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
@@ -20,6 +20,8 @@ source: https://api.hifleet.com
 |------|------|------|
 | 船位 Ship Position | ✅ 已实现 | 获取最新船舶位置 |
 | 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
+| 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 曼德、苏伊士、好望角、霍尔木兹海峡通航情况，支持时间区间，无 token 限最近 1 周 |
+| 区域船舶 Area Traffic | ✅ 已实现 | 查询指定矩形区域内的当前船舶，需 token |
 | 港口 Port | 待实现 | 港口、泊位、锚地 |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
@@ -75,11 +77,33 @@ source: https://api.hifleet.com
 
 **调用流程**：检查 token → 若为 **IMO**：GET `...?imo={imo}&usertoken=...`；若为 **MMSI**：GET `...?mmsi={mmsi}&usertoken=...`（支持内贸船无 IMO）→ 解析 data，按 labelZh 分块展示。船名需先 shipSearch 得到 MMSI/IMO 再查档案。
 
+### 红海与波斯湾海峡通航 / Strait Traffic
+
+查询曼德海峡、苏伊士运河、好望角、霍尔木兹海峡的船舶通航情况，支持按时间区间查询。
+
+- **触发**：红海、波斯湾、海峡通航、曼德海峡、苏伊士运河、好望角、霍尔木兹、strait traffic、Red Sea、Persian Gulf
+- **输入**：海峡名称或 oid；可选开始/结束日期（yyyy-MM-dd）。无 usertoken 仅可查**最近 1 周**；有 usertoken 时间区间不限。
+- **API 文档**：[references/strait_traffic_api.md](references/strait_traffic_api.md)；完整接口以 [ShowDoc 45/2234](http://showdoc.hifleet.com/web/#/45/2234) 为准。
+- **脚本**：`scripts/get_strait_traffic.py`（海峡名或 oid + 可选日期，usertoken 可选）
+
+**海峡 oid**：曼德海峡 24480、苏伊士运河 132808、好望角 1062830、霍尔木兹海峡 24471。无 token 时校验时间区间 ≤ 7 天，否则提示配置 token 或缩短区间。
+
+### 区域船舶 / Area Traffic
+
+查询当前指定区域内的船舶列表（矩形 bbox 或后续支持的 polygon）。
+
+- **触发**：区域船舶、范围内船舶、区域船位、某区域有多少船、area traffic、vessels in area
+- **输入**：矩形区域（左下经度、左下纬度、右上经度、右上纬度）；usertoken 必填
+- **API 详情**：[references/area_traffic_api.md](references/area_traffic_api.md)
+- **脚本**：`scripts/get_area_traffic.py`（bbox 四参数，需 token）
+
+**调用流程**：检查 token → 确定 bbox（用户提供西/南/东/北或左下/右上经纬度）→ GET `position/gettraffic/token?bbox={minLon},{minLat},{maxLon},{maxLat}&usertoken=...` → 解析 list 展示船名、MMSI、经纬度、航速、状态、目的港等。
+
 ---
 
 ## 安全与合规
 
-本技能仅向 `https://api.hifleet.com` 的船位/档案接口发起只读 GET 请求，token 仅用于 API 鉴权。详见 [SECURITY.md](SECURITY.md)。
+本技能仅向 `https://api.hifleet.com` 的船位/档案/海峡通航/区域船舶等接口发起只读 GET 请求，token 仅用于 API 鉴权（海峡通航为可选）。详见 [SECURITY.md](SECURITY.md)。
 
 ## 参考资料与脚本
 
@@ -89,5 +113,9 @@ source: https://api.hifleet.com
 | [references/skills_index.md](references/skills_index.md) | 技能清单（中英双语、触发词） |
 | [references/position_api.md](references/position_api.md) | 船位 API 完整说明与响应字段 |
 | [references/archive_api.md](references/archive_api.md) | 档案 API 说明与 data 分类 |
+| [references/strait_traffic_api.md](references/strait_traffic_api.md) | 红海/波斯湾海峡通航 API（oid、时间范围、ShowDoc 链接） |
+| [references/area_traffic_api.md](references/area_traffic_api.md) | 区域船舶 API（bbox、usertoken） |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 token） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（接口支持 mmsi 参数，内贸船无 IMO 可用 MMSI，需 token） |
+| scripts/get_strait_traffic.py | 海峡通航（曼德/苏伊士/好望角/霍尔木兹），支持时间区间，无 token 限最近 1 周 |
+| scripts/get_area_traffic.py | 区域船舶（bbox 矩形内当前船舶，需 token） |
