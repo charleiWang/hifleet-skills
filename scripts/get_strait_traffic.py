@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 海峡通航统计。咽喉航道通航船舶统计。支持曼德海峡、苏伊士运河、好望角、霍尔木兹海峡。
+对于霍尔木兹海峡的方向：东是出湾，西是入湾。
 接口：POST http://api.hifleet.com/position/statisticzonetraffic，参数 oid、startdate、enddate、i18n（可选）、usertoken（可选）。
-无 usertoken 仅可查最近 1 周；有 usertoken 时间区间不限。ShowDoc: http://showdoc.hifleet.com/web/#/45/2234
+无 usertoken 仅可查最近 1 周；有 usertoken 时间区间不限。
 
 用法:
   python get_strait_traffic.py <海峡名或oid> [开始日期] [结束日期] [i18n]
