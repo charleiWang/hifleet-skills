@@ -9,6 +9,7 @@
   - `https://api.hifleet.com/position/position/get/token`（GET）
   - `https://api.hifleet.com/shiparchive/getShipArchiveWithEnginAndCompany`（GET）
   - `http://api.hifleet.com/position/statisticzonetraffic`（海峡通航统计，**POST**，usertoken 可选，用于扩展时间范围）
+  - `https://api.hifleet.com/position/areas/token`（区域清单，GET）
   - `https://api.hifleet.com/position/gettraffic/token`（区域船舶，GET）
 - **无数据外传**：不向上述域名以外的地址发送数据，不上传用户文件或剪贴板。
 - **Token 用途**：环境变量 `HIFLEET_USER_TOKEN` / `HIFLEET_USERTOKEN` 仅作为上述 API 的授权参数（海峡通航统计为可选，用于扩展时间范围），由用户自行配置，脚本不写入、不转发至第三方。
@@ -21,6 +22,7 @@
 | scripts/get_position.py | 按船名/MMSI 查船位，仅 GET 上述 position 接口 |
 | scripts/get_archive.py | 按 IMO/MMSI 查档案，仅 GET 上述 shiparchive 接口 |
 | scripts/get_strait_traffic.py | 红海/波斯湾海峡通航统计，POST statisticzonetraffic，usertoken 可选（扩展时间范围） |
+| scripts/get_areas.py | 区域清单，仅 GET position/areas/token |
 | scripts/get_area_traffic.py | 区域船舶，仅 GET position/gettraffic/token，需 usertoken |
 
 扫描或审核时可对照上述端点与行为；若需进一步说明可联系技能维护方。

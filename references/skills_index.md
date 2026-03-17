@@ -33,8 +33,8 @@
 | 中文 | 英文 |
 |------|------|
 | 名称 | 区域船舶 / Area Traffic |
-| 描述 | 查询指定矩形区域内的当前船舶列表，需 token；支持 bbox（左下/右上经纬度）。 |
-| 触发词 | 区域船舶、范围内船舶、区域船位、某区域有多少船 / area traffic, vessels in area, ships in region |
+| 描述 | 查询指定区域内的当前船舶列表，需 token；支持 bbox（左下/右上经纬度）、areaId（区域清单 id）或 polygon（WKT 多边形）。用户仅文字描述区域时可先查区域清单（海区/贸易区），按 name/cnName 匹配得到 id 再查询。 |
+| 触发词 | 区域船舶、范围内船舶、区域船位、某区域有多少船、红海船舶、北太平洋船位 / area traffic, vessels in area, ships in region |
 
 ## 5. 港口 / Port
 
