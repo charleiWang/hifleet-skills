@@ -1,34 +1,55 @@
-# 海峡通航 API / Strait Traffic API
+# 海峡通航 API / Strait Traffic API（咽喉航道通航船舶统计）
 
-红海与波斯湾相关海峡的船舶通航情况查询。**完整请求 URL、参数名与响应格式请以 ShowDoc 为准**：[http://showdoc.hifleet.com/web/#/45/2234](http://showdoc.hifleet.com/web/#/45/2234)。
+红海与波斯湾相关咽喉航道的通航船舶统计。接口来源：ShowDoc [45/2234](http://showdoc.hifleet.com/web/#/45/2234)。
+
+## 请求
+
+| 项目 | 值 |
+|------|-----|
+| 请求 URL | `http://api.hifleet.com/position/statisticzonetraffic` |
+| 请求方式 | **POST** |
+
+### Query 参数
+
+| 参数名 | 示例值 | 必选 | 类型 | 说明 |
+|--------|--------|------|------|------|
+| oid | 132808 | 是 | string | 区域 oid，见下表 |
+| startdate | 2024-01-17 | 是 | string | 开始日期，格式 yyyy-MM-dd |
+| enddate | 2024-01-17 | 是 | string | 结束日期，格式 yyyy-MM-dd |
+| i18n | en | 否 | string | 输出语言，zh 或 en，默认 zh |
+| usertoken | (从配置读取) | 否 | string | 授权 token；**无 usertoken 仅可查最近 1 周**，有 usertoken 时间区间不限 |
+| usertoken | (从配置读取) | 否 | string | 授权 token；**无 token 仅可查最近 1 周**，有 token 时间区间不限 |
 
 ## 支持的海峡（oid）
 
-| 海峡名称     | oid    | 英文/备注   |
-|--------------|--------|-------------|
-| 曼德海峡     | 24480  | Bab el-Mandeb |
-| 苏伊士运河   | 132808 | Suez Canal  |
-| 好望角       | 1062830| Cape of Good Hope |
-| 霍尔木兹海峡 | 24471  | Strait of Hormuz |
+| 海峡名称     | oid     | 英文/备注        |
+|--------------|---------|------------------|
+| 曼德海峡     | 24480   | Bab el-Mandeb    |
+| 苏伊士运河   | 132808  | Suez Canal       |
+| 好望角       | 1062830 | Cape of Good Hope |
+| 霍尔木兹海峡 | 24471   | Strait of Hormuz |
+
+## 成功响应结构
+
+- **oid**：区域 oid
+- **zonename**：区域名称
+- **startdate** / **enddate**：查询参数回显
+- **passdata**：数组，按日与方向统计
+  - **passdate**：通过日期
+  - **passdirection**：数组
+    - **direction**：通过方向（如 S、N）
+    - **shiptypecount**：船型及艘次 `[{ "shiptype": "...", "count": n }]`
+    - **total**：该日该方向总艘次
+    - **ships**：船舶明细 `[{ "mmsi", "imonumber", "shipname", "type", "minotype", "dwt", "length", "width" }]`
 
 ## 鉴权与时间范围
 
-- **无 usertoken**：仅可查询**最近 1 周**内的时间区间；超出则需鉴权。
+- **无 usertoken**：仅可查询**最近 1 周**内的时间区间；超出则接口可能报错或需鉴权。
 - **有 usertoken**：时间区间不限，可查任意起止时间。
-
-## 请求约定（以 ShowDoc 为准）
-
-- 请求 URL：见 ShowDoc 文档；脚本中暂用占位 `https://api.hifleet.com/traffic/strait`，若文档不同请改脚本中的 `STRAIT_TRAFFIC_URL` 及参数名。
-- 请求方式：一般为 **GET**（以文档为准）。
-- 常见参数（名称以文档为准）：
-  - **oid**：海峡 ID，见上表。
-  - **startTime** / **endTime**（或 start、end）：时间区间，格式以文档为准（如 `yyyy-MM-dd` 或时间戳）。
-  - **usertoken**：可选；传入时时间范围不限。
 
 ## 调用流程
 
 1. 确定海峡：用户指定海峡名称或 oid，映射到上表 oid。
-2. 确定时间区间：若用户未指定，无 token 时默认最近 7 天；有 token 时可按用户指定或默认最近 7 天。
-3. **无 token 时**：校验 endTime - startTime ≤ 7 天，否则提示“仅支持最近 1 周，或配置 usertoken 后查询更长时间”。
-4. 请求接口：GET，传入 oid、startTime、endTime，有 token 时传入 usertoken。
-5. 解析响应并展示通航情况（字段以 ShowDoc 响应示例为准）。
+2. 确定时间区间：startdate、enddate，格式 yyyy-MM-dd。**无 token 时**校验区间 ≤ 7 天。
+3. **POST** 请求：`.../position/statisticzonetraffic?oid={oid}&startdate={startdate}&enddate={enddate}&i18n={zh|en}[&usertoken=...]`，有 token 时传入 usertoken。
+4. 解析响应：zonename、passdata 下按 passdate / passdirection 展示通航方向、船型统计、总艘次及船舶列表。

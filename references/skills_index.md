@@ -25,7 +25,7 @@
 | 中文 | 英文 |
 |------|------|
 | 名称 | 红海/波斯湾海峡通航 / Strait Traffic |
-| 描述 | 曼德海峡、苏伊士运河、好望角、霍尔木兹海峡船舶通航情况，支持时间区间；无 token 限最近 1 周，有 token 不限。 |
+| 描述 | 咽喉航道通航船舶统计：曼德、苏伊士、好望角、霍尔木兹；POST 接口；无 token 限最近 1 周，有 token 时间不限。 |
 | 触发词 | 红海、波斯湾、海峡通航、曼德、苏伊士、好望角、霍尔木兹 / Red Sea, Persian Gulf, strait traffic, Suez, Cape of Good Hope, Hormuz |
 
 ## 4. 区域船舶 / Area Traffic ✅
