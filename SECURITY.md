@@ -1,6 +1,6 @@
 # 安全说明 / Security
 
-本技能为 **HiFleet 船位与档案查询** 的只读客户端，供 ClawHub 与用户合法查询船舶位置与档案。
+本技能为 **HiFleet 船位、档案与 PSC 等查询** 的只读客户端，供 ClawHub 与用户合法查询船舶位置、档案及 PSC 检查数据。
 
 ## 行为说明
 
@@ -11,6 +11,7 @@
   - `http://api.hifleet.com/position/statisticzonetraffic`（海峡通航统计，**POST**，usertoken 可选，用于扩展时间范围）
   - `https://api.hifleet.com/position/areas/token`（区域清单，GET）
   - `https://api.hifleet.com/position/gettraffic/token`（区域船舶，GET）
+  - `https://api.hifleet.com/pscapi/get`（船舶 PSC 检查数据，GET，需 usertoken）
 - **无数据外传**：不向上述域名以外的地址发送数据，不上传用户文件或剪贴板。
 - **Token 用途**：环境变量 `HIFLEET_USER_TOKEN` / `HIFLEET_USERTOKEN` 仅作为上述 API 的授权参数（海峡通航统计为可选，用于扩展时间范围），由用户自行配置，脚本不写入、不转发至第三方。
 - **无动态代码**：脚本仅使用 Python 标准库（`os`, `sys`, `urllib.request`, `urllib.parse`, `json`），无 `eval`/`exec`、无 base64 解码执行、无从网络加载代码。
@@ -24,5 +25,6 @@
 | scripts/get_strait_traffic.py | 红海/波斯湾海峡通航统计，POST statisticzonetraffic，usertoken 可选（扩展时间范围） |
 | scripts/get_areas.py | 区域清单，仅 GET position/areas/token |
 | scripts/get_area_traffic.py | 区域船舶，仅 GET position/gettraffic/token，需 usertoken |
+| scripts/get_psc.py | 船舶 PSC，GET pscapi/get（及搜船时 GET position/shipSearch），需 usertoken |
 
 扫描或审核时可对照上述端点与行为；若需进一步说明可联系技能维护方。

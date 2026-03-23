@@ -1,8 +1,8 @@
 ---
 name: ship-position
 description: >-
-  船位、档案、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
-version: 0.1.8
+  船位、档案、PSC检查、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
+version: 0.1.10
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
   - HIFLEET_USER_TOKEN
@@ -22,6 +22,7 @@ source: https://api.hifleet.com
 | 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
 | 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹），POST；无 token 限最近 1 周，有 token 不限 |
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT），需 token |
+| PSC 检查 PSC Inspection | ✅ 已实现 | 按 IMO 查 PSC 数据；船名/MMSI 先 shipSearch 取 IMO，需 token |
 | 港口 Port | 待实现 | 港口、泊位、锚地 |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
@@ -36,7 +37,7 @@ source: https://api.hifleet.com
 
 ## Token 配置（可选，部分接口必填）
 
-船位、档案等已实现功能依赖 HiFleet API 鉴权；**不配置 token 时这些接口不可用，但技能中其他不需鉴权的部分仍可使用**。需要用到船位/档案时，请配置：
+船位、档案等已实现功能依赖 HiFleet API 鉴权；**不配置 token 时这些接口不可用，但技能中其他不需鉴权的部分仍可使用**。需要用到船位/档案/PSC 等时，请配置：
 
 1. **环境变量**（二选一）：`HIFLEET_USER_TOKEN` 或 `HIFLEET_USERTOKEN`
 2. **项目/ClawHub 配置**：`usertoken` / `userToken`
@@ -105,11 +106,24 @@ source: https://api.hifleet.com
 
 **调用流程**：检查 token → 若用户给的是**矩形坐标**：组 bbox → GET `position/gettraffic/token?bbox=...&usertoken=...`；若用户给的是**文字描述**：GET `position/areas/token`（可选 usertoken）→ 用 name/cnName 匹配得 id → GET `position/gettraffic/token?areaId={id}&usertoken=...`；若用户给的是**WKT 多边形**：GET `position/gettraffic/token?polygon=...&usertoken=...` → 解析 list 展示船名、MMSI、经纬度、航速、状态、目的港等。
 
+### PSC 检查 / PSC Inspection
+
+根据 **IMO** 查询船舶 **港口国监督检查（PSC）** 数据。接口为 **GET** `https://api.hifleet.com/pscapi/get`，**必须**带 `usertoken`（与其它需鉴权接口一致）。支持用户直接提供 IMO，或提供**船名/关键字**、**9 位 MMSI** 时先走 `position/shipSearch`，从命中结果的 `imonumber` 取得 IMO 再请求 PSC；**无 IMO 的内贸船**无法调本接口。
+
+- **触发**：PSC、港口国监督、港口国检查、滞留、缺陷、检查记录、port state control、PSC inspection、detention、deficiency
+- **输入**：IMO（6～7 位数字，可带 `IMO` 前缀）；或船名/关键字；或 9 位 MMSI（与船位技能相同，先搜船再取 IMO）；usertoken 从配置读取
+- **API 详情**：[references/psc_api.md](references/psc_api.md)
+- **脚本**：`scripts/get_psc.py`（`IMO` / `船名` / `船名 + MMSI` / `MMSI`）
+
+**调用流程**：检查 token → 若用户已给 **IMO**：GET `pscapi/get?imo={imo}&usertoken=...` → 解析并展示（脚本对常见 `status`+`data` / `list` 结构做分条输出，否则整段 JSON）。若用户给 **船名或 MMSI 关键字**：与船位相同的搜船规则（0/1/多条、多条时让用户选 MMSI）→ 取选定船的 `imonumber`；若为空则提示无 IMO、无法查 PSC → 有 IMO 再调 `pscapi/get`。
+
+**权限**：若接口返回 `code` **4001**（token 无权访问该 URL），说明当前 token 未开通 PSC API，需在 HiFleet 开通权限或更换 token（详见 [references/psc_api.md](references/psc_api.md)）。
+
 ---
 
 ## 安全与合规
 
-本技能仅向 api.hifleet.com 的船位/档案/海峡通航/区域船舶等接口发起只读请求（GET 或 POST）；海峡通航统计无需 token，其余需鉴权的接口使用 token。详见 [SECURITY.md](SECURITY.md)。
+本技能仅向 api.hifleet.com 的船位/档案/PSC/海峡通航/区域船舶等接口发起只读请求（GET 或 POST）；海峡通航统计无需 token，其余需鉴权的接口使用 token。详见 [SECURITY.md](SECURITY.md)。
 
 ## 参考资料与脚本
 
@@ -122,8 +136,10 @@ source: https://api.hifleet.com
 | [references/strait_traffic_api.md](references/strait_traffic_api.md) | 红海/波斯湾海峡通航 API（oid、时间范围、ShowDoc 链接） |
 | [references/area_traffic_api.md](references/area_traffic_api.md) | 区域船舶 API（bbox、areaId、polygon、usertoken） |
 | [references/areas_api.md](references/areas_api.md) | 区域清单 API（海区/贸易区列表，供按名称选 areaId） |
+| [references/psc_api.md](references/psc_api.md) | PSC 检查 API（pscapi/get，imo + usertoken） |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 token） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（接口支持 mmsi 参数，内贸船无 IMO 可用 MMSI，需 token） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST statisticzonetraffic），oid+日期+i18n；无 token 限 7 天，有 token 不限 |
 | scripts/get_areas.py | 区域清单（海区/贸易区），供按名称匹配 areaId |
 | scripts/get_area_traffic.py | 区域船舶（bbox、--area-id 或 --polygon，需 token） |
+| scripts/get_psc.py | PSC 检查（IMO 或船名/MMSI 先搜船取 IMO，需 token） |
