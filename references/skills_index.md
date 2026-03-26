@@ -41,8 +41,18 @@
 | 中文 | 英文 |
 |------|------|
 | 名称 | PSC 检查 / PSC Inspection（港口国监督） |
-| 描述 | 按 IMO 查询船舶 PSC 检查记录；船名需先搜船取 IMO。需 token。 |
-| 触发词 | PSC、港口国监督、港口国检查、滞留、缺陷、检查记录 / port state control, PSC inspection, detention, deficiency, inspection record |
+| 描述 | **(a) 单船**：按 IMO 查询船舶 PSC 检查记录；船名需先搜船取 IMO。需 token。**(b) 统计异常**（同属本技能）：查询日批产生的 PSC 统计异常事件（滞留率/平均缺陷显著升高等），需 token；接口见 [psc_anomaly_api.md](psc_anomaly_api.md)。 |
+| 触发词 | **单船**：PSC、港口国监督、港口国检查、滞留、缺陷、检查记录 / port state control, PSC inspection, detention, deficiency, inspection record。**统计异常**：PSC 异常、统计异常、滞留率飙升、缺陷异常、PSC 风险、严重度 HIGH、PSC anomaly、detention spike、deficiency spike、PSC statistics |
+
+**统计异常子能力（均需 usertoken）**
+
+| 子能力 | 说明 |
+|--------|------|
+| 异常列表 | 分页查询 `openclaw/anomalies`，可选日期、当局、旗国、港口、严重度等 |
+| 严重度汇总 | `openclaw/anomalies/summary`，先答 HIGH/MEDIUM/LOW 条数 |
+| 单条详情 | `openclaw/anomalies/{id}`，展开描述与 evidence |
+
+脚本：`scripts/get_psc_anomalies.py`（`list` / `summary` / `get <id>`）。默认 API 主机 `https://api.hifleet.com`，可设 `HIFLEET_API_BASE`。
 
 ## 6. 港口 / Port
 

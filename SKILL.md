@@ -1,8 +1,8 @@
 ---
 name: ship-position
 description: >-
-  船位、档案、PSC检查、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
-version: 0.1.11
+  船位、档案、PSC检查、PSC统计异常、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), PSC statistical anomalies (滞留率异常 缺陷异常 PSC anomaly detention spike), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
+version: 0.1.12
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
   - HIFLEET_USER_TOKEN
@@ -22,7 +22,7 @@ source: https://api.hifleet.com
 | 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
 | 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹），POST；无 token 限最近 1 周，有 token 不限 |
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT），需 token |
-| PSC 检查 PSC Inspection | ✅ 已实现 | 按 IMO 查 PSC 数据；船名/MMSI 先 shipSearch 取 IMO，需 token |
+| PSC 检查 PSC Inspection | ✅ 已实现 | 按 IMO 查 PSC 数据；船名/MMSI 先 shipSearch 取 IMO，需 token。**含统计异常子能力**（列表/汇总/详情，见下） |
 | 港口 Port | 待实现 | 港口、泊位、锚地 |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
@@ -119,11 +119,30 @@ source: https://api.hifleet.com
 
 **权限**：若接口返回 `code` **4001**（token 无权访问该 URL），说明当前 token 未开通 PSC API，需在 HiFleet 开通权限或更换 token（详见 [references/psc_api.md](references/psc_api.md)）。
 
+#### PSC 统计异常（OpenClaw，同属 PSC 技能）
+
+基于日批统计的 **异常事件表**（`psc_anomaly_event`），与「单船 PSC 记录」互补：回答**某时段、某当局/旗国/港口**等维度下「滞留率/平均缺陷是否相对历史显著升高」等宏观问题。**均需 `usertoken`**（与 `pscapi/get` 相同）。
+
+- **触发**：PSC 异常、统计异常、滞留率飙升、缺陷异常、港口国监督风险、HIGH 严重度 PSC 事件、PSC anomaly、detention spike、deficiency spike、PSC statistics risk
+- **输入**：可选日期区间（`yyyy-MM-dd`）；可选 `authority`、`flag`、`port`、`severity`、`anomalyType` 等（**精确匹配**，与自然语言之间需映射）；列表支持 `page`、`pageSize`
+- **API 详情**：[references/psc_anomaly_api.md](references/psc_anomaly_api.md)
+- **脚本**：`scripts/get_psc_anomalies.py`（子命令 `list` / `summary` / `get <id>`）
+
+**三类调用**（Agent 按需组合）：
+
+1. **汇总**：`GET .../pscapi/openclaw/anomalies/summary?usertoken=...&dateFrom=...&dateTo=...` → 按 `severity` 计数，适合先答「严重异常有多少」。
+2. **列表**：`GET .../pscapi/openclaw/anomalies?usertoken=...`（同上筛选 + 分页）→ `data.list` 展示 `title`、`dateEnd`、`severity`、`metric` 等。
+3. **详情**：`GET .../pscapi/openclaw/anomalies/{id}?usertoken=...` → 展开 `description`、`evidence`（JSON 字符串可格式化）。
+
+**说明**：若列表长期为空或极少，多为检测阈值较严或异常补算未跑全，可提示用户调整 newpsc 中 `psc.stats` 或执行全量 `backfill-anomalies`；**不影响**单船 `pscapi/get` 能力。
+
+**Base URL**：默认 `https://api.hifleet.com`；其它部署可设环境变量 `HIFLEET_API_BASE`（脚本与文档均支持）。
+
 ---
 
 ## 安全与合规
 
-本技能仅向 api.hifleet.com 的船位/档案/PSC/海峡通航/区域船舶等接口发起只读请求（GET 或 POST）；海峡通航统计无需 token，其余需鉴权的接口使用 token。详见 [SECURITY.md](SECURITY.md)。
+本技能仅向 api.hifleet.com（或 `HIFLEET_API_BASE`）的船位/档案/PSC/PSC openclaw 统计异常/海峡通航/区域船舶等接口发起只读请求（GET 或 POST）；海峡通航统计无需 token，其余需鉴权的接口使用 token。详见 [SECURITY.md](SECURITY.md)。
 
 ## 参考资料与脚本
 
@@ -137,9 +156,11 @@ source: https://api.hifleet.com
 | [references/area_traffic_api.md](references/area_traffic_api.md) | 区域船舶 API（bbox、areaId、polygon、usertoken） |
 | [references/areas_api.md](references/areas_api.md) | 区域清单 API（海区/贸易区列表，供按名称选 areaId） |
 | [references/psc_api.md](references/psc_api.md) | PSC 检查 API（pscapi/get，imo + usertoken） |
+| [references/psc_anomaly_api.md](references/psc_anomaly_api.md) | PSC 统计异常 API（openclaw/anomalies*，usertoken，可选 HIFLEET_API_BASE） |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 token） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（接口支持 mmsi 参数，内贸船无 IMO 可用 MMSI，需 token） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST statisticzonetraffic），oid+日期+i18n；无 token 限 7 天，有 token 不限 |
 | scripts/get_areas.py | 区域清单（海区/贸易区），供按名称匹配 areaId |
 | scripts/get_area_traffic.py | 区域船舶（bbox、--area-id 或 --polygon，需 token） |
 | scripts/get_psc.py | PSC 检查（IMO 或船名/MMSI 先搜船取 IMO，需 token） |
+| scripts/get_psc_anomalies.py | PSC 统计异常：list / summary / get id（需 token，可选 HIFLEET_API_BASE） |

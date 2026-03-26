@@ -4,7 +4,7 @@
 
 ## 行为说明
 
-- **唯一网络目标**：仅向固定域名发起请求（GET 或 POST，见各接口）：
+- **唯一网络目标**：仅向固定域名发起请求（GET 或 POST，见各接口）。`get_psc_anomalies.py` 在未设置 `HIFLEET_API_BASE` 时与下列相同；若设置 `HIFLEET_API_BASE`，仅向该基址请求 **同源路径**（`/pscapi/openclaw/...`），不扩大路径范围：
   - `https://api.hifleet.com/position/shipSearch`（GET）
   - `https://api.hifleet.com/position/position/get/token`（GET）
   - `https://api.hifleet.com/shiparchive/getShipArchiveWithEnginAndCompany`（GET）
@@ -12,6 +12,9 @@
   - `https://api.hifleet.com/position/areas/token`（区域清单，GET）
   - `https://api.hifleet.com/position/gettraffic/token`（区域船舶，GET）
   - `https://api.hifleet.com/pscapi/get`（船舶 PSC 检查数据，GET，需 usertoken）
+  - `https://api.hifleet.com/pscapi/openclaw/anomalies`（PSC 统计异常列表，GET，需 usertoken）
+  - `https://api.hifleet.com/pscapi/openclaw/anomalies/summary`（PSC 统计异常按严重度汇总，GET，需 usertoken）
+  - `https://api.hifleet.com/pscapi/openclaw/anomalies/{id}`（PSC 统计异常单条详情，GET，需 usertoken；`{id}` 为数字）
 - **无数据外传**：不向上述域名以外的地址发送数据，不上传用户文件或剪贴板。
 - **Token 用途**：环境变量 `HIFLEET_USER_TOKEN` / `HIFLEET_USERTOKEN` 仅作为上述 API 的授权参数（海峡通航统计为可选，用于扩展时间范围），由用户自行配置，脚本不写入、不转发至第三方。
 - **无动态代码**：脚本仅使用 Python 标准库（`os`, `sys`, `urllib.request`, `urllib.parse`, `json`），无 `eval`/`exec`、无 base64 解码执行、无从网络加载代码。
@@ -26,5 +29,6 @@
 | scripts/get_areas.py | 区域清单，仅 GET position/areas/token |
 | scripts/get_area_traffic.py | 区域船舶，仅 GET position/gettraffic/token，需 usertoken |
 | scripts/get_psc.py | 船舶 PSC，GET pscapi/get（及搜船时 GET position/shipSearch），需 usertoken |
+| scripts/get_psc_anomalies.py | PSC 统计异常，GET pscapi/openclaw/anomalies*，需 usertoken；可选 `HIFLEET_API_BASE` |
 
 扫描或审核时可对照上述端点与行为；若需进一步说明可联系技能维护方。
