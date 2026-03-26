@@ -54,6 +54,9 @@
 
 脚本：`scripts/get_psc_anomalies.py`（`list` / `summary` / `get <id>`）。默认 API 主机 `https://api.hifleet.com`，可设 `HIFLEET_API_BASE`。
 
+**数据稀疏（异常表条数很少或为空）**  
+OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常事件表」在当前条件下无命中或样本极少，并引导：放宽筛选/日期、核对当局与旗国等是否与库内一致、或改用单船 `pscapi/get`。详见 [psc_anomaly_api.md](psc_anomaly_api.md) 专节。
+
 ## 6. 港口 / Port
 
 | 中文 | 英文 |

@@ -1,8 +1,8 @@
 ---
 name: ship-position
 description: >-
-  船位、档案、PSC检查、PSC统计异常、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), PSC statistical anomalies (滞留率异常 缺陷异常 PSC anomaly detention spike), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
-version: 0.1.12
+  船位、档案、PSC检查、PSC统计异常、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。PSC 异常表为空或极少时不得断言无风险；单船记录用 pscapi/get。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), PSC statistical anomalies (滞留率异常 缺陷异常 PSC anomaly detention spike; if anomaly table is sparse never claim no PSC risk), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
+version: 0.1.13
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
   - HIFLEET_USER_TOKEN
@@ -134,7 +134,16 @@ source: https://api.hifleet.com
 2. **列表**：`GET .../pscapi/openclaw/anomalies?usertoken=...`（同上筛选 + 分页）→ `data.list` 展示 `title`、`dateEnd`、`severity`、`metric` 等。
 3. **详情**：`GET .../pscapi/openclaw/anomalies/{id}?usertoken=...` → 展开 `description`、`evidence`（JSON 字符串可格式化）。
 
-**说明**：若列表长期为空或极少，多为检测阈值较严或异常补算未跑全，可提示用户调整 newpsc 中 `psc.stats` 或执行全量 `backfill-anomalies`；**不影响**单船 `pscapi/get` 能力。
+**数据稀疏时的回答规则（OpenClaw 必守）**  
+`psc_anomaly_event` 可能只有极少行或全空，**不得**据此下结论「没有 PSC 风险」「监管很松」等。须遵守 [references/psc_anomaly_api.md](references/psc_anomaly_api.md) 中的 **「异常表数据量过少」专节**，要点如下：
+
+| 情况 | Agent 应做 |
+|------|------------|
+| `list` 的 `total == 0` 或 summary 全为 0 | 明确说：**仅表示「统计异常事件表」在当前筛选/时间窗内无命中**，不代表无 PSC 活动、不代表无滞留；原因可能是检测阈值严、切片样本不足、未跑全量 `backfill-anomalies`、或 `authority`/`flag`/`port` 与库内**精确字符串**不一致。 |
+| `total` 为个位数（如 1～5） | 如实列出；注明 **样本极少、不宜做宏观推断**；可建议放宽日期、减少筛选维度，或改用单船 PSC。 |
+| 用户问「中国/巴拿马」等自然语言 | 先映射到与库一致的英文名/入库值；若无映射把握，**说明可能因拼写不一致导致 0 条**，请用户确认或先试无当局/旗国筛选。 |
+| 用户要「某船有没有被查」 | **不要用异常表代替**：应走上文 **PSC 检查**（`pscapi/get` + IMO）。 |
+| 用户问「为什么一直没有异常」 | 可简述：日批模型只标记**相对历史基线显著升高**的切片；`min-inspections`、Z 阈值、是否已跑异常补算均会影响条数；运维侧可调 newpsc `psc.stats` 或补跑 `backfill-anomalies`（不展开实现细节除非用户是运维）。 |
 
 **Base URL**：默认 `https://api.hifleet.com`；其它部署可设环境变量 `HIFLEET_API_BASE`（脚本与文档均支持）。
 
