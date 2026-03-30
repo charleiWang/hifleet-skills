@@ -1,8 +1,8 @@
 ---
 name: ship-position
 description: >-
-  船位、档案、PSC检查、PSC统计异常、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。PSC 异常表为空或极少时不得断言无风险；单船记录用 pscapi/get。PSC anomaly JSON field shipType is inspection type (type_ins), not vessel ship type。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), PSC statistical anomalies (滞留率异常 缺陷异常 PSC anomaly detention spike; if anomaly table is sparse never claim no PSC risk), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
-version: 0.1.14
+  船位、档案、PSC检查、PSC统计异常、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。PSC 异常表为空或极少时不得断言无风险；单船记录用 pscapi/get。PSC stats: authority is inspection country not flag state; shipType/ship_type is inspection type (type_ins) not vessel type — see references/psc_stats_field_semantics.md。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), PSC statistical anomalies (滞留率异常 缺陷异常 PSC anomaly detention spike; if anomaly table is sparse never claim no PSC risk), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
+version: 0.1.15
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
   - HIFLEET_USER_TOKEN
@@ -123,8 +123,14 @@ source: https://api.hifleet.com
 
 基于日批统计的 **异常事件表**（`psc_anomaly_event`），与「单船 PSC 记录」互补：回答**某时段、某当局/旗国/港口**等维度下「滞留率/平均缺陷是否相对历史显著升高」等宏观问题。**均需 `usertoken`**（与 `pscapi/get` 相同）。
 
-**OpenClaw 必知：`shipType` 不是船型**  
-接口返回里的 **`shipType` 对应源数据 `type_ins`，表示检查类型**（如初检、后续检查），**不是**散货船/油轮等船舶类型。对用户解释异常维度时勿称「船型」；若用户明确要「按船型」的统计异常，应说明**当前接口不提供真实船型分桶**，详见 [references/psc_anomaly_api.md](references/psc_anomaly_api.md)。
+**OpenClaw 必知：PSC 统计相关字段语义（整页必读）**  
+见 **[references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md)**，核心两条：
+
+1. **`authority`**：在 `psc`、`psc_daily_stats`、`psc_daily_stats_roll`、`psc_defect_distribution`、`psc_port_authority_daily`、`psc_company_daily`、`psc_anomaly_event`、`psc_anomalies` 等表中，均表示 **船舶当时接受检查的检查国/检查当局**，**不是**船舶注册国；**船旗国**看 **`flag`**。  
+2. **`ship_type` / 接口 `shipType`**：在 `psc`（源字段 `type_ins`）、`psc_daily_stats`、`psc_daily_stats_roll`、`psc_anomaly_event` 中，均为 **检查类型**（如初检、后续检查），**不是**船舶类型（船型）。对用户勿把 `authority` 说成「船籍国」，勿把 `shipType` 说成「船型」。  
+若用户要「按真实船型」的统计，说明当前日批维度不提供，需后端扩展。
+
+接口路径与参数细节仍见 [references/psc_anomaly_api.md](references/psc_anomaly_api.md)。
 
 - **触发**：PSC 异常、统计异常、滞留率飙升、缺陷异常、港口国监督风险、HIGH 严重度 PSC 事件、PSC anomaly、detention spike、deficiency spike、PSC statistics risk
 - **输入**：可选日期区间（`yyyy-MM-dd`）；可选 `authority`、`flag`、`port`、`severity`、`anomalyType` 等（**精确匹配**，与自然语言之间需映射）；列表支持 `page`、`pageSize`
@@ -169,6 +175,7 @@ source: https://api.hifleet.com
 | [references/areas_api.md](references/areas_api.md) | 区域清单 API（海区/贸易区列表，供按名称选 areaId） |
 | [references/psc_api.md](references/psc_api.md) | PSC 检查 API（pscapi/get，imo + usertoken） |
 | [references/psc_anomaly_api.md](references/psc_anomaly_api.md) | PSC 统计异常 API（openclaw/anomalies*，usertoken，可选 HIFLEET_API_BASE） |
+| [references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md) | PSC 多表字段语义：`authority`=检查国、`ship_type`=检查类型（非船型） |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 token） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（接口支持 mmsi 参数，内贸船无 IMO 可用 MMSI，需 token） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST statisticzonetraffic），oid+日期+i18n；无 token 限 7 天，有 token 不限 |

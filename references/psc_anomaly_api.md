@@ -2,6 +2,8 @@
 
 查询 **PSC 日批统计异常事件**（表 `psc_anomaly_event`），与「按 IMO 查单船检查记录」的 [psc_api.md](psc_api.md) 互补。**均需**在 Query 中传 `usertoken`（与 `pscapi/get` 相同，技能脚本从 `HIFLEET_USER_TOKEN` / `HIFLEET_USERTOKEN` 读取）。若网关已对路径统一鉴权、应用层暂不解析该参数，多余参数通常可忽略；与 `pscapi/get` 对齐便于同一 token 策略。
 
+**多表字段语义（`authority` = 检查国、`ship_type`/`shipType` = 检查类型）**：见 **[psc_stats_field_semantics.md](psc_stats_field_semantics.md)**，OpenClaw 解读异常或向用户解释维度时应优先遵循该文档。
+
 **Base URL**：与船位/PSC 一致，默认 `https://api.hifleet.com`。若部署在内网或其它域名，可通过环境变量 `HIFLEET_API_BASE` 覆盖（脚本会读取，**不含**末尾 `/`）。
 
 ## 响应包装 HiResult
@@ -18,16 +20,10 @@
 
 ---
 
-## 重要：字段 `shipType` 的真实含义（OpenClaw 必读）
+## 重要：`shipType` / `authority`（摘要）
 
-接口 JSON 里常见字段 **`shipType`**（库表列名 `ship_type`）**不是船舶类型**（如散货船、油轮），而是 **PSC 源表中的检查类型 `type_ins`**：例如**初次检查、后续检查、跟进检查**等。
-
-| 对用户/Agent 的说法 | 正确 | 错误 |
-|---------------------|------|------|
-| 解释 `shipType` | **检查类型**（初检/复检等），与单船「船型」无关 | 说成船型、吨位类型 |
-| 用户问「按船型统计的异常」 | 明确：**当前 openclaw 异常数据不按真实船型分桶**；若需船型需后端改用 IMO 关联船型后再统计 | 用现有 `shipType` 冒充船型 |
-
-向用户复述异常标题或 `evidence` 中的维度时，建议说 **「检查类型」** 或 **「type_ins 维度」**，避免使用「船舶类型」除非后端已改为真实船型字段。
+- **`shipType`**（库表 `ship_type`）：**检查类型**（源字段 `psc.type_ins`），**不是**船型。涉及表：`psc`、`psc_daily_stats`、`psc_daily_stats_roll`、`psc_anomaly_event` 等，**完整表清单与话术**见 [psc_stats_field_semantics.md](psc_stats_field_semantics.md)。  
+- **`authority`**：**检查国/检查当局**，**不是**船舶注册国；船旗国用 **`flag`**。同上见语义文档。
 
 ---
 
