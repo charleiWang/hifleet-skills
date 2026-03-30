@@ -2,7 +2,7 @@
 name: ship-position
 description: >-
   船位、档案、PSC检查、PSC统计异常、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。PSC 异常表为空或极少时不得断言无风险；单船记录用 pscapi/get。PSC stats: authority is inspection country not flag state; shipType/ship_type is inspection type (type_ins) not vessel type — see references/psc_stats_field_semantics.md。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), PSC statistical anomalies (滞留率异常 缺陷异常 PSC anomaly detention spike; if anomaly table is sparse never claim no PSC risk), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
-version: 0.1.15
+version: 0.1.16
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
   - HIFLEET_USER_TOKEN
