@@ -16,7 +16,7 @@
 | `psc_defect_distribution` | 缺陷分布日表 |
 | `psc_port_authority_daily` | 港口×当局日表 |
 | `psc_company_daily` | 公司维度日表（若有） |
-| `psc_anomaly_event` | 异常事件 |
+| `psc_anomaly_event` | 异常事件；`slice_type` 含细切片 `AUTHORITY_FLAG_PORT_TYPE` 与粗切片 `AUTHORITY_FLAG`（后者 `port`/`ship_type` 占位 `__COARSE_ALL__`，表示当局×旗国汇总） |
 | `psc_anomalies` | 兼容用异常表 |
 
 **船旗国 / 注册国**在业务上通常对应字段 **`flag`**（或数据源中的 flag 含义），**不要**与 `authority` 混淆。

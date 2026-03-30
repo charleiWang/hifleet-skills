@@ -41,7 +41,7 @@
 | 中文 | 英文 |
 |------|------|
 | 名称 | PSC 检查 / PSC Inspection（港口国监督） |
-| 描述 | **(a) 单船**：按 IMO 查询船舶 PSC 检查记录；船名需先搜船取 IMO。需 token。**(b) 统计异常**（同属本技能）：查询日批产生的 PSC 统计异常事件（滞留率/平均缺陷显著升高等），需 token；接口见 [psc_anomaly_api.md](psc_anomaly_api.md)。 |
+| 描述 | **(a) 单船**：按 IMO 查询船舶 PSC 检查记录；船名需先搜船取 IMO。需 token。**(b) 统计异常**：`psc_anomaly_event`，见 [psc_anomaly_api.md](psc_anomaly_api.md)。**(c) 宏观统计**：区间对比/缺陷 Top/占比对比（监管趋势、旗国港口风险、缺陷热点、针对性占比），见 [psc_openclaw_stats_api.md](psc_openclaw_stats_api.md)。 |
 | 触发词 | **单船**：PSC、港口国监督、港口国检查、滞留、缺陷、检查记录 / port state control, PSC inspection, detention, deficiency, inspection record。**统计异常**：PSC 异常、统计异常、滞留率飙升、缺陷异常、PSC 风险、严重度 HIGH、PSC anomaly、detention spike、deficiency spike、PSC statistics |
 
 **统计异常子能力（均需 usertoken）**

@@ -1,8 +1,8 @@
 ---
 name: ship-position
 description: >-
-  船位、档案、PSC检查、PSC统计异常、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。PSC 异常表为空或极少时不得断言无风险；单船记录用 pscapi/get。PSC stats: authority is inspection country not flag state; shipType/ship_type is inspection type (type_ins) not vessel type — see references/psc_stats_field_semantics.md。Use when user asks for vessel position (船位), ship info, PSC inspection (港口国监督 PSC检查 滞留), PSC statistical anomalies (滞留率异常 缺陷异常 PSC anomaly detention spike; if anomaly table is sparse never claim no PSC risk), area traffic (区域船舶 范围内船舶), strait traffic (红海 波斯湾 曼德 苏伊士 好望角 霍尔木兹), port, voyage, route, charter, shipping, weather, fleet, or AIS.
-version: 0.1.16
+  船位、档案、PSC检查、PSC统计异常、PSC宏观统计(openclaw/stats/compare缺陷占比mix)、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。PSC 异常表为空或极少时不得断言无风险；宏观数字用 openclaw/stats/*；单船用 pscapi/get。authority=检查国、type_ins=检查类型非船型 — psc_stats_field_semantics.md。Use when user asks for vessel position (船位), ship info, PSC inspection, PSC trends (which country stricter, flag risk, port risk, defect hotspots, targeting share), PSC anomalies, area traffic, strait traffic, port, voyage, route, charter, shipping, weather, fleet, or AIS.
+version: 0.1.18
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
   - HIFLEET_USER_TOKEN
@@ -22,7 +22,7 @@ source: https://api.hifleet.com
 | 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
 | 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹），POST；无 token 限最近 1 周，有 token 不限 |
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT），需 token |
-| PSC 检查 PSC Inspection | ✅ 已实现 | 按 IMO 查 PSC 数据；船名/MMSI 先 shipSearch 取 IMO，需 token。**含统计异常子能力**（列表/汇总/详情，见下） |
+| PSC 检查 PSC Inspection | ✅ 已实现 | 按 IMO 查 PSC；船名/MMSI 先 shipSearch。**含**：统计异常 `openclaw/anomalies*`；**宏观统计** `openclaw/stats/compare|defects/top|mix/compare`（监管/旗国/港口/缺陷/占比，见下） |
 | 港口 Port | 待实现 | 港口、泊位、锚地 |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
@@ -133,7 +133,7 @@ source: https://api.hifleet.com
 接口路径与参数细节仍见 [references/psc_anomaly_api.md](references/psc_anomaly_api.md)。
 
 - **触发**：PSC 异常、统计异常、滞留率飙升、缺陷异常、港口国监督风险、HIGH 严重度 PSC 事件、PSC anomaly、detention spike、deficiency spike、PSC statistics risk
-- **输入**：可选日期区间（`yyyy-MM-dd`）；可选 `authority`、`flag`、`port`、`severity`、`anomalyType` 等（**精确匹配**，与自然语言之间需映射）；列表支持 `page`、`pageSize`
+- **输入**：可选日期区间（`yyyy-MM-dd`）；可选 `authority`/`flag`/`port`（精确）、**`authorityContains`/`flagContains`（子串 LIKE，适合「中国/China」等）**、`sliceType`（**`AUTHORITY_FLAG`**=当局×旗国粗粒度异常；**`AUTHORITY_FLAG_PORT_TYPE`**=含港口×检查类型细切片）、`severity`、`anomalyType` 等；列表支持 `page`、`pageSize`
 - **API 详情**：[references/psc_anomaly_api.md](references/psc_anomaly_api.md)
 - **脚本**：`scripts/get_psc_anomalies.py`（子命令 `list` / `summary` / `get <id>`）
 
@@ -150,17 +150,38 @@ source: https://api.hifleet.com
 |------|------------|
 | `list` 的 `total == 0` 或 summary 全为 0 | 明确说：**仅表示「统计异常事件表」在当前筛选/时间窗内无命中**，不代表无 PSC 活动、不代表无滞留；原因可能是检测阈值严、切片样本不足、未跑全量 `backfill-anomalies`、或 `authority`/`flag`/`port` 与库内**精确字符串**不一致。 |
 | `total` 为个位数（如 1～5） | 如实列出；注明 **样本极少、不宜做宏观推断**；可建议放宽日期、减少筛选维度，或改用单船 PSC。 |
-| 用户问「中国/巴拿马」等自然语言 | 先映射到与库一致的英文名/入库值；若无映射把握，**说明可能因拼写不一致导致 0 条**，请用户确认或先试无当局/旗国筛选。 |
+| 用户问「中国/巴拿马」等自然语言 | 优先用 **`authorityContains`/`flagContains`**（如 `China`、`Panama`）再查异常表；宏观「某检查国对哪些船旗」优先 **`sliceType=AUTHORITY_FLAG`**；仍 0 条时再说明精确值可能不一致或模型未命中。 |
 | 用户要「某船有没有被查」 | **不要用异常表代替**：应走上文 **PSC 检查**（`pscapi/get` + IMO）。 |
 | 用户问「为什么一直没有异常」 | 可简述：日批模型只标记**相对历史基线显著升高**的切片；`min-inspections`、Z 阈值、是否已跑异常补算均会影响条数；运维侧可调 newpsc `psc.stats` 或补跑 `backfill-anomalies`（不展开实现细节除非用户是运维）。 |
 
 **Base URL**：默认 `https://api.hifleet.com`；其它部署可设环境变量 `HIFLEET_API_BASE`（脚本与文档均支持）。
 
+#### PSC 宏观统计（OpenClaw，原始聚合 / 缺陷 / 占比）
+
+与 **异常事件表**互补：直接基于 **`pscdata.psc`**（及 **`psc_defect_distribution`**）做可引用数字，支撑「哪国变严」「哪旗/哪港风险」「缺陷热点」「是否某旗占比上升」等；**不替代**因果推断与预测。
+
+- **文档**：[references/psc_openclaw_stats_api.md](references/psc_openclaw_stats_api.md)（含与九类问题的映射与能力边界）
+- **脚本**：`scripts/get_psc_openclaw_stats.py`（`compare` / `defects` / `mix`）
+
+**Agent 路由建议**：
+
+| 用户意图 | 优先接口 |
+|----------|-----------|
+| 国家/全局监管变严、检查量/滞留率环比 | `GET .../pscapi/openclaw/stats/compare`（`groupBy=AUTHORITY`/`GLOBAL`，可用 `authorityContains`） |
+| 船旗风险排行、某旗滞留率 | `compare` + `groupBy=FLAG`；结合 `anomalies` |
+| 港口严、某国下港口 | `groupBy=PORT` 或 `AUTHORITY_PORT` |
+| 最近查什么缺陷、缺陷码热点 | `GET .../pscapi/openclaw/stats/defects/top`（需 newpsc 已写缺陷分布表） |
+| 是否「针对」某旗 / 检查类型占比变化 | `GET .../pscapi/openclaw/stats/mix/compare`（`mixDimension=FLAG` 或 `TYPE_INS`）；**勿断言政治针对**，`TYPE_INS` **不是**散货船等船型 |
+| 统计模型认定的异常 spike | 仍用 `openclaw/anomalies*` |
+| 某船/IMO | `pscapi/get` |
+
+**合规**：勿输出投资建议（「必避开某港」）；可陈述事实与风险提示。无「风险预测」专用接口，对未来表述须谨慎。
+
 ---
 
 ## 安全与合规
 
-本技能仅向 api.hifleet.com（或 `HIFLEET_API_BASE`）的船位/档案/PSC/PSC openclaw 统计异常/海峡通航/区域船舶等接口发起只读请求（GET 或 POST）；海峡通航统计无需 token，其余需鉴权的接口使用 token。详见 [SECURITY.md](SECURITY.md)。
+本技能仅向 api.hifleet.com（或 `HIFLEET_API_BASE`）的船位/档案/PSC/PSC openclaw（anomalies + stats）/海峡通航/区域船舶等接口发起只读请求（GET 或 POST）；海峡通航统计无需 token，其余需鉴权的接口使用 token。详见 [SECURITY.md](SECURITY.md)。
 
 ## 参考资料与脚本
 
@@ -175,6 +196,7 @@ source: https://api.hifleet.com
 | [references/areas_api.md](references/areas_api.md) | 区域清单 API（海区/贸易区列表，供按名称选 areaId） |
 | [references/psc_api.md](references/psc_api.md) | PSC 检查 API（pscapi/get，imo + usertoken） |
 | [references/psc_anomaly_api.md](references/psc_anomaly_api.md) | PSC 统计异常 API（openclaw/anomalies*，usertoken，可选 HIFLEET_API_BASE） |
+| [references/psc_openclaw_stats_api.md](references/psc_openclaw_stats_api.md) | PSC 宏观统计（openclaw/stats/compare、defects/top、mix/compare） |
 | [references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md) | PSC 多表字段语义：`authority`=检查国、`ship_type`=检查类型（非船型） |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 token） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（接口支持 mmsi 参数，内贸船无 IMO 可用 MMSI，需 token） |
@@ -183,3 +205,4 @@ source: https://api.hifleet.com
 | scripts/get_area_traffic.py | 区域船舶（bbox、--area-id 或 --polygon，需 token） |
 | scripts/get_psc.py | PSC 检查（IMO 或船名/MMSI 先搜船取 IMO，需 token） |
 | scripts/get_psc_anomalies.py | PSC 统计异常：list / summary / get id（需 token，可选 HIFLEET_API_BASE） |
+| scripts/get_psc_openclaw_stats.py | PSC 宏观统计：compare / defects / mix（需 token，可选 HIFLEET_API_BASE） |

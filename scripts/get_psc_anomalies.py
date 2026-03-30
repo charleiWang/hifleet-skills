@@ -8,7 +8,7 @@ PSC 统计异常事件：列表 / 严重度汇总 / 按 ID 详情。
 
 用法:
   python get_psc_anomalies.py list [--date-from YYYY-MM-DD] [--date-to YYYY-MM-DD]
-      [--authority X] [--flag X] [--port X] [--severity HIGH] [--page 1] [--page-size 20]
+      [--authority X] [--authority-contains X] [--flag X] [--flag-contains X] [--port X] [--severity HIGH] [--page 1] [--page-size 20]
   python get_psc_anomalies.py summary [--date-from ...] [--date-to ...] [同上筛选]
   python get_psc_anomalies.py get <id>
 
@@ -56,7 +56,9 @@ def add_common_filters(p: argparse.ArgumentParser) -> None:
     p.add_argument("--date-from", dest="date_from", default=None, help="yyyy-MM-dd")
     p.add_argument("--date-to", dest="date_to", default=None, help="yyyy-MM-dd")
     p.add_argument("--authority", default=None)
+    p.add_argument("--authority-contains", dest="authority_contains", default=None)
     p.add_argument("--flag", default=None)
+    p.add_argument("--flag-contains", dest="flag_contains", default=None)
     p.add_argument("--port", default=None)
     p.add_argument("--severity", default=None)
     p.add_argument("--anomaly-type", dest="anomaly_type", default=None)
@@ -71,7 +73,9 @@ def build_filter_params(ns: argparse.Namespace) -> Dict[str, str]:
         ("date_from", "dateFrom"),
         ("date_to", "dateTo"),
         ("authority", "authority"),
+        ("authority_contains", "authorityContains"),
         ("flag", "flag"),
+        ("flag_contains", "flagContains"),
         ("port", "port"),
         ("severity", "severity"),
         ("anomaly_type", "anomalyType"),

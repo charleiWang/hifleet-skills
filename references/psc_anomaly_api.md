@@ -42,11 +42,13 @@
 | dateFrom | 否 | `yyyy-MM-dd`；与 `dateTo` 都省略时服务端默认最近约 30 天 |
 | dateTo | 否 | `yyyy-MM-dd` |
 | authority | 否 | 检查当局，精确匹配 |
+| authorityContains | 否 | 检查当局**子串**匹配（SQL `LIKE %…%`），适合「China」等与库内全称不一致时；可与 `authority` 同时存在（AND） |
 | flag | 否 | 船旗国，精确匹配 |
+| flagContains | 否 | 船旗国**子串**匹配（同上） |
 | port | 否 | 港口，精确匹配 |
 | severity | 否 | 如 `HIGH` / `MEDIUM` / `LOW` |
 | anomalyType | 否 | 如 `DETENTION_RATE_SPIKE`、`AVG_DEFECTS_SPIKE` |
-| sliceType | 否 | 如 `AUTHORITY_FLAG_PORT_TYPE` |
+| sliceType | 否 | `AUTHORITY_FLAG_PORT_TYPE`（日×当局×旗国×港口×检查类型）；`AUTHORITY_FLAG`（日×当局×旗国粗粒度，港口/检查类型占位 `__COARSE_ALL__`，更易检出「某检查国对某船旗」整体滞留率异常） |
 | metric | 否 | 如 `detention_rate`、`avg_defects` |
 | status | 否 | 如 `open` |
 | page | 否 | 默认 `1` |
@@ -69,7 +71,7 @@
 
 ### Query 参数
 
-与列表相同筛选：`usertoken` 必填；`dateFrom`、`dateTo`、`authority`、`flag`、`port`、`severity`、`anomalyType`、`sliceType`、`metric`、`status` 可选（日期默认逻辑同列表）。
+与列表相同筛选：`usertoken` 必填；`dateFrom`、`dateTo`、`authority`、`authorityContains`、`flag`、`flagContains`、`port`、`severity`、`anomalyType`、`sliceType`、`metric`、`status` 可选（日期默认逻辑同列表）。
 
 ### data 结构
 
@@ -99,8 +101,9 @@
 ## OpenClaw 调用建议（常规）
 
 1. 先 **summary** 再 **list** 再 **get {id}**（见上）。  
-2. `authority`/`flag`/`port` 须与入库字符串**一致**（精确匹配）；自然语言需别名映射或请用户确认。  
-3. 仅输出接口返回内容，**不编造**未出现在 `list`/`summary` 中的事件。
+2. 精确筛选：`authority`/`flag`/`port` 须与入库字符串**一致**；自然语言（如「中国检查」）优先试 **`authorityContains`**（或 `flagContains`），避免精确值拼写不一致导致 0 条。  
+3. 用户问「某检查国近期哪些船旗风险高 / 滞留异常」时：在日期窗内调用 **list/summary**，宜带 **`sliceType=AUTHORITY_FLAG`** 看粗粒度事件；再按需查细切片 `AUTHORITY_FLAG_PORT_TYPE`。  
+4. 仅输出接口返回内容，**不编造**未出现在 `list`/`summary` 中的事件。
 
 ---
 
@@ -118,8 +121,9 @@
 1. **界定范围**：说明结果是「**统计异常事件表**在请求条件（日期、当局、旗国、港口等）下的查询结果」，不是全库 PSC 原始记录。  
 2. **可能原因**（择要说明，不必全列）：  
    - 检测参数较严（如单日切片检查次数下限、Z 分数阈值）；  
+   - 仅命中**细切片**时样本分散在港口/检查类型上，周维度「滞留件数」上升未必形成单日 Z 异常；部署 **`AUTHORITY_FLAG` 粗切片**并补跑日批后可改善；  
    - 未做或未做完历史 **异常补算**（`backfill-anomalies`）；  
-   - 筛选字段与数据库**字符串不完全一致**（如 `China` vs `中国`）；  
+   - 筛选字段与数据库**字符串不完全一致**（优先试 `authorityContains` / `flagContains`）；  
    - 时间窗过窄。  
 3. **可执行建议**（面向终端用户）：放宽日期、去掉部分筛选重试；若关心**具体船舶**，改用 **单船 PSC**（`pscapi/get`，见 [psc_api.md](psc_api.md)）。  
 4. **可执行建议**（面向运维/内部）：在 newpsc 中调整 `psc.stats`（如 `min-inspections`、Z 阈值）并全量重跑异常补算（详见项目运维说明）。
