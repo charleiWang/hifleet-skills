@@ -2,7 +2,7 @@
 name: ship-position
 description: >-
   船位、档案、PSC检查、PSC统计异常、PSC宏观统计(openclaw/stats/compare缺陷占比mix)、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。PSC 异常表为空或极少时不得断言无风险；宏观数字用 openclaw/stats/*；单船用 pscapi/get。authority=检查国、type_ins=检查类型非船型 — psc_stats_field_semantics.md。Use when user asks for vessel position (船位), ship info, PSC inspection, PSC trends (which country stricter, flag risk, port risk, defect hotspots, targeting share), PSC anomalies, area traffic, strait traffic, port, voyage, route, charter, shipping, weather, fleet, or AIS.
-version: 0.1.18
+version: 0.1.19
 # 可选：仅部分接口需要鉴权，配置后船位/档案等能力可用；不配置也可使用不需鉴权的部分
 optionalEnv:
   - HIFLEET_USER_TOKEN
@@ -169,7 +169,7 @@ source: https://api.hifleet.com
 |----------|-----------|
 | 国家/全局监管变严、检查量/滞留率环比 | `GET .../pscapi/openclaw/stats/compare`（`groupBy=AUTHORITY`/`GLOBAL`，可用 `authorityContains`） |
 | 船旗风险排行、某旗滞留率 | `compare` + `groupBy=FLAG`；结合 `anomalies` |
-| 港口严、某国下港口 | `groupBy=PORT` 或 `AUTHORITY_PORT` |
+| **中国/某国主要检查港口、哪港严** | **`stats/compare` 必调**：`groupBy=PORT` 或 `AUTHORITY_PORT` + `authorityContains`（如 `China`）；**禁止**在未请求接口时用常识港口列表冒充数据；**禁止**谎称「港口接口故障」除非返回明确错误（并说明 code）。 |
 | 最近查什么缺陷、缺陷码热点 | `GET .../pscapi/openclaw/stats/defects/top`（需 newpsc 已写缺陷分布表） |
 | 是否「针对」某旗 / 检查类型占比变化 | `GET .../pscapi/openclaw/stats/mix/compare`（`mixDimension=FLAG` 或 `TYPE_INS`）；**勿断言政治针对**，`TYPE_INS` **不是**散货船等船型 |
 | 统计模型认定的异常 spike | 仍用 `openclaw/anomalies*` |

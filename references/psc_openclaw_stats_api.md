@@ -33,7 +33,23 @@
 
 - 「哪些国家检查变严」：`groupBy=AUTHORITY`，适当 `dateFrom`/`dateTo`，看 `detentionRateChangePct`、`inspectionsChangePct`。
 - 「全球趋势」：`groupBy=GLOBAL`。
-- 「哪港严」：`groupBy=PORT` 或 `AUTHORITY_PORT`，可 `authorityContains=China`。
+- 「哪港严 / 中国主要检查港口是哪些」：**必须调用本接口**，禁止用常识列表代替数据库结果。推荐：
+  - `groupBy=PORT` + `authorityContains=China`（或库内实际出现的当局子串，如 `PRC`、`CHINA`），按 `inspections` 降序解读 `rows`；
+  - 或 `groupBy=AUTHORITY_PORT` + `authorityContains=China`，同时看到当局与港口字段。
+  - 完整路径示例：`GET {BASE}/pscapi/openclaw/stats/compare?usertoken=...&groupBy=PORT&authorityContains=China&dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&limit=30`
+
+**禁止**：在**未调用** `stats/compare`（或未拿到有效 JSON）时，向用户声称「港口接口故障」「无法获取港口排名」——除非请求确实返回错误码/超时，并应写明**具体错误**（如 `4001` 无权、`404` 未部署）。
+
+### 港口数据拿不到时的排查（不是缺接口）
+
+| 现象 | 常见原因 |
+|------|-----------|
+| `4001` / 权限错误 | token **未开通** `/pscapi/openclaw/stats/*`（仅开了 `anomalies` 或 `pscapi/get` 不够）；需在 HiFleet 网关/权限中放行上述路径。 |
+| `404` | **线上未部署**含 `openclaw/stats` 的 `hifleet.data.api` 版本。 |
+| `rows` 为空或很少 | `authorityContains` 与库内 `psc.authority` **写法不一致**（可换子串重试）；或 **`psc.port` 大量为空**被 SQL 过滤（`port` 非空的行才会进 `PORT`/`AUTHORITY_PORT` 分组）。 |
+| Agent 仍答「技术故障」 | 多为 **未按技能调用接口**或 **臆测**；应以实际 HTTP 响应为准。 |
+
+**说明**：返回的 `port` 为库内存储形式（可能是英文港名、代码等），与口语「上海港」可能不完全一致，需如实展示或说明映射关系。
 
 ---
 
