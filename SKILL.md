@@ -123,6 +123,21 @@ source: https://api.hifleet.com
 
 基于日批统计的 **异常事件表**（`psc_anomaly_event`），与「单船 PSC 记录」互补：回答**某时段、某当局/旗国/港口**等维度下「滞留率/平均缺陷是否相对历史显著升高」等宏观问题。**均需 `usertoken`**（与 `pscapi/get` 相同）。
 
+
+### 集装箱红海饶航 / Container ship Red Sea detour
+
+集装箱船舶绕航红海每日统计，按日期区间与方向返回船型统计及船舶明细。**无 usertoken 仅可查最近 1 周，有 usertoken 时间区间不限**。
+
+- **触发**：红海饶航、集装箱饶航、Container ship Red Sea detour
+- **输入**：必选选开始/结束日期（yyyy-MM-dd）。usertoken 从配置读取，有则时间不限。
+- **API 文档**：[references/avoidredsea_traffic_api.md](references/avoidredsea_traffic_api.md)；完整接口以 [ShowDoc 45/2234](http://47.93.16.141:4799/web/#/p/7d0c46db2ba7a2d96f782733a654ae51) 为准。
+- **脚本**：`scripts/get_avoidredsea_traffic.py`（ 必选 starttiime/endtime，有 token 可查超 7 天）
+
+**接口**：**POST** `http://api.hifleet.com/position/statisticzonetraffic`，Query 参数 oid、startdate、enddate、i18n（可选）、usertoken（可选）。**海峡 oid**：曼德海峡 24480、苏伊士运河 132808、好望角 1062830、霍尔木兹海峡 24471。无 token 时校验时间区间 ≤ 7 天。
+
+
+
+
 **OpenClaw 必知：PSC 统计相关字段语义（整页必读）**  
 见 **[references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md)**，核心两条：
 
