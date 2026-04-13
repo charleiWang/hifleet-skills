@@ -133,7 +133,7 @@ source: https://api.hifleet.com
 - **API 文档**：[references/avoidredsea_traffic_api.md](references/avoidredsea_traffic_api.md)；完整接口以 [ShowDoc 45/2234](http://47.93.16.141:4799/web/#/p/7d0c46db2ba7a2d96f782733a654ae51) 为准。
 - **脚本**：`scripts/get_avoidredsea_traffic.py`（ 必选 starttiime/endtime，有 token 可查超 7 天）
 
-**接口**：**POST** `http://api.hifleet.com/position/statisticzonetraffic`，Query 参数 oid、startdate、enddate、i18n（可选）、usertoken（可选）。**海峡 oid**：曼德海峡 24480、苏伊士运河 132808、好望角 1062830、霍尔木兹海峡 24471。无 token 时校验时间区间 ≤ 7 天。
+**接口**：**POST** `http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token`，Query 参数 startdate、enddate、i18n（可选）、usertoken（可选）。**无 token 时校验时间区间 ≤ 7 天。
 
 
 

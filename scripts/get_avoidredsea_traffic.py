@@ -3,7 +3,7 @@
 """
 集装箱饶航船舶每日统计。、支持查询下饶航红海的集装箱船舶。
 对于饶航饶航的方向：东是向东，西是向西。
-接口：POST http://112.126.23.236:8234//routerisk//getAvoidRedSeaDetail/token，参数 starttime、endtime、usertoken（可选）。
+接口：POST http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token，参数 starttime、endtime、usertoken（可选）。
 无 usertoken 仅可查最近 1 周；有 usertoken 时间区间不限。
 
 用法:
@@ -11,7 +11,7 @@
 
   日期: yyyy-MM-dd，不传则默认最近 1 天。无 token 时区间不得超过 7 天；有 token 不限。i18n 可选 zh 或 en。
 
-Security: 仅向 http://112.126.23.236:8234//routerisk//getAvoidRedSeaDetail/token 发起 POST 请求；usertoken 可选，仅用于扩展时间范围；仅使用标准库，无 eval/exec。
+Security: 仅向 http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token 发起 POST 请求；usertoken 可选，仅用于扩展时间范围；仅使用标准库，无 eval/exec。
 """
 import os
 import sys
@@ -20,7 +20,7 @@ import urllib.parse
 import json
 from datetime import datetime, timedelta
 
-STRAIT_TRAFFIC_URL = "http://112.126.23.236:8234//routerisk//getAvoidRedSeaDetail/token"
+STRAIT_TRAFFIC_URL = "http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token"
 
 
 

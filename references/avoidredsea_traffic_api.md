@@ -12,7 +12,7 @@
 
 | 项目 | 值 |
 |------|-----|
-| 请求 URL | `http://112.126.23.236:8234//routerisk//getAvoidRedSeaDetail/token` |
+| 请求 URL | `http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token` |
 | 请求方式 | **POST** |
 
 ### Query 参数
