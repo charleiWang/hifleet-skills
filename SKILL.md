@@ -23,7 +23,7 @@ source: https://api.hifleet.com
 | 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹），POST；无 token 限最近 1 周，有 token 不限 |
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT），需 token |
 | PSC 检查 PSC Inspection | ✅ 已实现 | 按 IMO 查 PSC；船名/MMSI 先 shipSearch。**含**：统计异常 `openclaw/anomalies*`；**宏观统计** `openclaw/stats/compare|defects/top|mix/compare`（监管/旗国/港口/缺陷/占比，见下） |
-| 港口 Port | 待实现 | 港口、泊位、锚地 |
+| 港口 Port guide | ✅ 已实现 | 港口列表/检索（港名或代码）、单港详情（`piuid`→`portId`）；`portguide/getPort/token`、`portguide/getPortDetail/token` |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
 | 航线 Route | 待实现 | 推荐航线、航路点 |
@@ -118,6 +118,17 @@ source: https://api.hifleet.com
 **调用流程**：检查 token → 若用户已给 **IMO**：GET `pscapi/get?imo={imo}&usertoken=...` → 解析并展示（脚本对常见 `status`+`data` / `list` 结构做分条输出，否则整段 JSON）。若用户给 **船名或 MMSI 关键字**：与船位相同的搜船规则（0/1/多条、多条时让用户选 MMSI）→ 取选定船的 `imonumber`；若为空则提示无 IMO、无法查 PSC → 有 IMO 再调 `pscapi/get`。
 
 **权限**：若接口返回 `code` **4001**（token 无权访问该 URL），说明当前 token 未开通 PSC API，需在 HiFleet 开通权限或更换 token（详见 [references/psc_api.md](references/psc_api.md)）。
+
+### 港口指南 / Port guide
+
+港口列表检索与单港详细信息。两步：**列表**可选 `portName`（港口名称）、`portCode`（港口代码），传其一即可筛选，**均不传返回全部港口**（数据可能很大，宜带条件）；**详情**用列表项中的 **`piuid`** 作为 Query 参数 **`portId`**（整数）调用详情接口。
+
+- **触发**：港口、港名、港口代码、UN/LOCODE、泊位、锚地、港口信息、port guide、port detail
+- **输入**：列表步可选港名、港口代码；详情步必选港口 id（来自上一步的 `piuid`）；`usertoken` 从配置读取；可选 `HIFLEET_API_BASE`
+- **API 详情**：[references/port_api.md](references/port_api.md)
+- **脚本**：`scripts/get_port.py`（子命令 `search [--port-name] [--port-code]`、`detail <portId>`）
+
+**调用流程**：检查 token → **列表**：`GET {BASE}/portguide/getPort/token?usertoken=...`（按需加 `portName`、`portCode`）→ 展示命中列表（含 `piuid`、港名、代码等以实际字段为准）→ **详情**：用户确认目标后 `GET {BASE}/portguide/getPortDetail/token?portId={piuid}&usertoken=...` → 解析并展示详情字段。
 
 #### PSC 统计异常（OpenClaw，同属 PSC 技能）
 
