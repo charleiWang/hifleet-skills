@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 根据 IMO 查询船舶 PSC（港口国监督检查）数据；支持直接 IMO，或通过船名/MMSI 先搜船再取 IMO。
-接口：GET https://api.hifleet.com/pscapi/get?imo=...&usertoken=...
-需配置环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN。
+接口：GET https://api.hifleet.com/pscapi/get?imo=...&api_key=...
+需配置环境变量 `HIFLEET_API_KEY`。
 
 用法:
   python get_psc.py <IMO>                    # 7 位 IMO（可带 IMO 前缀）
@@ -12,7 +12,7 @@
   python get_psc.py <9位MMSI>                # 以 MMSI 关键字搜船后取 IMO（同搜船逻辑）
 
 Security: 仅向 https://api.hifleet.com 的 position/shipSearch 与 pscapi/get 发起 GET 请求；
-token 仅用于 API 鉴权；仅使用标准库，无 eval/exec。
+`api_key` 仅用于 API 鉴权；仅使用标准库，无 eval/exec。
 """
 import os
 import sys
@@ -25,14 +25,14 @@ SHIP_SEARCH_URL = "https://api.hifleet.com/position/shipSearch"
 PSC_URL = "https://api.hifleet.com/pscapi/get"
 
 
-def get_token():
-    return os.environ.get("HIFLEET_USER_TOKEN") or os.environ.get("HIFLEET_USERTOKEN")
+def get_api_key():
+    return os.environ.get("HIFLEET_API_KEY")
 
 
-def ship_search(shipname: str, usertoken: str, i18n: str = "zh", count: str = "50") -> dict:
+def ship_search(shipname: str, api_key: str, i18n: str = "zh", count: str = "50") -> dict:
     params = {
         "shipname": shipname,
-        "usertoken": usertoken,
+        "api_key": api_key,
         "i18n": i18n,
         "count": count,
     }
@@ -42,8 +42,8 @@ def ship_search(shipname: str, usertoken: str, i18n: str = "zh", count: str = "5
         return json.loads(resp.read().decode())
 
 
-def get_psc(usertoken: str, imo: str) -> dict:
-    params = {"imo": imo.strip(), "usertoken": usertoken}
+def get_psc(api_key: str, imo: str) -> dict:
+    params = {"imo": imo.strip(), "api_key": api_key}
     url = PSC_URL + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
@@ -69,13 +69,13 @@ def _psc_error_hint(data: dict) -> Optional[str]:
         return None
     if n == 4001:
         return (
-            "该 token 无权访问 PSC 接口（/pscapi/get）。"
-            "请在 HiFleet 开通或续约 PSC 数据 API 权限，或使用已授权该路径的 token。"
+            "该 api_key 无权访问 PSC 接口（/pscapi/get）。"
+            "请在 HiFleet 开通或续约 PSC 数据 API 权限，或使用已授权该路径的 api_key。"
         )
     if n == 4004:
-        return "token 无效或不存在，请检查 HIFLEET_USER_TOKEN / HIFLEET_USERTOKEN。"
+        return "api_key 无效或不存在，请检查 HIFLEET_API_KEY。"
     if n == 4005:
-        return "未携带 token，请配置环境变量或项目中的 usertoken。"
+        return "未携带 api_key，请配置环境变量或项目中的 api_key。"
     return None
 
 
@@ -154,8 +154,8 @@ def _is_imo_token(s: str) -> bool:
     return len(s) in (6, 7)
 
 
-def resolve_imo_from_search(keyword: str, usertoken: str, chosen_mmsi: Optional[str]) -> str:
-    search_data = ship_search(keyword, usertoken)
+def resolve_imo_from_search(keyword: str, api_key: str, chosen_mmsi: Optional[str]) -> str:
+    search_data = ship_search(keyword, api_key)
     if search_data.get("result") != "ok":
         raise ValueError(json.dumps(search_data, ensure_ascii=False))
 
@@ -199,9 +199,9 @@ def resolve_imo_from_search(keyword: str, usertoken: str, chosen_mmsi: Optional[
 
 
 def main():
-    token = get_token()
-    if not token:
-        print("请先配置 HiFleet 授权 token（环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN）", file=sys.stderr)
+    api_key = get_api_key()
+    if not api_key:
+        print("请先配置 HiFleet 授权 api_key（环境变量 HIFLEET_API_KEY）", file=sys.stderr)
         sys.exit(1)
     if len(sys.argv) < 2:
         print(
@@ -221,13 +221,13 @@ def main():
     elif keyword.isdigit() and len(keyword) == 9:
         # 9 位：按 MMSI 搜船再取 IMO
         try:
-            imo = resolve_imo_from_search(keyword, token, chosen_mmsi)
+            imo = resolve_imo_from_search(keyword, api_key, chosen_mmsi)
         except ValueError as e:
             print(str(e), file=sys.stderr)
             sys.exit(1)
     else:
         try:
-            imo = resolve_imo_from_search(keyword, token, chosen_mmsi)
+            imo = resolve_imo_from_search(keyword, api_key, chosen_mmsi)
         except ValueError as e:
             print(str(e), file=sys.stderr)
             sys.exit(1)
@@ -238,7 +238,7 @@ def main():
 
     print(f"查询 IMO: {imo}", file=sys.stderr)
     try:
-        raw = get_psc(token, imo)
+        raw = get_psc(api_key, imo)
     except Exception as e:
         print(f"PSC 请求失败: {e}", file=sys.stderr)
         sys.exit(1)

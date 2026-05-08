@@ -1,6 +1,6 @@
 # 港口指南 API / Port guide API
 
-港口列表检索与单港详情。**需配置 usertoken**（与其它 `/token` 接口一致）。
+港口列表检索与单港详情。**需配置 `api_key`**（与其它 `/token` 接口一致）。
 
 默认基址：`https://api.hifleet.com`。其它部署可设环境变量 **`HIFLEET_API_BASE`**（无末尾斜杠），脚本与 Agent 请求路径均为 `{BASE}/portguide/...`。
 
@@ -21,7 +21,7 @@
 
 | 参数名 | 示例值 | 必选 | 类型 | 说明 |
 |--------|--------|------|------|------|
-| usertoken | (从配置读取) | 是 | string | 授权 token |
+| api_key | (从配置读取) | 是 | string | 接口授权 `api_key` |
 | portName | Shanghai | 否 | string | 港口名称（模糊或精确规则以后端为准） |
 | portCode | CNSHA | 否 | string | 港口代码（如 UN/LOCODE 等，以后端为准） |
 
@@ -52,16 +52,16 @@
 
 | 参数名 | 示例值 | 必选 | 类型 | 说明 |
 |--------|--------|------|------|------|
-| usertoken | (从配置读取) | 是 | string | 授权 token |
+| api_key | (从配置读取) | 是 | string | 接口授权 `api_key` |
 | portId | 12345 | 是 | integer | 港口 id，**取自第一步列表项的 `piuid` 字段** |
 
 ---
 
 ## 调用流程（Agent）
 
-1. 检查 token；无则提示配置 `HIFLEET_USER_TOKEN` 或 `HIFLEET_USERTOKEN`（或项目中的 `usertoken`）。
-2. **列表**：`GET .../portguide/getPort/token?usertoken=...`；若用户给出港名或代码，附加 `portName` 或 `portCode`。
-3. **详情**：用户选定某条后，取该条 **`piuid`** → `GET .../portguide/getPortDetail/token?portId={piuid}&usertoken=...`。
+1. 检查 `api_key`；无则提示配置 `HIFLEET_API_KEY`。
+2. **列表**：`GET .../portguide/getPort/token?api_key=...`；若用户给出港名或代码，附加 `portName` 或 `portCode`。
+3. **详情**：用户选定某条后，取该条 **`piuid`** → `GET .../portguide/getPortDetail/token?portId={piuid}&api_key=...`。
 4. 若列表命中多条，列出港名/代码/`piuid`，请用户确认后再查详情。
 
 ---
@@ -69,4 +69,4 @@
 ## 错误与权限
 
 - 若返回业务错误码或 `status`/`result` 非成功，如实展示接口返回信息。
-- 若提示 token 无效或无权限，需检查 HiFleet 账号是否开通港口指南相关接口。
+- 若提示 `api_key` 无效或无权限，需检查 HiFleet 账号是否开通港口指南相关接口。

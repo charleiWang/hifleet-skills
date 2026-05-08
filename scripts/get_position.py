@@ -3,14 +3,14 @@
 """
 获取船舶最新位置信息。支持关键字（船名或 MMSI）或直接 MMSI 查询。
 两步流程：先 position/shipSearch 搜船，再 position/position/get/token 查位。
-需配置环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN。
+需配置环境变量 `HIFLEET_API_KEY`。
 
 用法:
   python get_position.py <MMSI>              # 直接查位（9 位 MMSI）
   python get_position.py <船名或关键字>        # 先搜船：1 条则直接查位，多条则列出并提示指定 MMSI
   python get_position.py <关键字> <MMSI>     # 多条命中时，用第二个参数指定要查的 MMSI
 
-Security: 仅向 https://api.hifleet.com 的 position 相关接口发起 GET 请求；token 仅用于 API 鉴权，不向第三方发送；仅使用标准库，无 eval/exec。
+Security: 仅向 https://api.hifleet.com 的 position 相关接口发起 GET 请求；`api_key` 仅用于 API 鉴权，不向第三方发送；仅使用标准库，无 eval/exec。
 """
 import os
 import sys
@@ -22,15 +22,15 @@ SHIP_SEARCH_URL = "https://api.hifleet.com/position/shipSearch"
 POSITION_GET_URL = "https://api.hifleet.com/position/position/get/token"
 
 
-def get_token():
-    return os.environ.get("HIFLEET_USER_TOKEN") or os.environ.get("HIFLEET_USERTOKEN")
+def get_api_key():
+    return os.environ.get("HIFLEET_API_KEY")
 
 
-def ship_search(shipname: str, usertoken: str, i18n: str = "zh", count: str = "50") -> dict:
+def ship_search(shipname: str, api_key: str, i18n: str = "zh", count: str = "50") -> dict:
     """按船名或 MMSI 关键字搜索船舶。"""
     params = {
         "shipname": shipname,
-        "usertoken": usertoken,
+        "api_key": api_key,
         "i18n": i18n,
         "count": count,
     }
@@ -40,9 +40,9 @@ def ship_search(shipname: str, usertoken: str, i18n: str = "zh", count: str = "5
         return json.loads(resp.read().decode())
 
 
-def get_position(mmsi: str, usertoken: str) -> dict:
+def get_position(mmsi: str, api_key: str) -> dict:
     """根据 MMSI 获取最新船位。"""
-    params = {"mmsi": mmsi, "usertoken": usertoken}
+    params = {"mmsi": mmsi, "api_key": api_key}
     url = POSITION_GET_URL + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
@@ -126,9 +126,9 @@ def print_position(data: dict) -> None:
 
 
 def main():
-    token = get_token()
-    if not token:
-        print("请先配置 HiFleet 授权 token（环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN）", file=sys.stderr)
+    api_key = get_api_key()
+    if not api_key:
+        print("请先配置 HiFleet 授权 api_key（环境变量 HIFLEET_API_KEY）", file=sys.stderr)
         sys.exit(1)
     if len(sys.argv) < 2:
         print("用法: python get_position.py <MMSI> 或 python get_position.py <船名或关键字> [MMSI]", file=sys.stderr)
@@ -141,7 +141,7 @@ def main():
     if keyword.isdigit() and len(keyword) == 9:
         mmsi = chosen_mmsi if chosen_mmsi and chosen_mmsi.isdigit() and len(chosen_mmsi) == 9 else keyword
         try:
-            data = get_position(mmsi, token)
+            data = get_position(mmsi, api_key)
         except Exception as e:
             print(f"请求失败: {e}", file=sys.stderr)
             sys.exit(1)
@@ -153,7 +153,7 @@ def main():
 
     # 关键字模式：先搜船
     try:
-        search_data = ship_search(keyword, token)
+        search_data = ship_search(keyword, api_key)
     except Exception as e:
         print(f"船舶搜索失败: {e}", file=sys.stderr)
         sys.exit(1)
@@ -201,7 +201,7 @@ def main():
                 sys.exit(1)
 
     try:
-        data = get_position(mmsi, token)
+        data = get_position(mmsi, api_key)
     except Exception as e:
         print(f"位置查询失败: {e}", file=sys.stderr)
         sys.exit(1)

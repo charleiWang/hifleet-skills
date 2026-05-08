@@ -3,7 +3,7 @@
 """
 PSC OpenClaw 统计：区间对比 / 缺陷 Top / 占比对比（旗国或 type_ins）。
 GET {BASE}/pscapi/openclaw/stats/compare|defects/top|mix/compare
-需 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN；可选 HIFLEET_API_BASE。
+需环境变量 `HIFLEET_API_KEY`；可选 `HIFLEET_API_BASE`。
 """
 from __future__ import annotations
 
@@ -16,8 +16,8 @@ import urllib.request
 from typing import Any, Dict, Optional
 
 
-def get_token() -> Optional[str]:
-    return os.environ.get("HIFLEET_USER_TOKEN") or os.environ.get("HIFLEET_USERTOKEN")
+def get_api_key() -> Optional[str]:
+    return os.environ.get("HIFLEET_API_KEY")
 
 
 def api_base() -> str:
@@ -44,9 +44,9 @@ def print_hi_error(data: dict) -> None:
 
 
 def main() -> int:
-    token = get_token()
-    if not token:
-        print("请配置 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN", file=sys.stderr)
+    api_key = get_api_key()
+    if not api_key:
+        print("请配置 HIFLEET_API_KEY", file=sys.stderr)
         return 1
 
     parser = argparse.ArgumentParser(description="PSC OpenClaw 统计 CLI")
@@ -86,7 +86,7 @@ def main() -> int:
 
     ns = parser.parse_args()
 
-    params: Dict[str, Any] = {"usertoken": token}
+    params: Dict[str, Any] = {"api_key": api_key}
     path = ""
     if ns.cmd == "compare":
         path = "/pscapi/openclaw/stats/compare"

@@ -5,7 +5,7 @@
   1) bbox：左下经度、左下纬度、右上经度、右上纬度；
   2) areaId：区域清单接口返回的 id（用户文字描述区域时可先查区域清单，用 name/cnName 匹配得到 id）；
   3) polygon：WKT 格式多边形，参数名 polygon。
-需配置环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN。
+需配置环境变量 `HIFLEET_API_KEY`。
 
 用法:
   python get_area_traffic.py <左下经度> <左下纬度> <右上经度> <右上纬度>
@@ -15,7 +15,7 @@
   python get_area_traffic.py --polygon "POLYGON((lon1 lat1,lon2 lat2,...))"
   例如: python get_area_traffic.py --polygon "POLYGON((120 15,121 15,121 17,120 17,120 15))"
 
-Security: 仅向 https://api.hifleet.com/position/gettraffic/token 发起 GET 请求；token 仅用于 API 鉴权；仅使用标准库，无 eval/exec。
+Security: 仅向 https://api.hifleet.com/position/gettraffic/token 发起 GET 请求；`api_key` 仅用于 API 鉴权；仅使用标准库，无 eval/exec。
 """
 import argparse
 import json
@@ -27,13 +27,13 @@ import urllib.request
 AREA_TRAFFIC_URL = "https://api.hifleet.com/position/gettraffic/token"
 
 
-def get_token():
-    return os.environ.get("HIFLEET_USER_TOKEN") or os.environ.get("HIFLEET_USERTOKEN")
+def get_api_key():
+    return os.environ.get("HIFLEET_API_KEY")
 
 
-def get_area_traffic(usertoken: str, bbox: str = None, area_id: int = None, polygon: str = None) -> dict:
+def get_area_traffic(api_key: str, bbox: str = None, area_id: int = None, polygon: str = None) -> dict:
     """bbox、area_id、polygon 三选一。polygon 为 WKT 格式，如 POLYGON((lon1 lat1,...))。"""
-    params = {"usertoken": usertoken}
+    params = {"api_key": api_key}
     if area_id is not None:
         params["areaId"] = area_id
     elif bbox:
@@ -55,9 +55,9 @@ def main():
     parser.add_argument("bbox", nargs="*", type=float, help="左下经度 左下纬度 右上经度 右上纬度（与 --area-id/--polygon 互斥）")
     args = parser.parse_args()
 
-    token = get_token()
-    if not token:
-        print("请先配置 HiFleet 授权 token（环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN）", file=sys.stderr)
+    api_key = get_api_key()
+    if not api_key:
+        print("请先配置 HiFleet 授权 api_key（环境变量 HIFLEET_API_KEY）", file=sys.stderr)
         sys.exit(1)
 
     modes = sum([args.area_id is not None, bool(args.polygon), len(args.bbox) == 4])
@@ -67,13 +67,13 @@ def main():
 
     if args.area_id is not None:
         try:
-            data = get_area_traffic(usertoken=token, area_id=args.area_id)
+            data = get_area_traffic(api_key=api_key, area_id=args.area_id)
         except Exception as e:
             print("请求失败: %s" % e, file=sys.stderr)
             sys.exit(1)
     elif args.polygon:
         try:
-            data = get_area_traffic(usertoken=token, polygon=args.polygon)
+            data = get_area_traffic(api_key=api_key, polygon=args.polygon)
         except Exception as e:
             print("请求失败: %s" % e, file=sys.stderr)
             sys.exit(1)
@@ -84,7 +84,7 @@ def main():
             sys.exit(1)
         bbox = "%s,%s,%s,%s" % (lon_min, lat_min, lon_max, lat_max)
         try:
-            data = get_area_traffic(usertoken=token, bbox=bbox)
+            data = get_area_traffic(api_key=api_key, bbox=bbox)
         except Exception as e:
             print("请求失败: %s" % e, file=sys.stderr)
             sys.exit(1)

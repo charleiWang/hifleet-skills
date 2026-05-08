@@ -3,15 +3,15 @@
 """
 集装箱饶航船舶每日统计。、支持查询下饶航红海的集装箱船舶。
 对于饶航饶航的方向：东是向东，西是向西。
-接口：POST http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token，参数 starttime、endtime、usertoken（可选）。
-无 usertoken 仅可查最近 1 周；有 usertoken 时间区间不限。
+接口：POST http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token，参数 starttime、endtime、api_key（可选）。
+无 `api_key` 仅可查最近 1 周；有 `api_key` 时间区间不限。
 
 用法:
   python get_avoidredsea_traffic.py  [开始日期] [结束日期] [i18n]
 
-  日期: yyyy-MM-dd，不传则默认最近 1 天。无 token 时区间不得超过 7 天；有 token 不限。i18n 可选 zh 或 en。
+  日期: yyyy-MM-dd，不传则默认最近 1 天。无 `api_key` 时区间不得超过 7 天；有 `api_key` 不限。i18n 可选 zh 或 en。
 
-Security: 仅向 http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token 发起 POST 请求；usertoken 可选，仅用于扩展时间范围；仅使用标准库，无 eval/exec。
+Security: 仅向 http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token 发起 POST 请求；`api_key` 可选，仅用于扩展时间范围；仅使用标准库，无 eval/exec。
 """
 import os
 import sys
@@ -25,15 +25,15 @@ STRAIT_TRAFFIC_URL = "http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/toke
 
 
 
-def get_token():
-    return os.environ.get("HIFLEET_USER_TOKEN") or os.environ.get("HIFLEET_USERTOKEN")
+def get_api_key():
+    return os.environ.get("HIFLEET_API_KEY")
 
 
-def get_strait_traffic(starttime: str, endtime: str, i18n: str = "zh", usertoken: str = None) -> dict:
-    """POST 请求咽喉航道通航统计。有 usertoken 时传入可查任意时间区间。"""
+def get_strait_traffic(starttime: str, endtime: str, i18n: str = "zh", api_key: str = None) -> dict:
+    """POST 请求红海绕航统计。有 api_key 时传入可查任意时间区间。"""
     params = {"starttime": starttime, "endtime": endtime, "i18n": i18n}
-    if usertoken:
-        params["usertoken"] = usertoken
+    if api_key:
+        params["api_key"] = api_key
     url = STRAIT_TRAFFIC_URL + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="POST", data=b"")
     req.add_header("Content-Type", "application/x-www-form-urlencoded")
@@ -63,10 +63,10 @@ def main():
         print("开始日期不得大于结束日期", file=sys.stderr)
         sys.exit(1)
 
-    token = get_token()
+    api_key = get_api_key()
     delta = (end_d - start_d).days
-    if delta > 6 and not token:
-        print("无 usertoken 时仅可查询最近 1 天（1 天），当前区间为 %d 天。请配置 HIFLEET_USER_TOKEN 或缩短区间。" % (delta + 1), file=sys.stderr)
+    if delta > 6 and not api_key:
+        print("无 api_key 时仅可查询最近 1 天（1 天），当前区间为 %d 天。请配置 HIFLEET_API_KEY 或缩短区间。" % (delta + 1), file=sys.stderr)
         sys.exit(1)
 
     i18n = (sys.argv[4].strip() if len(sys.argv) > 4 else "zh").lower()
@@ -77,7 +77,7 @@ def main():
     end_str = end_d.strftime("%Y-%m-%d")
 
     try:
-        data = get_strait_traffic(start_str, end_str, i18n, token)
+        data = get_strait_traffic(start_str, end_str, i18n, api_key)
     except Exception as e:
         print("请求失败: %s" % e, file=sys.stderr)
         sys.exit(1)

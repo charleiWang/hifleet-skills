@@ -3,7 +3,7 @@
 """
 港口指南：列表检索（可选港名/代码，不传则全量）与按港口 id 查详情。
 详情参数 portId 取自列表项字段 piuid。
-需环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN。
+需环境变量 `HIFLEET_API_KEY`。
 可选 HIFLEET_API_BASE（默认 https://api.hifleet.com，无末尾斜杠）。
 
 用法:
@@ -23,8 +23,8 @@ import urllib.request
 from typing import Any, Dict, Optional
 
 
-def get_token() -> Optional[str]:
-    return os.environ.get("HIFLEET_USER_TOKEN") or os.environ.get("HIFLEET_USERTOKEN")
+def get_api_key() -> Optional[str]:
+    return os.environ.get("HIFLEET_API_KEY")
 
 
 def api_base() -> str:
@@ -50,16 +50,16 @@ def main() -> None:
 
     args = p.parse_args()
 
-    token = get_token()
-    if not token:
-        print("请先配置 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN", file=sys.stderr)
+    api_key = get_api_key()
+    if not api_key:
+        print("请先配置 HIFLEET_API_KEY", file=sys.stderr)
         sys.exit(1)
 
     base = api_base()
 
     try:
         if args.cmd == "search":
-            params: Dict[str, str] = {"usertoken": token}
+            params: Dict[str, str] = {"api_key": api_key}
             if args.port_name:
                 params["portName"] = args.port_name
             if args.port_code:
@@ -71,7 +71,7 @@ def main() -> None:
             if not pid.isdigit():
                 print("portId 应为整数（列表项 piuid）", file=sys.stderr)
                 sys.exit(1)
-            params = {"usertoken": token, "portId": pid}
+            params = {"api_key": api_key, "portId": pid}
             url = base + "/portguide/getPortDetail/token?" + urllib.parse.urlencode(params)
             data = http_get(url)
     except Exception as e:

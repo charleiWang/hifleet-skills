@@ -25,7 +25,7 @@
 | 中文 | 英文 |
 |------|------|
 | 名称 | 红海/波斯湾海峡通航 / Strait Traffic |
-| 描述 | 咽喉航道通航船舶统计：曼德、苏伊士、好望角、霍尔木兹；POST 接口；无 token 限最近 1 周，有 token 时间不限。 |
+| 描述 | 咽喉航道通航船舶统计：曼德、苏伊士、好望角、霍尔木兹；POST 接口；无 `api_key` 限最近 1 周，有 `api_key` 时间不限。 |
 | 触发词 | 红海、波斯湾、海峡通航、曼德、苏伊士、好望角、霍尔木兹 / Red Sea, Persian Gulf, strait traffic, Suez, Cape of Good Hope, Hormuz |
 
 ## 4. 区域船舶 / Area Traffic ✅
@@ -33,7 +33,7 @@
 | 中文 | 英文 |
 |------|------|
 | 名称 | 区域船舶 / Area Traffic |
-| 描述 | 查询指定区域内的当前船舶列表，需 token；支持 bbox（左下/右上经纬度）、areaId（区域清单 id）或 polygon（WKT 多边形）。用户仅文字描述区域时可先查区域清单（海区/贸易区），按 name/cnName 匹配得到 id 再查询。 |
+| 描述 | 查询指定区域内的当前船舶列表，需 `api_key`；支持 bbox（左下/右上经纬度）、areaId（区域清单 id）或 polygon（WKT 多边形）。用户仅文字描述区域时可先查区域清单（海区/贸易区），按 name/cnName 匹配得到 id 再查询。 |
 | 触发词 | 区域船舶、范围内船舶、区域船位、某区域有多少船、红海船舶、北太平洋船位 / area traffic, vessels in area, ships in region |
 
 ## 5. PSC 检查 / PSC Inspection ✅
@@ -41,10 +41,10 @@
 | 中文 | 英文 |
 |------|------|
 | 名称 | PSC 检查 / PSC Inspection（港口国监督） |
-| 描述 | **(a) 单船**：按 IMO 查询船舶 PSC 检查记录；船名需先搜船取 IMO。需 token。**(b) 统计异常**：`psc_anomaly_event`，见 [psc_anomaly_api.md](psc_anomaly_api.md)。**(c) 宏观统计**：区间对比/缺陷 Top/占比对比（监管趋势、旗国港口风险、缺陷热点、针对性占比），见 [psc_openclaw_stats_api.md](psc_openclaw_stats_api.md)。 |
+| 描述 | **(a) 单船**：按 IMO 查询船舶 PSC 检查记录；船名需先搜船取 IMO。需 `api_key`。**(b) 统计异常**：`psc_anomaly_event`，见 [psc_anomaly_api.md](psc_anomaly_api.md)。**(c) 宏观统计**：区间对比/缺陷 Top/占比对比（监管趋势、旗国港口风险、缺陷热点、针对性占比），见 [psc_openclaw_stats_api.md](psc_openclaw_stats_api.md)。 |
 | 触发词 | **单船**：PSC、港口国监督、港口国检查、滞留、缺陷、检查记录 / port state control, PSC inspection, detention, deficiency, inspection record。**统计异常**：PSC 异常、统计异常、滞留率飙升、缺陷异常、PSC 风险、严重度 HIGH、PSC anomaly、detention spike、deficiency spike、PSC statistics |
 
-**统计异常子能力（均需 usertoken）**
+**统计异常子能力（均需 `api_key`）**
 
 | 子能力 | 说明 |
 |--------|------|
@@ -67,7 +67,7 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 港口指南 / Port guide |
-| 描述 | **列表**：`GET portguide/getPort/token`，可选 `portName`、`portCode`（传一即可筛选，不传则全部港口）。**详情**：`GET portguide/getPortDetail/token`，`portId` 取列表项 **`piuid`**。需 usertoken；可选 `HIFLEET_API_BASE`。 |
+| 描述 | **列表**：`GET portguide/getPort/token`，可选 `portName`、`portCode`（传一即可筛选，不传则全部港口）。**详情**：`GET portguide/getPortDetail/token`，`portId` 取列表项 **`piuid`**。需 `api_key`；可选 `HIFLEET_API_BASE`。 |
 | 触发词 | 港口、港名、港口代码、泊位、锚地、港口信息、UN/LOCODE / port, port name, port code, berth, anchorage, port info, UN/LOCODE |
 
 **API**：[port_api.md](port_api.md)。**脚本**：`scripts/get_port.py search [--port-name] [--port-code]`、`scripts/get_port.py detail <portId>`（portId 为列表中的 piuid）。

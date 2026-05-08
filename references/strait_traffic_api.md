@@ -24,8 +24,7 @@
 | startdate | 2024-01-17 | 是 | string | 开始日期，格式 yyyy-MM-dd |
 | enddate | 2024-01-17 | 是 | string | 结束日期，格式 yyyy-MM-dd |
 | i18n | en | 否 | string | 输出语言，zh 或 en，默认 zh |
-| usertoken | (从配置读取) | 否 | string | 授权 token；**无 usertoken 仅可查最近 1 周**，有 usertoken 时间区间不限 |
-| usertoken | (从配置读取) | 否 | string | 授权 token；**无 token 仅可查最近 1 周**，有 token 时间区间不限 |
+| api_key | (从配置读取) | 否 | string | 接口授权 `api_key`；**无 `api_key` 仅可查最近 1 周**，有 `api_key` 时间区间不限 |
 
 ## 支持的海峡（oid）
 
@@ -51,12 +50,12 @@
 
 ## 鉴权与时间范围
 
-- **无 usertoken**：仅可查询**最近 1 周**内的时间区间；超出则接口可能报错或需鉴权。
-- **有 usertoken**：时间区间不限，可查任意起止时间。
+- **无 `api_key`**：仅可查询**最近 1 周**内的时间区间；超出则接口可能报错或需鉴权。
+- **有 `api_key`**：时间区间不限，可查任意起止时间。
 
 ## 调用流程
 
 1. 确定海峡：用户指定海峡名称或 oid，映射到上表 oid。
-2. 确定时间区间：startdate、enddate，格式 yyyy-MM-dd。**无 token 时**校验区间 ≤ 7 天。
-3. **POST** 请求：`.../position/statisticzonetraffic?oid={oid}&startdate={startdate}&enddate={enddate}&i18n={zh|en}[&usertoken=...]`，有 token 时传入 usertoken。
+2. 确定时间区间：startdate、enddate，格式 yyyy-MM-dd。**无 `api_key` 时**校验区间 ≤ 7 天。
+3. **POST** 请求：`.../position/statisticzonetraffic?oid={oid}&startdate={startdate}&enddate={enddate}&i18n={zh|en}[&api_key=...]`，有 `api_key` 时传入 `api_key`。
 4. 解析响应：zonename、passdata 下按 passdate / passdirection 展示通航方向、船型统计、总艘次及船舶列表。

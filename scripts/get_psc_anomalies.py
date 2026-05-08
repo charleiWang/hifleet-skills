@@ -3,7 +3,7 @@
 """
 PSC 统计异常事件：列表 / 严重度汇总 / 按 ID 详情。
 接口：GET {BASE}/pscapi/openclaw/anomalies、.../summary、.../anomalies/{id}
-需环境变量 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN。
+需环境变量 `HIFLEET_API_KEY`。
 可选 HIFLEET_API_BASE（默认 https://api.hifleet.com，无末尾斜杠）。
 
 用法:
@@ -25,8 +25,8 @@ import urllib.request
 from typing import Any, Dict, Optional
 
 
-def get_token() -> Optional[str]:
-    return os.environ.get("HIFLEET_USER_TOKEN") or os.environ.get("HIFLEET_USERTOKEN")
+def get_api_key() -> Optional[str]:
+    return os.environ.get("HIFLEET_API_KEY")
 
 
 def api_base() -> str:
@@ -90,8 +90,8 @@ def build_filter_params(ns: argparse.Namespace) -> Dict[str, str]:
     return out
 
 
-def run_list(ns: argparse.Namespace, token: str) -> int:
-    params: Dict[str, Any] = {"usertoken": token, "page": str(ns.page), "pageSize": str(ns.page_size)}
+def run_list(ns: argparse.Namespace, api_key: str) -> int:
+    params: Dict[str, Any] = {"api_key": api_key, "page": str(ns.page), "pageSize": str(ns.page_size)}
     params.update(build_filter_params(ns))
     url = api_base() + "/pscapi/openclaw/anomalies?" + urllib.parse.urlencode(params)
     try:
@@ -107,8 +107,8 @@ def run_list(ns: argparse.Namespace, token: str) -> int:
     return 0
 
 
-def run_summary(ns: argparse.Namespace, token: str) -> int:
-    params: Dict[str, Any] = {"usertoken": token}
+def run_summary(ns: argparse.Namespace, api_key: str) -> int:
+    params: Dict[str, Any] = {"api_key": api_key}
     params.update(build_filter_params(ns))
     url = api_base() + "/pscapi/openclaw/anomalies/summary?" + urllib.parse.urlencode(params)
     try:
@@ -124,8 +124,8 @@ def run_summary(ns: argparse.Namespace, token: str) -> int:
     return 0
 
 
-def run_get(aid: int, token: str) -> int:
-    params = {"usertoken": token}
+def run_get(aid: int, api_key: str) -> int:
+    params = {"api_key": api_key}
     url = (
         api_base()
         + "/pscapi/openclaw/anomalies/"
@@ -147,10 +147,10 @@ def run_get(aid: int, token: str) -> int:
 
 
 def main() -> int:
-    token = get_token()
-    if not token:
+    api_key = get_api_key()
+    if not api_key:
         print(
-            "请配置 HIFLEET_USER_TOKEN 或 HIFLEET_USERTOKEN",
+            "请配置 HIFLEET_API_KEY",
             file=sys.stderr,
         )
         return 1
@@ -162,15 +162,15 @@ def main() -> int:
     add_common_filters(p_list)
     p_list.add_argument("--page", type=int, default=1)
     p_list.add_argument("--page-size", dest="page_size", type=int, default=20)
-    p_list.set_defaults(func=lambda ns: run_list(ns, token))
+    p_list.set_defaults(func=lambda ns: run_list(ns, api_key))
 
     p_sum = sub.add_parser("summary", help="按 severity 汇总")
     add_common_filters(p_sum)
-    p_sum.set_defaults(func=lambda ns: run_summary(ns, token))
+    p_sum.set_defaults(func=lambda ns: run_summary(ns, api_key))
 
     p_get = sub.add_parser("get", help="按 ID 详情")
     p_get.add_argument("id", type=int)
-    p_get.set_defaults(func=lambda ns: run_get(ns.id, token))
+    p_get.set_defaults(func=lambda ns: run_get(ns.id, api_key))
 
     ns = parser.parse_args()
     return int(ns.func(ns))

@@ -1,6 +1,6 @@
 # 船位 API / Position API
 
-获取（岸基+卫星+移动）船舶最新位置信息。**需配置 usertoken。**
+获取（岸基+卫星+移动）船舶最新位置信息。**需配置 `api_key`。**
 
 船位查询建议分两步：先用 **船舶搜索** 按关键字得到船舶列表（及 MMSI），再根据 MMSI 用 **位置查询** 获取最新船位。
 
@@ -22,7 +22,7 @@
 | 参数名 | 示例值 | 必选 | 类型 | 说明 |
 |--------|--------|------|------|------|
 | shipname | yu feng | 是 | string | 船名或 MMSI（关键字） |
-| usertoken | (从配置读取) | 是 | string | 授权 token |
+| api_key | (从配置读取) | 是 | string | 接口授权 `api_key` |
 | i18n | zh | 是 | string | 中英文：zh 中文，en 英文，默认 zh |
 | count | 50 | 是 | string | 返回条数，默认 50 |
 
@@ -85,7 +85,7 @@
 | 参数名 | 示例值 | 必选 | 类型 | 说明 |
 |--------|--------|------|------|------|
 | mmsi | 413829443 | 是 | string | MMSI 号码 |
-| usertoken | (从配置读取) | 是 | string | 授权 token |
+| api_key | (从配置读取) | 是 | string | 接口授权 `api_key` |
 
 ## 成功响应示例
 
@@ -158,13 +158,13 @@
 
 ## 船位查询整体流程（推荐）
 
-1. **检查 token**；无则提示并终止。
-2. **第一步 - 船舶搜索**：用用户输入的关键字（船名或 MMSI）调用 `GET .../position/shipSearch?shipname={keyword}&usertoken={usertoken}&i18n=zh&count=50`。
+1. **检查 `api_key`**；无则提示并终止。
+2. **第一步 - 船舶搜索**：用用户输入的关键字（船名或 MMSI）调用 `GET .../position/shipSearch?shipname={keyword}&api_key={api_key}&i18n=zh&count=50`。
 3. **根据命中数量**：
    - **0 条**：提示未找到船舶，请检查关键字。
    - **1 条**：取该条的 `mmsi`，直接进入第二步查位置。
    - **多条**：若能从上下文或结果明显推断用户要的船（例如关键字是完整 MMSI 或唯一匹配船名），则取对应 MMSI 查位置；否则列出 `name / mmsi / type / dn` 等，请用户选择具体 MMSI，再根据用户选择的 MMSI 查位置。
-4. **第二步 - 位置查询**：校验 mmsi（9 位数字），请求 `GET .../position/position/get/token?mmsi={mmsi}&usertoken={usertoken}`；若 `result === "ok"` 解析 list，否则按错误处理。
+4. **第二步 - 位置查询**：校验 mmsi（9 位数字），请求 `GET .../position/position/get/token?mmsi={mmsi}&api_key={api_key}`；若 `result === "ok"` 解析 list，否则按错误处理。
 5. **展示**：船名、MMSI、最后更新时间、经纬度（度）、航速、航向、目的港、状态。
 
 若用户**已提供 9 位数字 MMSI**，可省略第一步，直接执行第二步。

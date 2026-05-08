@@ -13,8 +13,8 @@
 
 | 参数名 | 示例值 | 必选 | 类型 | 说明 |
 |--------|--------|------|------|------|
-| usertoken | (从配置读取) | 否 | string | 授权 token；传了之后 includeBound 才生效 |
-| includeBound | false | 否 | string | 是否返回边界 WKT，仅 usertoken 有效时生效，默认 false |
+| api_key | (从配置读取) | 否 | string | 接口授权 `api_key`；传了之后 `includeBound` 才生效 |
+| includeBound | false | 否 | string | 是否返回边界 WKT，仅 `api_key` 有效时生效，默认 false |
 
 ## 成功响应
 
@@ -41,4 +41,4 @@
 
 ## 脚本
 
-`scripts/get_areas.py`：无参数时返回区域列表；`--include-bound` 时返回边界 WKT（需配置 usertoken）。
+`scripts/get_areas.py`：无参数时返回区域列表；`--include-bound` 时返回边界 WKT（需配置 `api_key`）。

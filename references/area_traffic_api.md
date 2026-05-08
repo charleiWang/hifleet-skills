@@ -1,6 +1,6 @@
 # 区域船舶 API / Area Traffic API
 
-查询指定区域内的当前船舶列表。**需配置 usertoken。**
+查询指定区域内的当前船舶列表。**需配置 `api_key`。**
 
 ## 请求
 
@@ -13,7 +13,7 @@
 
 | 参数名 | 示例值 | 必选 | 类型 | 说明 |
 |--------|--------|------|------|------|
-| usertoken | (从配置读取) | 是 | string | 授权 token |
+| api_key | (从配置读取) | 是 | string | 接口授权 `api_key` |
 | bbox | 120,15,121,17 | 否 | string | 矩形区域：左下角经度、左下角纬度、右上角经度、右上角纬度（逗号分隔） |
 | areaId | 52 | 否 | number | 区域 id，来自 [区域清单接口](areas_api.md) 返回的 list[].id |
 | polygon | POLYGON((...)) | 否 | string | WKT 格式多边形，如 POLYGON((lon1 lat1,lon2 lat2,...)) |
@@ -56,10 +56,10 @@
 
 ## 调用流程
 
-1. 检查 token；无则提示并终止。
+1. 检查 `api_key`；无则提示并终止。
 2. 确定区域：
    - **用户提供矩形坐标**：西/南/东/北 或 左下经度、左下纬度、右上经度、右上纬度 → 请求带 `bbox=...`。
    - **用户仅文字描述区域**（如「红海」「北太平洋」「马六甲海峡」）：先调用 [区域清单接口](areas_api.md)（`position/areas/token`），用返回的 `name`/`cnName` 匹配用户描述，取匹配项的 `id`，请求带 `areaId={id}`。
    - **用户提供 WKT 多边形**：请求带 `polygon=...`（如 `POLYGON((lon1 lat1,lon2 lat2,...))`）。
-3. 请求：`GET .../position/gettraffic/token?usertoken={usertoken}&bbox=...` 或 `&areaId=...` 或 `&polygon=...`（三选一）。
+3. 请求：`GET .../position/gettraffic/token?api_key={api_key}&bbox=...` 或 `&areaId=...` 或 `&polygon=...`（三选一）。
 4. 若 `result === "ok"` 解析 list，按需展示船名、MMSI、经纬度、航速、状态、目的港等。

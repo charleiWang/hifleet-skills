@@ -1,6 +1,6 @@
 # PSC 统计异常 API / PSC statistical anomaly API
 
-查询 **PSC 日批统计异常事件**（表 `psc_anomaly_event`），与「按 IMO 查单船检查记录」的 [psc_api.md](psc_api.md) 互补。**均需**在 Query 中传 `usertoken`（与 `pscapi/get` 相同，技能脚本从 `HIFLEET_USER_TOKEN` / `HIFLEET_USERTOKEN` 读取）。若网关已对路径统一鉴权、应用层暂不解析该参数，多余参数通常可忽略；与 `pscapi/get` 对齐便于同一 token 策略。
+查询 **PSC 日批统计异常事件**（表 `psc_anomaly_event`），与「按 IMO 查单船检查记录」的 [psc_api.md](psc_api.md) 互补。**均需**在 Query 中传 `api_key`（与 `pscapi/get` 相同，技能脚本从 `HIFLEET_API_KEY` 读取）。若网关已对路径统一鉴权、应用层暂不解析该参数，多余参数通常可忽略；与 `pscapi/get` 对齐便于同一 `api_key` 策略。
 
 **多表字段语义（`authority` = 检查国、`ship_type`/`shipType` = 检查类型）**：见 **[psc_stats_field_semantics.md](psc_stats_field_semantics.md)**，OpenClaw 解读异常或向用户解释维度时应优先遵循该文档。
 
@@ -16,7 +16,7 @@
 | msg | 如 `SUCCESS` |
 | data | 业务载荷：列表接口为 `{ total, page, pageSize, list }`；详情为单条对象；summary 为数组 `[{ severity, cnt }, ...]` |
 
-若返回顶层 `code` 为 **4004/4005/4001** 等，含义与 [psc_api.md](psc_api.md) 中 token/权限说明类似（以服务端为准）。
+若返回顶层 `code` 为 **4004/4005/4001** 等，含义与 [psc_api.md](psc_api.md) 中 `api_key` / 权限说明类似（以服务端为准）。
 
 ---
 
@@ -38,7 +38,7 @@
 
 | 参数 | 必选 | 说明 |
 |------|------|------|
-| usertoken | 是 | 授权 token |
+| api_key | 是 | 接口授权 `api_key` |
 | dateFrom | 否 | `yyyy-MM-dd`；与 `dateTo` 都省略时服务端默认最近约 30 天 |
 | dateTo | 否 | `yyyy-MM-dd` |
 | authority | 否 | 检查当局，精确匹配 |
@@ -71,7 +71,7 @@
 
 ### Query 参数
 
-与列表相同筛选：`usertoken` 必填；`dateFrom`、`dateTo`、`authority`、`authorityContains`、`flag`、`flagContains`、`port`、`severity`、`anomalyType`、`sliceType`、`metric`、`status` 可选（日期默认逻辑同列表）。
+与列表相同筛选：`api_key` 必填；`dateFrom`、`dateTo`、`authority`、`authorityContains`、`flag`、`flagContains`、`port`、`severity`、`anomalyType`、`sliceType`、`metric`、`status` 可选（日期默认逻辑同列表）。
 
 ### data 结构
 
@@ -90,7 +90,7 @@
 
 | 参数 | 必选 |
 |------|------|
-| usertoken | 是 |
+| api_key | 是 |
 
 路径 `{id}` 为事件主键（数字）。
 
@@ -144,4 +144,4 @@
 
 ## 脚本
 
-`scripts/get_psc_anomalies.py`：`list` / `summary` / get `<id>`，从环境变量读 token 与可选 `HIFLEET_API_BASE`。
+`scripts/get_psc_anomalies.py`：`list` / `summary` / get `<id>`，从环境变量读取 `api_key` 与可选 `HIFLEET_API_BASE`。
