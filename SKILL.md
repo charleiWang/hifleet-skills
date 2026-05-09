@@ -1,7 +1,7 @@
 ---
 name: hifleet-skills
 description: >-
-  船位、档案、PSC检查、PSC统计异常、PSC宏观统计(openclaw/stats/compare缺陷占比mix)、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。PSC 异常表为空或极少时不得断言无风险；宏观数字用 openclaw/stats/*；单船用 pscapi/get。authority=检查国、type_ins=检查类型非船型 — psc_stats_field_semantics.md。Use when user asks for vessel position (船位), ship info, PSC inspection, PSC trends (which country stricter, flag risk, port risk, defect hotspots, targeting share), PSC anomalies, area traffic, strait traffic, port, voyage, route, charter, shipping, weather, fleet, or AIS.
+  船位、档案、PSC检查、PSC统计异常、PSC宏观统计、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, PSC inspection, PSC trends (which country stricter, flag risk, port risk, defect hotspots, targeting share), PSC anomalies, area traffic, strait traffic, port, voyage, route, charter, shipping, weather, fleet, or AIS.
 version: 0.2.0
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
