@@ -4,7 +4,7 @@
 
 - **发布方**：**HiFleet（航运公司）**将本 Skill 提供给市场；用户在自己的 **OpenClaw** 环境中**本地安装**本 Skill（随附 `SKILL.md`、分册 `WORKFLOW_*.md`、`SCHEDULE_API.md`、`PARSE_SCHEMA.md`、脚本等均在用户机器上的技能目录内）。  
 - **路由 A（邮件船货盘）**：处理的是用户**本人邮箱**中的内容；向量库、SQLite 等主要在**用户本机**侧，与公司船期库分离。解析落库后通过 **`CHARTER_ENRICH_API.md`** 用 `ttseapi` 补充船舶档案、`portid` 及按港距排序查询。  
-- **路由 B（船期等）**：**业务数据在 HiFleet `ttseapi` 网关**；助手通过 **HTTPS** 调用港口联想、**`POST /schedules`**、**`/unlock`**（详见 **`SCHEDULE_API.md`**）。用户须在 **`config.json`**（或环境变量）中配置 **`hifleet_api_key`**，用于绑定网站账号与按次扣费；可选覆盖 **`hifleet_liner_api_base`** 用于私有化/联调。
+- **路由 B（船期等）**：**业务数据在 HiFleet `api` 网关**；助手通过 **HTTPS** 调用港口联想、**`POST /schedules`**、**`/unlock`**（详见 **`SCHEDULE_API.md`**）。用户须在 **`config.json`**（或环境变量）中配置 **`hifleet_api_key`**，用于绑定网站账号与按次扣费；可选覆盖 **`hifleet_liner_api_base`** 用于私有化/联调。
 
 ---
 
