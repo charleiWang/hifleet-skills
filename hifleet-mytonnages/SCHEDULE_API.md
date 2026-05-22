@@ -6,7 +6,7 @@
 
 ## 分发模式
 
-1. 船期数据由 **HiFleet `ttseapi.hifleet.com`** 提供；触发路由 B 时由助手在环境中发 **HTTPS** 请求，**不得**用邮件检索、SQLite 或臆造数据代替。  
+1. 船期数据由 **HiFleet `api.hifleet.com`** 提供；触发路由 B 时由助手在环境中发 **HTTPS** 请求，**不得**用邮件检索、SQLite 或臆造数据代替。  
 2. 用户在 **HiFleet 网站**申请密钥，与网站账号绑定、**按次计费**；本地存为 `hifleet_api_key` / `HIFLEET_API_KEY`；在请求里以 **`api_key`（query/header）** 或船期列表的 **`sk`（query）** 传递**同一串**，**勿在对话中完整暴露**。
 
 ---
@@ -15,7 +15,7 @@
 
 | 含义 | 默认值 |
 |------|--------|
-| 班轮 API 根（无末尾 `/`） | `https://ttseapi.hifleet.com/openclaw/vessel/charter/liner` |
+| 班轮 API 根（无末尾 `/`） | `https://api.hifleet.com/openclaw/vessel/charter/liner` |
 
 **根路径**：`hifleet_liner_api_base`（config）→ `HIFLEET_LINER_API_BASE`（环境）→ 上表。  
 **用户密钥字符串**：`hifleet_api_key`（config）→ `HIFLEET_API_KEY`（环境）。各接口在 HTTP 里以 **`api_key`（query/header）** 或 **`sk`（仅船期列表，见下）** 使用同一串，勿混为两个不同值。
