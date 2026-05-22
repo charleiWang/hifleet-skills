@@ -6,7 +6,7 @@
 
 ## 分发模式
 
-1. 船舶档案、港口 ID、港间距离由 **HiFleet `ttseapi.hifleet.com`** 提供；助手在环境中发 **HTTPS** 请求，**不得**臆造 IMO 档案字段或 `portid`。  
+1. 船舶档案、港口 ID、港间距离由 **HiFleet `api.hifleet.com`** 提供；助手在环境中发 **HTTPS** 请求，**不得**臆造 IMO 档案字段或 `portid`。  
 2. 密钥与路由 B 相同：`hifleet_api_key`（`config.json`）或 `HIFLEET_API_KEY`（环境变量）；各接口 Query 参数 **`api_key`** = 该串，**勿在对话中完整暴露**。  
 3. **写入顺序（硬性）**：邮件 **2.4** 解析 → **2.4.1** `charter_facts_tool.py save` 落库 → **2.4.2** 按本文批量富化并 **UPDATE** 同行 → 之后 **2.3 / 2.5** 检索与筛选。未富化行可展示邮件字段，但**距离排序查询**须先完成 **§3** 所需 `portid` 富化。
 
@@ -16,7 +16,7 @@
 
 | 含义 | 默认值 |
 |------|--------|
-| 租船/船货盘 API 根（无末尾 `/`） | `https://ttseapi.hifleet.com/openclaw/vessel/charter` |
+| 租船/船货盘 API 根（无末尾 `/`） | `https://api.hifleet.com/openclaw/vessel/charter` |
 
 **根路径**：`hifleet_charter_api_base`（config）→ `HIFLEET_CHARTER_API_BASE`（环境）→ 上表。  
 无有效 **`hifleet_api_key`** 时：**不得**调本文接口；可仅基于邮件解析字段回答，并提示用户配置 Key（见 `CONFIG.example.md`）。
