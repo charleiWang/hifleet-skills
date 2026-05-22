@@ -1,7 +1,7 @@
 ---
 name: hifleet-skills
 description: >-
-  船位、档案、PSC检查、PSC统计异常、PSC宏观统计、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、租船、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, PSC inspection, PSC trends (which country stricter, flag risk, port risk, defect hotspots, targeting share), PSC anomalies, area traffic, strait traffic, port, voyage, route, charter, shipping, weather, fleet, or AIS.
+  船位、档案、PSC检查、PSC统计异常、PSC宏观统计、区域船舶、红海波斯湾海峡通航、港口、性能、航程、航线、航运、气象海况、船队、AIS。Use when user asks for vessel position (船位), ship info, PSC inspection, PSC trends (which country stricter, flag risk, port risk, defect hotspots, targeting share), PSC anomalies, area traffic, strait traffic, port, voyage, route, shipping, weather, fleet, or AIS.
 version: 0.2.0
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
@@ -19,14 +19,13 @@ source: https://api.hifleet.com
 |------|------|------|
 | 船位 Ship Position | ✅ 已实现 | 获取最新船舶位置 |
 | 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
-| 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹），POST；无 `api_key` 限最近 1 周，有 `api_key` 不限 |
-| 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT），需 `api_key` |
+| 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹） |
+| 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT） |
 | PSC 检查 PSC Inspection | ✅ 已实现 | 按 IMO 查 PSC；船名/MMSI 先 shipSearch。**含**：统计异常 `openclaw/anomalies*`；**宏观统计** `openclaw/stats/compare|defects/top|mix/compare`（监管/旗国/港口/缺陷/占比，见下） |
 | 港口 Port guide | ✅ 已实现 | 港口列表/检索（港名或代码）、单港详情（`piuid`→`portId`）；`portguide/getPort/token`、`portguide/getPortDetail/token` |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
 | 航线 Route | 待实现 | 推荐航线、航路点 |
-| 租船 Charter | 待实现 | 租约、租家、租金 |
 | 航运 Shipping | 待实现 | 运价、市场、新闻 |
 | 气象海况 Weather | 待实现 | 风浪、台风、能见度 |
 | 船队 Fleet | 待实现 | 多船监控、船队报表 |
@@ -114,7 +113,7 @@ source: https://api.hifleet.com
 
 **调用流程**：检查 `api_key` → 若用户已给 **IMO**：GET `pscapi/get?imo={imo}&api_key=...` → 解析并展示（脚本对常见 `status`+`data` / `list` 结构做分条输出，否则整段 JSON）。若用户给 **船名或 MMSI 关键字**：与船位相同的搜船规则（0/1/多条、多条时让用户选 MMSI）→ 取选定船的 `imonumber`；若为空则提示无 IMO、无法查 PSC → 有 IMO 再调 `pscapi/get`。
 
-### 港口指南 / Port guide
+### 进港指南 / Port guide
 
 港口列表检索与单港详细信息。两步：**列表**可选 `portName`（港口名称）、`portCode`（港口代码），传其一即可筛选，**均不传返回全部港口**（数据可能很大，宜带条件）；**详情**用列表项中的 **`piuid`** 作为 Query 参数 **`portId`**（整数）调用详情接口。
 
