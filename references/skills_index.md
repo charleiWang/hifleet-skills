@@ -41,8 +41,8 @@
 | 中文 | 英文 |
 |------|------|
 | 名称 | PSC 检查 / PSC Inspection（港口国监督） |
-| 描述 | **(a) 单船**：按 IMO 查询船舶 PSC 检查记录；船名需先搜船取 IMO。需 `api_key`。**(b) 统计异常**：`psc_anomaly_event`，见 [psc_anomaly_api.md](psc_anomaly_api.md)。**(c) 宏观统计**：区间对比/缺陷 Top/占比对比（监管趋势、旗国港口风险、缺陷热点、针对性占比），见 [psc_openclaw_stats_api.md](psc_openclaw_stats_api.md)。 |
-| 触发词 | **单船**：PSC、港口国监督、港口国检查、滞留、缺陷、检查记录 / port state control, PSC inspection, detention, deficiency, inspection record。**统计异常**：PSC 异常、统计异常、滞留率飙升、缺陷异常、PSC 风险、严重度 HIGH、PSC anomaly、detention spike、deficiency spike、PSC statistics |
+| 描述 | 顺序：**单船 PSC**（按 IMO，船名需先搜船取 IMO）→ **统计异常**（`psc_anomaly_event`，见 [psc_anomaly_api.md](psc_anomaly_api.md)）→ **宏观统计**（区间对比/缺陷 Top/占比对比，见 [psc_openclaw_stats_api.md](psc_openclaw_stats_api.md)）。均需 `api_key`。 |
+| 触发词 | **单船**：PSC、港口国监督、港口国检查、滞留、缺陷、检查记录 / port state control, PSC inspection, detention, deficiency, inspection record。**统计异常/宏观统计**：PSC 异常、统计异常、滞留率飙升、缺陷异常、哪国变严、旗国风险、港口风险、缺陷热点、PSC anomaly、detention spike、deficiency spike, PSC statistics |
 
 **统计异常子能力（均需 `api_key`）**
 
@@ -96,13 +96,15 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 描述 | 推荐航线、航路点、距离与航时、历史航线对比。 |
 | 触发词 | 航线、航路、推荐航线、距离、航时、航路点 / route, shipping route, recommended route, distance, sailing time, waypoint |
 
-## 10. 租船 / Charter
+## 10. 租船 / Charter ✅
 
 | 中文 | 英文 |
 |------|------|
 | 名称 | 租船 / Charter |
-| 描述 | 租约、租家、租金、租期、合同条款及租船市场。 |
-| 触发词 | 租船、租约、租家、租金、租期、合同 / charter, charter party, charterer, hire, period, contract |
+| 描述 | 独立技能 `hifleet-mytonnages`：船盘/货盘邮件检索解析、按港口距离排序，以及 HiFleet 服务端船期查询。邮件查询需配置邮箱与记忆；档案富化、港口 ID、距离排序和船期接口需 `hifleet_api_key` 或 `HIFLEET_API_KEY`。 |
+| 触发词 | 租船、船盘、货盘、船期、租约、租家、租金、租期、合同、班轮船期 / charter, open vessel, cargo, schedule, charter party, charterer, hire, period, contract, line |
+
+**路由**：用户明确说“邮件里”“最近船盘/货盘”“帮我查邮箱”时走邮件船货盘流程；用户询问班轮、航线时刻、schedule、line 或装卸港船期时走 HiFleet 服务端船期接口。
 
 ## 11. 航运 / Shipping
 
@@ -138,4 +140,4 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 
 ---
 
-建议实现顺序：船位 → AIS → 档案 → PSC → **港口指南（已实现）** → 航程 → 航线 → 性能 → 气象海况 → 船队 → 租船 → 航运。
+建议实现顺序：船位 → AIS → 档案 → PSC → 港口指南 → 租船 → 航程 → 航线 → 性能 → 气象海况 → 船队 → 航运。
