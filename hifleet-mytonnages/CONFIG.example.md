@@ -5,8 +5,8 @@
 ```json
 {
   "hifleet_api_key": "在 HiFleet 网站获取的 API Key（与账号绑定、按次计费）",
-  "hifleet_liner_api_base": "https://ttseapi.hifleet.com/openclaw/vessel/charter/liner",
-  "hifleet_charter_api_base": "https://ttseapi.hifleet.com/openclaw/vessel/charter"
+  "hifleet_liner_api_base": "https://api.hifleet.com/openclaw/vessel/charter/liner",
+  "hifleet_charter_api_base": "https://api.hifleet.com/openclaw/vessel/charter"
 }
 ```
 
