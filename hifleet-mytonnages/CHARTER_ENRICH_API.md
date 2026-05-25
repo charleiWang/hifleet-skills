@@ -123,4 +123,4 @@
 - **富化回写**：`python scripts/charter_facts_tool.py enrich [--db …]`（拉取 §1、§2 并 UPDATE；须已配置 `hifleet_api_key`）。  
 - **按港距排序查询**：`python scripts/charter_facts_tool.py query-by-port --port "Singapore" [--db …] [--limit 50]`（内部 §2 + §3；输出 JSON 已按 `dist` 排序）。
 
-OpenClaw 环境以允许的方式调用；**勿**要求零基础用户自行拼 curl。
+当前宿主环境以允许的方式调用；**勿**要求零基础用户自行拼 curl。

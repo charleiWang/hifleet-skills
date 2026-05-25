@@ -2,7 +2,7 @@
 name: hifleet-mytonnages
 version: 1.0.0
 description: >
-  HiFleet 本地 OpenClaw Skill：路由A=本人邮箱船货盘（memory/SQLite）；路由B=ttseapi 班轮船期（须 hifleet_api_key）。勿伪造数据。执行前须 read_file 分册（见 SKILL 内「必读分册」）。
+  hifleet-skills 内置租船模块：路由A=本人邮箱船货盘（memory/SQLite）；路由B=ttseapi 班轮船期（须 hifleet_api_key）。勿伪造数据。执行前须 read_file 分册（见 SKILL 内「必读分册」）。
 metadata:
   openclaw:
     homepage: https://mytonnages.hifleet.com
@@ -27,7 +27,7 @@ metadata:
 1. **（强制）能力路由**：先阅读 **`ROUTING_AND_WHEN.md`**。若当前请求（或其中一部分）属于 **路由 B**，则对该部分仅执行 **Workflow 3**，**不得**用 **Workflow 2** 的邮件同步与解析替代。若属于 **路由 A**，则邮件相关步骤仍按下列第 3～5 步及 **Workflow 2** 全文执行（**2.1～2.7 内部逻辑不变**）。若两类并存，分别执行两套路由。  
 2. **若本次请求不含路由 A（仅有路由 B）**：仅执行 **Workflow 3**（含其中 **API Key 检查**），**跳过**下列第 3～5 步。**若含路由 A**：依次执行第 3～5 步；若同轮还含路由 B，路由 B 部分仍完整执行 **Workflow 3**。  
 3. **若尚未完成「首次启用记忆：memory-lancedb-pro」且用户将要使用邮件向量检索**：先按 **`MEMORY_LANCEDB.md`** 完成知情同意与安装（或用户明确选择不启用并接受后果）。  
-4. **检查邮箱配置**：配置文件路径 `~/.openclaw/workspace/skills/hifleet-mytonnages/config.json`（或当前 OpenClaw 实际路径）。不存在或不完整则进入 **Workflow 1**。  
+4. **检查邮箱配置**：配置文件路径默认为当前安装包内的 `hifleet-mytonnages/config.json`（即本分册所在目录；可用 `HIFLEET_MYTONNAGES_DIR` 覆盖）。不存在或不完整则进入 **Workflow 1**。  
 5. 若记忆与邮箱均已就绪且需要路由 A，进入 **Workflow 2**（邮件查询）。**每次检索类提问均须先完成 2.2 增量同步**；再按 **2.3** 执行「SQLite 结构化查询（如适用）→ 向量检索补充」；对拟送大模型的邮件文本**必须先经 2.3.5 脱敏**再执行 **2.4** 解析；解析完成后按 **2.4.1** 写入 SQLite，再按 **2.4.2** 调用 `ttseapi` 补充船舶档案与 `portid`（须 **`hifleet_api_key`**，见 **`CHARTER_ENRICH_API.md`**），顺序不可省略。用户按**查询港口**查船盘/货盘且需**按距离排序**时，在 **2.3** 命中后按 **2.3.1** 与 **`CHARTER_ENRICH_API.md` §3** 批量算距并升序展示。
 
 ### 1. 邮箱配置流程（首次使用或配置缺失时）
@@ -55,7 +55,7 @@ metadata:
 **随包文件索引**
 
 ```text
-~/.openclaw/workspace/skills/hifleet-mytonnages/
+<技能安装目录>/hifleet-skills/hifleet-mytonnages/
 ├── SKILL.md
 ├── SKILL_CONTEXT.md         # 定位 + 零基础
 ├── ROUTING_AND_WHEN.md      # 能力路由 + When to Run

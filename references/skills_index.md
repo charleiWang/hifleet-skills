@@ -101,7 +101,7 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 租船 / Charter |
-| 描述 | 独立技能 `hifleet-mytonnages`：船盘/货盘邮件检索解析、按港口距离排序，以及 HiFleet 服务端船期查询。邮件查询需配置邮箱与记忆；档案富化、港口 ID、距离排序和船期接口需 `hifleet_api_key` 或 `HIFLEET_API_KEY`。 |
+| 描述 | `hifleet-skills` 内置租船模块（分册位于 `hifleet-mytonnages/`）：船盘/货盘邮件检索解析、按港口距离排序，以及 HiFleet 服务端船期查询。邮件查询需配置邮箱与记忆；档案富化、港口 ID、距离排序和船期接口需 `hifleet_api_key` 或 `HIFLEET_API_KEY`。 |
 | 触发词 | 租船、船盘、货盘、船期、租约、租家、租金、租期、合同、班轮船期 / charter, open vessel, cargo, schedule, charter party, charterer, hire, period, contract, line |
 
 **路由**：用户明确说“邮件里”“最近船盘/货盘”“帮我查邮箱”时走邮件船货盘流程；用户询问班轮、航线时刻、schedule、line 或装卸港船期时走 HiFleet 服务端船期接口。

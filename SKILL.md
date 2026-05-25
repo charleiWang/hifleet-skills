@@ -1,7 +1,7 @@
 ---
 name: hifleet-skills
 description: >-
-  HiFleet 船位、档案、PSC、区域/海峡通航、港口、租船、航程航线、航运、气象海况、船队、AIS。Use for vessel position, ship info, PSC inspection/anomalies/statistics, area or strait traffic, port, charter, voyage, route, shipping, weather, fleet, or AIS.
+  HiFleet 综合技能，包含船位、档案、PSC、区域/海峡通航、港口、租船船货盘邮件检索、港距排序、班轮船期、航程航线、航运、气象海况、船队、AIS。Use for vessel position, ship info, PSC inspection/anomalies/statistics, area or strait traffic, port, charter/open-vessel/cargo email search, port-distance sorting, liner schedule, voyage, route, shipping, weather, fleet, or AIS.
 version: 0.3.0
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
@@ -23,7 +23,7 @@ source: https://api.hifleet.com
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT） |
 | PSC 检查 PSC Inspection | ✅ 已实现 | 单船 PSC（按 IMO）→ 统计异常 `openclaw/anomalies*` → 宏观统计 `openclaw/stats/compare|defects/top|mix/compare` |
 | 港口 Port guide | ✅ 已实现 | 港口列表/检索（港名或代码）、单港详情（`piuid`→`portId`）；`portguide/getPort/token`、`portguide/getPortDetail/token` |
-| 租船 Charter | ✅ 已实现（独立技能） | 船盘/货盘邮件检索解析、按港口距离排序、船期查询；使用 `hifleet-mytonnages` 工作流 |
+| 租船 Charter | ✅ 已实现（内置模块） | 船盘/货盘邮件检索解析、按港口距离排序、船期查询；使用 `hifleet-mytonnages/` 分册工作流 |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
 | 航线 Route | 待实现 | 推荐航线、航路点 |
@@ -112,10 +112,10 @@ source: https://api.hifleet.com
 
 ### 租船 / Charter
 
-租船能力由独立技能 `hifleet-mytonnages` 执行：支持船盘/货盘邮件检索解析、按港口距离排序，以及 HiFleet 服务端船期查询。
+租船能力已合并为 `hifleet-skills` 的内置模块，分册与脚本位于 `hifleet-mytonnages/`：支持船盘/货盘邮件检索解析、按港口距离排序，以及 HiFleet 服务端船期查询。
 
 - **触发**：租船、船盘、货盘、船期、open vessel、cargo、租约、租家、租金、租期、合同、charter、charterer、hire、period、班轮船期、schedule、line
-- **使用条件**：邮件船盘/货盘查询需按 `hifleet-mytonnages` 配置邮箱与记忆；船舶档案富化、港口 ID、距离排序和船期接口需配置 `hifleet_api_key` 或 `HIFLEET_API_KEY`
+- **使用条件**：邮件船盘/货盘查询需按 `hifleet-mytonnages/` 分册配置邮箱与记忆；船舶档案富化、港口 ID、距离排序和船期接口需配置 `hifleet_api_key` 或 `HIFLEET_API_KEY`
 - **路由规则**：用户明确说“邮件里”“最近船盘/货盘”“帮我查邮箱”时走邮件船货盘流程；用户询问班轮、航线时刻、schedule、line 或装卸港船期时走 HiFleet 服务端船期接口；不得伪造邮件、船期、港口距离或档案数据
 
 ### 集装箱红海饶航 / Container ship Red Sea detour

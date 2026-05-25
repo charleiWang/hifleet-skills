@@ -16,19 +16,19 @@
 
 向量库**不是**邮箱的实时镜像：**邮箱里新收到的邮件，只要还没经过同步入库，就不会出现在 `memory_search` 结果里**。因此必须把「增量同步」作为固定环节，否则会**漏新盘、漏新货**。
 
-由 **OpenClaw + 已启用的记忆/邮件能力**（例如 IMAP 拉取新信后 `memory_store`、或插件提供的「同步到记忆」——**以当前环境实际工具名为准**）将邮件写入**本地向量记忆**。
+由**当前宿主环境 + 已启用的记忆/邮件能力**（例如 IMAP 拉取新信后 `memory_store`、或插件提供的「同步到记忆」——**以当前环境实际工具名为准**）将邮件写入**本地向量记忆**。
 
 - **（硬性要求）每次路由 A（船货盘邮件）检索前的同步**：用户每次发起「查邮件 / 船盘 / 货盘」等**邮件检索类**请求时，在调用 **2.3** 的 `memory_search`（或等价检索）**之前**，助手**必须先**执行一次**增量同步**：把**当前邮箱里尚未写入向量库的新邮件**拉取并入库（只增量、不必重复全量处理已入库信件，具体以环境能力为准）。**禁止**在未完成本轮同步的情况下，仅凭旧索引直接检索并当作「已覆盖邮箱现状」。**路由 B（班轮船期 / 公司接口）** 的提问**不要求**执行本节邮件增量同步。  
 - **首次配置后**：完成邮箱校验后也应**立即**做至少一次全量/窗口同步（与插件约定一致），再允许回答问题。  
 - **同步失败**：若增量同步失败（网络、认证、插件错误），须**如实告知用户**，不得假装已更新索引；可建议检查邮箱密码/网络或重试。  
 - **存储与去重**：由 memory-lancedb-pro 或等效组件处理分块、向量化；同一邮件 `Message-ID` 去重/覆盖策略以插件为准。  
-- **用户体验**：可向用户简短说明「正在同步最新邮件…」再检索；**不要**让用户自己运行脚本；调用方式以 OpenClaw 为准。
+- **用户体验**：可向用户简短说明「正在同步最新邮件…」再检索；**不要**让用户自己运行脚本；调用方式以当前宿主环境为准。
 
 **与省 token 的关系（重要）**：
 
 - **能省的部分**：同步完成后，用 **memory_search** 只把**相关片段**交给模型，**不要**把时间窗内**全部邮件正文**一次性载入上下文。  
 - **仍会消耗 token 的部分**：同步与向量化成本、以及回答里粘贴过长正文。  
-- **定时补充**（可选）：若 OpenClaw 支持后台定时同步，可与「每次提问前增量同步」并存；**不得以「刚定时同步过」为由跳过用户当次提问前的增量同步**，除非官方文档明确保证「提问触发时已自动含最新邮件」且助手可核验。
+- **定时补充**（可选）：若当前宿主环境支持后台定时同步，可与「每次提问前增量同步」并存；**不得以「刚定时同步过」为由跳过用户当次提问前的增量同步**，除非官方文档明确保证「提问触发时已自动含最新邮件」且助手可核验。
 
 ### 2.3 混合检索：SQLite 事实库 + 向量记忆
 
@@ -47,7 +47,7 @@
 
 5. **默认不**输出每封邮件全文；用户明确要求「全文」「原文核对」时，再按 `message_id` 拉取正文。  
 
-工具参数以 **OpenClaw + memory-lancedb-pro** 为准；**SQLite 的读写**须通过 OpenClaw 允许的工具或 HiFleet 内置实现，**勿**要求零基础用户自行执行 SQL 客户端。
+工具参数以**当前宿主环境 + memory-lancedb-pro** 为准；**SQLite 的读写**须通过当前环境允许的工具或 HiFleet 内置实现，**勿**要求零基础用户自行执行 SQL 客户端。
 
 ### 2.3.1 按查询港口距离排序（船盘 / 货盘检索，默认）
 
@@ -93,7 +93,7 @@
 
 每封邮件在完成 **2.4** 结构化提取后，助手**必须**将结果持久化到**本地嵌入式 SQLite**，供 **2.3** 及后续提问使用。
 
-- **文件路径**（默认）：`~/.openclaw/workspace/skills/hifleet-mytonnages/charter_facts.sqlite3`（**单文件**，用户**无需**安装数据库服务）。  
+- **文件路径**（默认）：当前安装包内的 `hifleet-mytonnages/charter_facts.sqlite3`（脚本按自身所在目录解析；可用 `HIFLEET_CHARTER_DB_PATH` 覆盖为任意 sqlite 文件路径）。例如 Codex 可位于 `$CODEX_HOME/skills/hifleet-skills/hifleet-mytonnages/charter_facts.sqlite3`，OpenClaw 可位于 `~/.openclaw/workspace/skills/hifleet-skills/hifleet-mytonnages/charter_facts.sqlite3`。该文件是**单文件**，用户**无需**安装数据库服务。  
 - **三张表**（实现须与此语义一致；**每个解析字段单独成列**，列名与 **2.4** JSON 键一致）：  
   1. **`cargo_plate`（货盘）**：一行对应 `data.cargo[]` 中**一条**货盘。除邮件元数据外，**2.4** 货盘对象的**每个字段各占一列**（如 `客户名称`、`货物种类`、`装货港`、`卸货港`、`dwt要求` …… 直至 `即时通讯`）。**2.4.2** 富化列：`portid`（装货港）、`discharging_portid`（卸货港）。另含：`message_id`、`email_date_utc`、`from_addr`、`subject`、`row_index`、`payload_json`、`search_text`、`parsed_at`。  
   2. **`openvessel_plate`（船盘）**：一行对应 `data.openvessels[]` 中**一条**船盘；**每个字段各占一列**（如 `船名`、`IMO`、`载重吨`、`OPEN位置`、`航线意向` …… 直至 `O/A其他附加信息`）。**2.4.2** 富化列：`portid`（OPEN 位置）、`discharging_portid`、`档案_*`、`ship_archive_json`。同样含 `payload_json`、`search_text`、`parsed_at`。  
@@ -101,7 +101,7 @@
 - **幂等**：同一 `message_id` 再次解析时，**先删除**该 id 在以上三表中的旧行再插入新行。若磁盘上存在旧版单表 **`charter_fact`**，迁移实现应**删除**该表并改用上述三表（随包脚本已处理）。  
 - **仅查库未解析**：若当次只读库、未对该 `message_id` 重跑 **2.4**，可跳过写入。  
 - **与向量库关系**：向量库管**原文召回**；SQLite 管**已解析字段**的结构化查询；互补而非二选一。  
-- **工具（随本 Skill 目录）**：`python scripts/charter_facts_tool.py save ...`（标准输入或 `save -f` 传入 JSON，含 `message_id`、`email_date_utc`、`from_addr`、`subject`、`parsed`）；可选 `save --db /path/to.sqlite3` / `search --db ...`（`--db` 须写在子命令后，如 `save --db x.sqlite3 -f doc.json`）；`python scripts/charter_facts_tool.py search "关键词"`。OpenClaw 环境以允许的方式调用即可，**勿**要求零基础用户自行敲 SQL 客户端命令。
+- **工具（随本 Skill 目录）**：`python scripts/charter_facts_tool.py save ...`（标准输入或 `save -f` 传入 JSON，含 `message_id`、`email_date_utc`、`from_addr`、`subject`、`parsed`）；可选 `save --db /path/to.sqlite3` / `search --db ...`（`--db` 须写在子命令后，如 `save --db x.sqlite3 -f doc.json`）；`python scripts/charter_facts_tool.py search "关键词"`。当前宿主环境以允许的方式调用即可，**勿**要求零基础用户自行敲 SQL 客户端命令。
 
 ### 2.4.2 船舶档案与港口 ID 富化（硬性要求，在 2.4.1 之后）
 
@@ -154,4 +154,4 @@
 
 ### 2.7 更新最后使用时间
 
-若本地仍维护 `config.json` 中的 `last_used` 字段，由助手在**成功完成一次查询或同步后**，通过 OpenClaw 提供的写入方式更新为当前时间。**不要求用户运行 sed 或任何终端命令**；若环境中无此字段，可省略本步。
+若本地仍维护 `config.json` 中的 `last_used` 字段，由助手在**成功完成一次查询或同步后**，通过当前宿主环境提供的写入方式更新为当前时间。**不要求用户运行 sed 或任何终端命令**；若环境中无此字段，可省略本步。

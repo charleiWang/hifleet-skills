@@ -136,7 +136,7 @@ SHIP_ARCHIVE_KEYS: tuple[str, ...] = (
 
 OPENVESSEL_ENRICH_KEYS: tuple[str, ...] = ("portid", "discharging_portid") + SHIP_ARCHIVE_KEYS
 
-DEFAULT_CHARTER_API_BASE = "https://ttseapi.hifleet.com/openclaw/vessel/charter"
+DEFAULT_CHARTER_API_BASE = "https://api.hifleet.com/openclaw/vessel/charter"
 
 
 def _q(name: str) -> str:
@@ -421,11 +421,17 @@ def _row_index_key(message_id: str, row_index: Any, fact_type: str) -> str:
 
 
 def default_db_path() -> Path:
-    return Path.home() / ".openclaw" / "workspace" / "skills" / "hifleet-mytonnages" / "charter_facts.sqlite3"
+    env_path = os.environ.get("HIFLEET_CHARTER_DB_PATH", "").strip()
+    if env_path:
+        return Path(env_path).expanduser()
+    return default_skill_dir() / "charter_facts.sqlite3"
 
 
 def default_skill_dir() -> Path:
-    return Path.home() / ".openclaw" / "workspace" / "skills" / "hifleet-mytonnages"
+    env_path = os.environ.get("HIFLEET_MYTONNAGES_DIR", "").strip()
+    if env_path:
+        return Path(env_path).expanduser()
+    return Path(__file__).resolve().parents[1]
 
 
 def load_api_config() -> tuple[str, str]:
@@ -805,12 +811,12 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     ps = sub.add_parser("save", help="从 JSON 写入（默认读标准输入，或用 -f 指定文件）")
-    ps.add_argument("--db", help="sqlite3 路径（默认 ~/.openclaw/.../charter_facts.sqlite3）")
+    ps.add_argument("--db", help="sqlite3 路径（默认 hifleet-mytonnages/charter_facts.sqlite3，可用 HIFLEET_CHARTER_DB_PATH 覆盖）")
     ps.add_argument("--file", "-f", help="JSON 文件路径（未指定则从 stdin 读取）")
     ps.set_defaults(func=cmd_save)
 
     pr = sub.add_parser("search", help="关键词检索 search_text")
-    pr.add_argument("--db", help="sqlite3 路径（默认 ~/.openclaw/.../charter_facts.sqlite3）")
+    pr.add_argument("--db", help="sqlite3 路径（默认 hifleet-mytonnages/charter_facts.sqlite3，可用 HIFLEET_CHARTER_DB_PATH 覆盖）")
     pr.add_argument("query")
     pr.add_argument("--limit", type=int, default=50)
     pr.set_defaults(func=cmd_search)
