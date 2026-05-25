@@ -2,13 +2,15 @@
 
 根据 **IMO** 查询船舶 **港口国监督检查（PSC）** 相关数据。需配置 `api_key`。
 
+**API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 `HIFLEET_API_BASE`（无末尾 `/`）。见 [api_base.md](api_base.md)。
+
 **船名不支持直接查询**：若用户只提供船名或关键字，需先调用 `position/shipSearch` 得到船舶列表，从命中条目的 `imonumber` 取得 IMO，再调本接口。无 IMO 的内贸船无法按 IMO 查 PSC。
 
 ## 请求
 
 | 项目 | 值 |
 |------|-----|
-| 请求 URL | `https://api.hifleet.com/pscapi/get` |
+| 请求 URL | `{base}/pscapi/get` |
 | 请求方式 | `GET` |
 
 ### Query 参数
@@ -63,4 +65,4 @@
 
 ## 相关接口
 
-- 搜船：`https://api.hifleet.com/position/shipSearch`（见 [position_api.md](position_api.md)）
+- 搜船：`{base}/position/shipSearch`（见 [position_api.md](position_api.md)）

@@ -11,13 +11,15 @@
 
 ---
 
-## 配置与根路径
+## 配置与 API 基址
+
+下文 **`{base}`** 表示**班轮船期 API 根**（无末尾 `/`）。
 
 | 含义 | 默认值 |
 |------|--------|
-| 班轮 API 根（无末尾 `/`） | `https://api.hifleet.com/openclaw/vessel/charter/liner` |
+| `{base}`（班轮 OpenClaw 根） | `https://api.hifleet.com/openclaw/vessel/charter/liner`（主机可由 `HIFLEET_API_BASE` 覆盖，见 [../references/api_base.md](../references/api_base.md)） |
 
-**根路径**：`hifleet_liner_api_base`（config）→ `HIFLEET_LINER_API_BASE`（环境）→ 上表。  
+**解析顺序**：`hifleet_liner_api_base`（config）→ `HIFLEET_LINER_API_BASE`（环境）→ 上表默认。  
 **用户密钥字符串**：`hifleet_api_key`（config）→ `HIFLEET_API_KEY`（环境）。各接口在 HTTP 里以 **`api_key`（query/header）** 或 **`sk`（仅船期列表，见下）** 使用同一串，勿混为两个不同值。
 
 无有效密钥时**不得**调接口，引导用户配置（见 `SKILL.md` Workflow 3）。
@@ -26,7 +28,7 @@
 
 ## 1. 港口联想
 
-**`GET {root}/ports/suggest`**
+**`GET {base}/ports/suggest`**
 
 | 方式 | 名称 | 值 |
 |------|------|-----|
@@ -50,7 +52,7 @@
 
 ## 2. 船期列表
 
-**`POST {root}/schedules?sk={URL 编码的 api_key 字符串}`**
+**`POST {base}/schedules?sk={URL 编码的 api_key 字符串}`**
 
 - **Query**：`sk` = 用户 `api_key`（与上节同一配置值）。若仍报「token 为空」，与后端核对鉴权参数。  
 - **Body**：`Content-Type: application/json`。**现网**将装港、卸港、是否公开、**受载日窗** 一并放在 **`params` 中**。筛选与后端数据对齐依赖 **`portid` / `dischargingPortid`**，**不**能靠助手机侧对**港名**的模糊包含来替代。  
@@ -118,7 +120,7 @@
 
 ## 3. 解锁联系人
 
-**`POST {root}/unlock`**
+**`POST {base}/unlock`**
 
 仅 **Query 参数**（无特殊说明时 **Body 可为空**）：
 

@@ -1,12 +1,14 @@
 # 船舶档案 API / Ship Archive API
 
+**API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 `HIFLEET_API_BASE`（无末尾 `/`）。见 [api_base.md](api_base.md)。
+
 根据 IMO 或 MMSI 获取船舶档案（含基本信息、尺度、舱容、建造、入级、动力、公司信息、互保协会等）。支持内贸船（无 IMO）时仅根据 MMSI 查询。需配置 api_key。
 
 ## 请求
 
 | 项目 | 值 |
 |------|-----|
-| 请求 URL | `https://api.hifleet.com/shiparchive/getShipArchiveWithEnginAndCompany` |
+| 请求 URL | `{base}/shiparchive/getShipArchiveWithEnginAndCompany` |
 | 请求方式 | `GET` |
 
 ### Query 参数
@@ -48,7 +50,7 @@
 ## 调用流程
 
 1. 检查 `api_key`；无则提示并终止。
-2. **入参为 IMO**（7 位数字）：请求 `...?imo={imo}&api_key={api_key}`。
-3. **入参为 MMSI**（9 位数字）：请求 `...?mmsi={mmsi}&api_key={api_key}`，**支持内贸船无 IMO**，无需先 shipSearch。
+2. **入参为 IMO**（7 位数字）：请求 `{base}/shiparchive/getShipArchiveWithEnginAndCompany?imo={imo}&api_key={api_key}`。
+3. **入参为 MMSI**（9 位数字）：请求 `{base}/shiparchive/getShipArchiveWithEnginAndCompany?mmsi={mmsi}&api_key={api_key}`，**支持内贸船无 IMO**，无需先 shipSearch。
 4. **船名不支持**直接查档案；若用户只提供船名，需先调用 `position/shipSearch` 得到 MMSI 或 IMO 再调本接口。
 5. 若 `status === "1"` 解析 data，按 labelZh 分块展示，字段值优先用 valueZh。

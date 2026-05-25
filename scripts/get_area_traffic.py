@@ -6,6 +6,7 @@
   2) areaId：区域清单接口返回的 id（用户文字描述区域时可先查区域清单，用 name/cnName 匹配得到 id）；
   3) polygon：WKT 格式多边形，参数名 polygon。
 需配置环境变量 `HIFLEET_API_KEY`。
+可选 `HIFLEET_API_BASE`（默认 https://api.hifleet.com，无末尾斜杠）。
 
 用法:
   python get_area_traffic.py <左下经度> <左下纬度> <右上经度> <右上纬度>
@@ -15,7 +16,7 @@
   python get_area_traffic.py --polygon "POLYGON((lon1 lat1,lon2 lat2,...))"
   例如: python get_area_traffic.py --polygon "POLYGON((120 15,121 15,121 17,120 17,120 15))"
 
-Security: 仅向 https://api.hifleet.com/position/gettraffic/token 发起 GET 请求；`api_key` 仅用于 API 鉴权；仅使用标准库，无 eval/exec。
+Security: 仅向 HIFLEET_API_BASE 下 position/gettraffic/token 发起 GET；标准库 only。
 """
 import argparse
 import json
@@ -24,7 +25,9 @@ import sys
 import urllib.parse
 import urllib.request
 
-AREA_TRAFFIC_URL = "https://api.hifleet.com/position/gettraffic/token"
+
+def api_base():
+    return (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
 
 
 def get_api_key():
@@ -42,7 +45,7 @@ def get_area_traffic(api_key: str, bbox: str = None, area_id: int = None, polygo
         params["polygon"] = polygon
     else:
         raise ValueError("必须提供 bbox、areaId 或 polygon 之一")
-    url = AREA_TRAFFIC_URL + "?" + urllib.parse.urlencode(params)
+    url = api_base() + "/position/gettraffic/token?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode())

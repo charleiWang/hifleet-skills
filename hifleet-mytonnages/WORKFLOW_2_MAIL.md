@@ -107,8 +107,8 @@
 
 每批邮件在 **2.4.1** 写入 SQLite 后，助手**必须**（在具备 **`hifleet_api_key`** 时）调用 **`CHARTER_ENRICH_API.md`** 中的接口，将结果 **UPDATE** 回同一行：
 
-1. **船舶档案（仅船盘）**：收集本批 `openvessel_plate` 行的 **`IMO`**，**POST** `{charter_root}/ship-archive/batch`（Body `{"imos":[...]}`，**禁止 GET**）。将 `data.list[]` 写入 **`ship_archive_json`** 及档案分列（`档案_船名`、`档案_呼号`、`档案_建造年`、`档案_dwt`、`档案_船旗`、`档案_船长`、`档案_船宽`、`档案_吃水`、`档案_总吨`、`档案_造船厂`、`档案_船型`、`档案_船东`、`档案_经营人`、`档案_管理公司`、`档案_细分船型`）；与邮件字段冲突时**以 API 档案为准**更新 `载重吨`、`建造年份`、`船型` 等展示列。  
-2. **港口 ID**：对船盘 **`OPEN位置`**、货盘 **`装货港`** / **`卸货港`**（有值则参与），**POST** `{charter_root}/port/portid`（Body `{"portname":"港A+港B"}`，多港用 `+`）。将 `data.portid` 写入：**船盘** → **`portid`**；**货盘** → 装港 **`portid`**、卸港 **`discharging_portid`**。  
+1. **船舶档案（仅船盘）**：收集本批 `openvessel_plate` 行的 **`IMO`**，**POST** `{base}/ship-archive/batch`（Body `{"imos":[...]}`，**禁止 GET**）。将 `data.list[]` 写入 **`ship_archive_json`** 及档案分列（`档案_船名`、`档案_呼号`、`档案_建造年`、`档案_dwt`、`档案_船旗`、`档案_船长`、`档案_船宽`、`档案_吃水`、`档案_总吨`、`档案_造船厂`、`档案_船型`、`档案_船东`、`档案_经营人`、`档案_管理公司`、`档案_细分船型`）；与邮件字段冲突时**以 API 档案为准**更新 `载重吨`、`建造年份`、`船型` 等展示列。  
+2. **港口 ID**：对船盘 **`OPEN位置`**、货盘 **`装货港`** / **`卸货港`**（有值则参与），**POST** `{base}/port/portid`（Body `{"portname":"港A+港B"}`，多港用 `+`）。将 `data.portid` 写入：**船盘** → **`portid`**；**货盘** → 装港 **`portid`**、卸港 **`discharging_portid`**。  
 3. **幂等**：同一 `message_id` 再次 **2.4.1** 覆盖后，须重新执行 **2.4.2** 更新档案与 `portid`。  
 4. **无 Key / 接口失败**：跳过富化并如实说明；**禁止**编造 `portid` 或档案字段。  
 5. **工具**：`python scripts/charter_facts_tool.py enrich [--db …]`（读 config / 环境变量中的 `hifleet_api_key` 与 `hifleet_charter_api_base`）。

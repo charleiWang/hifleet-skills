@@ -2,7 +2,7 @@
 
 与 **统计异常事件**（`openclaw/anomalies*`，见 [psc_anomaly_api.md](psc_anomaly_api.md)）及 **单船 PSC**（`pscapi/get`，见 [psc_api.md](psc_api.md)）并列，用于回答「哪里变严」「哪旗风险」「哪港严」「缺陷热点」「是否针对某旗」等 **可量化** 问题。
 
-**Base URL**：默认 `https://api.hifleet.com`，可用环境变量 `HIFLEET_API_BASE`（无末尾 `/`）。Query 均需 **`api_key`**（与 `pscapi/get` 一致）。
+**API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 `HIFLEET_API_BASE`（无末尾 `/`）。见 [api_base.md](api_base.md)。Query 均需 **`api_key`**（与 `pscapi/get` 一致）。
 
 **数据依赖**：
 
@@ -36,7 +36,7 @@
 - 「哪港严 / 中国主要检查港口是哪些」：**必须调用本接口**，禁止用常识列表代替数据库结果。推荐：
   - `groupBy=PORT` + `authorityContains=China`（或库内实际出现的当局子串，如 `PRC`、`CHINA`），按 `inspections` 降序解读 `rows`；
   - 或 `groupBy=AUTHORITY_PORT` + `authorityContains=China`，同时看到当局与港口字段。
-  - 完整路径示例：`GET {BASE}/pscapi/openclaw/stats/compare?api_key=...&groupBy=PORT&authorityContains=China&dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&limit=30`
+  - 完整路径示例：`GET {base}/pscapi/openclaw/stats/compare?api_key=...&groupBy=PORT&authorityContains=China&dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&limit=30`
 
 **禁止**：在**未调用** `stats/compare`（或未拿到有效 JSON）时，向用户声称「港口接口故障」「无法获取港口排名」——除非请求确实返回错误码/超时，并应写明**具体错误**（如 `4001` 无权、`404` 未部署）。
 

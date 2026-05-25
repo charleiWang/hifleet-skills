@@ -2,6 +2,8 @@
 
 红海与波斯湾相关咽喉航道的通航船舶统计。
 
+**API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 `HIFLEET_API_BASE`（无末尾 `/`）。见 [api_base.md](api_base.md)。
+
 方向定义
 霍尔木兹海峡：
 | 方向 | 含义 | 说明 |
@@ -13,7 +15,7 @@
 
 | 项目 | 值 |
 |------|-----|
-| 请求 URL | `http://api.hifleet.com/position/statisticzonetraffic` |
+| 请求 URL | `{base}/position/statisticzonetraffic` |
 | 请求方式 | **POST** |
 
 ### Query 参数

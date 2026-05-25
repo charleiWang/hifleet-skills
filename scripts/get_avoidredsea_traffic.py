@@ -3,7 +3,8 @@
 """
 集装箱饶航船舶每日统计。、支持查询下饶航红海的集装箱船舶。
 对于饶航饶航的方向：东是向东，西是向西。
-接口：POST http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token，参数 starttime、endtime、api_key（可选）。
+接口：POST {base}/routerisk/getAvoidRedSeaDetail/token，参数 starttime、endtime、api_key（可选）。
+可选 `HIFLEET_API_BASE`（默认 https://api.hifleet.com，无末尾斜杠）。
 无 `api_key` 仅可查最近 1 周；有 `api_key` 时间区间不限。
 
 用法:
@@ -11,7 +12,7 @@
 
   日期: yyyy-MM-dd，不传则默认最近 1 天。无 `api_key` 时区间不得超过 7 天；有 `api_key` 不限。i18n 可选 zh 或 en。
 
-Security: 仅向 http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token 发起 POST 请求；`api_key` 可选，仅用于扩展时间范围；仅使用标准库，无 eval/exec。
+Security: 仅向 HIFLEET_API_BASE 下 routerisk/getAvoidRedSeaDetail/token 发起 POST；标准库 only。
 """
 import os
 import sys
@@ -20,7 +21,9 @@ import urllib.parse
 import json
 from datetime import datetime, timedelta
 
-STRAIT_TRAFFIC_URL = "http://api.hifleet.com/routerisk/getAvoidRedSeaDetail/token"
+
+def api_base():
+    return (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
 
 
 
@@ -34,7 +37,7 @@ def get_strait_traffic(starttime: str, endtime: str, i18n: str = "zh", api_key: 
     params = {"starttime": starttime, "endtime": endtime, "i18n": i18n}
     if api_key:
         params["api_key"] = api_key
-    url = STRAIT_TRAFFIC_URL + "?" + urllib.parse.urlencode(params)
+    url = api_base() + "/routerisk/getAvoidRedSeaDetail/token?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="POST", data=b"")
     req.add_header("Content-Type", "application/x-www-form-urlencoded")
     with urllib.request.urlopen(req) as resp:

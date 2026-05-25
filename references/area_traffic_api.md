@@ -2,11 +2,13 @@
 
 查询指定区域内的当前船舶列表。**需配置 `api_key`。**
 
+**API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 `HIFLEET_API_BASE`（无末尾 `/`）。见 [api_base.md](api_base.md)。
+
 ## 请求
 
 | 项目 | 值 |
 |------|-----|
-| 请求 URL | `https://api.hifleet.com/position/gettraffic/token` |
+| 请求 URL | `{base}/position/gettraffic/token` |
 | 请求方式 | `GET` |
 
 ### Query 参数

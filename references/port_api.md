@@ -2,7 +2,7 @@
 
 港口列表检索与单港详情。**需配置 `api_key`**（与其它 `/token` 接口一致）。
 
-默认基址：`https://api.hifleet.com`。其它部署可设环境变量 **`HIFLEET_API_BASE`**（无末尾斜杠），脚本与 Agent 请求路径均为 `{BASE}/portguide/...`。
+**API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 **`HIFLEET_API_BASE`**（无末尾 `/`）。见 [api_base.md](api_base.md)。
 
 ---
 
@@ -14,7 +14,7 @@
 
 | 项目 | 值 |
 |------|-----|
-| 请求 URL | `{BASE}/portguide/getPort/token` |
+| 请求 URL | `{base}/portguide/getPort/token` |
 | 请求方式 | `GET` |
 
 ### Query 参数
@@ -45,7 +45,7 @@
 
 | 项目 | 值 |
 |------|-----|
-| 请求 URL | `{BASE}/portguide/getPortDetail/token` |
+| 请求 URL | `{base}/portguide/getPortDetail/token` |
 | 请求方式 | `GET` |
 
 ### Query 参数
@@ -60,8 +60,8 @@
 ## 调用流程（Agent）
 
 1. 检查 `api_key`；无则提示配置 `HIFLEET_API_KEY`。
-2. **列表**：`GET .../portguide/getPort/token?api_key=...`；若用户给出港名或代码，附加 `portName` 或 `portCode`。
-3. **详情**：用户选定某条后，取该条 **`piuid`** → `GET .../portguide/getPortDetail/token?portId={piuid}&api_key=...`。
+2. **列表**：`GET {base}/portguide/getPort/token?api_key=...`；若用户给出港名或代码，附加 `portName` 或 `portCode`。
+3. **详情**：用户选定某条后，取该条 **`piuid`** → `GET {base}/portguide/getPortDetail/token?portId={piuid}&api_key=...`。
 4. 若列表命中多条，列出港名/代码/`piuid`，请用户确认后再查详情。
 
 ---

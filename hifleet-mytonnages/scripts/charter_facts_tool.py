@@ -434,18 +434,26 @@ def default_skill_dir() -> Path:
     return Path(__file__).resolve().parents[1]
 
 
+def resolve_charter_api_base(cfg_value: str | None = None) -> str:
+    """租船 OpenClaw 根地址：config > HIFLEET_CHARTER_API_BASE > HIFLEET_API_BASE + 路径 > 默认公网。"""
+    if cfg_value and str(cfg_value).strip():
+        return str(cfg_value).strip().rstrip("/")
+    explicit = os.environ.get("HIFLEET_CHARTER_API_BASE", "").strip()
+    if explicit:
+        return explicit.rstrip("/")
+    root = (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
+    return root + "/openclaw/vessel/charter"
+
+
 def load_api_config() -> tuple[str, str]:
     api_key = os.environ.get("HIFLEET_API_KEY", "").strip()
-    api_base = os.environ.get("HIFLEET_CHARTER_API_BASE", DEFAULT_CHARTER_API_BASE).strip()
+    api_base = resolve_charter_api_base()
     cfg_path = default_skill_dir() / "config.json"
     if cfg_path.is_file():
         try:
             cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
             api_key = api_key or str(cfg.get("hifleet_api_key") or "").strip()
-            api_base = (
-                os.environ.get("HIFLEET_CHARTER_API_BASE")
-                or str(cfg.get("hifleet_charter_api_base") or api_base).strip()
-            )
+            api_base = resolve_charter_api_base(cfg.get("hifleet_charter_api_base"))
         except (json.JSONDecodeError, OSError):
             pass
     return api_key, api_base.rstrip("/")

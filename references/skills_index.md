@@ -52,7 +52,7 @@
 | 严重度汇总 | `openclaw/anomalies/summary`，先答 HIGH/MEDIUM/LOW 条数 |
 | 单条详情 | `openclaw/anomalies/{id}`，展开描述与 evidence |
 
-脚本：`scripts/get_psc_anomalies.py`（`list` / `summary` / `get <id>`）。默认 API 主机 `https://api.hifleet.com`，可设 `HIFLEET_API_BASE`。
+脚本：`scripts/get_psc_anomalies.py`（`list` / `summary` / `get <id>`）。接口 URL 使用 `{base}`（默认 `https://api.hifleet.com`，可设 `HIFLEET_API_BASE`）。
 
 **字段语义（OpenClaw 必读）**  
 - **`authority`**：上述 PSC 统计相关表中均为 **检查国/检查当局**，**不是**船舶注册国；船旗国为 **`flag`**。  
@@ -67,7 +67,7 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 港口指南 / Port guide |
-| 描述 | **列表**：`GET portguide/getPort/token`，可选 `portName`、`portCode`（传一即可筛选，不传则全部港口）。**详情**：`GET portguide/getPortDetail/token`，`portId` 取列表项 **`piuid`**。需 `api_key`；可选 `HIFLEET_API_BASE`。 |
+| 描述 | **列表**：`GET {base}/portguide/getPort/token`，可选 `portName`、`portCode`。**详情**：`GET {base}/portguide/getPortDetail/token`，`portId` 取列表项 **`piuid`**。需 `api_key`。 |
 | 触发词 | 港口、港名、港口代码、泊位、锚地、港口信息、UN/LOCODE / port, port name, port code, berth, anchorage, port info, UN/LOCODE |
 
 **API**：[port_api.md](port_api.md)。**脚本**：`scripts/get_port.py search [--port-name] [--port-code]`、`scripts/get_port.py detail <portId>`（portId 为列表中的 piuid）。
@@ -80,13 +80,15 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 描述 | 航速、油耗、主机负荷、能效（EEOI）及性能报告。 |
 | 触发词 | 性能、油耗、航速、主机、能效、EEOI / performance, fuel consumption, speed, main engine, EEOI, efficiency |
 
-## 8. 航程 / Voyage
+## 8. 航程 / Voyage ✅（部分）
 
 | 中文 | 英文 |
 |------|------|
 | 名称 | 航程 / Voyage |
-| 描述 | 航次、航程段、挂港顺序、ETA/ETD、航程统计。 |
-| 触发词 | 航程、航次、挂港、ETA、ETD、航程段 / voyage, voyage leg, port call, ETA, ETD, voyage segment |
+| 描述 | OpenClaw 单船航程：**历史挂靠**（`{base}/position/getcallport/token`）、**历史航次**（`{base}/position/getvoyagelist/token` / `{base}/portofcall/getvoyages`）、**上一港**（`{base}/position/lastdeparture/token`）、**当前停船**（`{base}/position/getstop/token`）。均需 `api_key`；无 MMSI 时先 `shipSearch`。 |
+| 触发词 | 历史挂靠、靠港记录、挂港、历史航次、航次列表、上一港、上次离港、当前停船、停在哪 / port call history, voyage history, last departure, current stop, stopped at port |
+
+**API**：[voyage_api.md](voyage_api.md)
 
 ## 9. 航线 / Route
 

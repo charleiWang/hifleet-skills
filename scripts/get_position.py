@@ -4,13 +4,14 @@
 获取船舶最新位置信息。支持关键字（船名或 MMSI）或直接 MMSI 查询。
 两步流程：先 position/shipSearch 搜船，再 position/position/get/token 查位。
 需配置环境变量 `HIFLEET_API_KEY`。
+可选 `HIFLEET_API_BASE`（默认 https://api.hifleet.com，无末尾斜杠）。
 
 用法:
   python get_position.py <MMSI>              # 直接查位（9 位 MMSI）
   python get_position.py <船名或关键字>        # 先搜船：1 条则直接查位，多条则列出并提示指定 MMSI
   python get_position.py <关键字> <MMSI>     # 多条命中时，用第二个参数指定要查的 MMSI
 
-Security: 仅向 https://api.hifleet.com 的 position 相关接口发起 GET 请求；`api_key` 仅用于 API 鉴权，不向第三方发送；仅使用标准库，无 eval/exec。
+Security: 仅向 HIFLEET_API_BASE 下 position 相关路径发起 GET；`api_key` 仅用于 API 鉴权；标准库 only。
 """
 import os
 import sys
@@ -18,8 +19,9 @@ import urllib.request
 import urllib.parse
 import json
 
-SHIP_SEARCH_URL = "https://api.hifleet.com/position/shipSearch"
-POSITION_GET_URL = "https://api.hifleet.com/position/position/get/token"
+
+def api_base():
+    return (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
 
 
 def get_api_key():
@@ -34,7 +36,7 @@ def ship_search(shipname: str, api_key: str, i18n: str = "zh", count: str = "50"
         "i18n": i18n,
         "count": count,
     }
-    url = SHIP_SEARCH_URL + "?" + urllib.parse.urlencode(params)
+    url = api_base() + "/position/shipSearch?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode())
@@ -43,7 +45,7 @@ def ship_search(shipname: str, api_key: str, i18n: str = "zh", count: str = "50"
 def get_position(mmsi: str, api_key: str) -> dict:
     """根据 MMSI 获取最新船位。"""
     params = {"mmsi": mmsi, "api_key": api_key}
-    url = POSITION_GET_URL + "?" + urllib.parse.urlencode(params)
+    url = api_base() + "/position/position/get/token?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode())

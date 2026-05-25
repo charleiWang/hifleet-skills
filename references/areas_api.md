@@ -2,11 +2,13 @@
 
 获取可直接使用的区域清单（海区、贸易区），用于按名称选择区域后以 **areaId** 调用区域船舶接口。
 
+**API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 `HIFLEET_API_BASE`（无末尾 `/`）。见 [api_base.md](api_base.md)。
+
 ## 请求
 
 | 项目 | 值 |
 |------|-----|
-| 请求 URL | `https://api.hifleet.com/position/areas/token` |
+| 请求 URL | `{base}/position/areas/token` |
 | 请求方式 | `GET` |
 
 ### Query 参数

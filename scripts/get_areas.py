@@ -3,12 +3,13 @@
 """
 获取区域清单（海区、贸易区），供用户按名称选择区域后使用 areaId 查询区域船舶。
 可选配置环境变量 `HIFLEET_API_KEY`（传 `api_key` 时 `includeBound` 才生效）。
+可选 `HIFLEET_API_BASE`（默认 https://api.hifleet.com，无末尾斜杠）。
 
 用法:
   python get_areas.py [--include-bound]
   无参数时仅返回区域列表；--include-bound 时返回边界 WKT（需 `api_key` 有效）。
 
-Security: 仅向 https://api.hifleet.com/position/areas/token 发起 GET 请求；仅使用标准库，无 eval/exec。
+Security: 仅向 HIFLEET_API_BASE 下 position/areas/token 发起 GET；标准库 only。
 """
 import argparse
 import json
@@ -17,7 +18,9 @@ import sys
 import urllib.parse
 import urllib.request
 
-AREAS_URL = "https://api.hifleet.com/position/areas/token"
+
+def api_base():
+    return (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
 
 
 def get_api_key():
@@ -30,7 +33,7 @@ def get_areas(api_key: str = None, include_bound: bool = False) -> dict:
         params["api_key"] = api_key
     if include_bound:
         params["includeBound"] = "true"
-    url = AREAS_URL + ("?" + urllib.parse.urlencode(params) if params else "")
+    url = api_base() + "/position/areas/token" + ("?" + urllib.parse.urlencode(params) if params else "")
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode())

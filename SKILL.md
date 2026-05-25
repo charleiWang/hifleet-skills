@@ -1,8 +1,8 @@
 ---
 name: hifleet-skills
 description: >-
-  HiFleet 综合技能，包含船位、档案、PSC、区域/海峡通航、港口、租船船货盘邮件检索、港距排序、班轮船期、航程航线、航运、气象海况、船队、AIS。Use for vessel position, ship info, PSC inspection/anomalies/statistics, area or strait traffic, port, charter/open-vessel/cargo email search, port-distance sorting, liner schedule, voyage, route, shipping, weather, fleet, or AIS.
-version: 0.3.0
+  HiFleet 综合技能，包含船位、档案、航程（历史挂靠/历史航次/上一港/当前停船）、PSC、区域/海峡通航、港口、租船船货盘邮件检索、港距排序、班轮船期、航线、航运、气象海况、船队、AIS。Use for vessel position, ship info, port calls, voyage history, last departure, current stop, PSC inspection/anomalies/statistics, area or strait traffic, port, charter/open-vessel/cargo email search, port-distance sorting, liner schedule, route, shipping, weather, fleet, or AIS.
+version: 0.3.1
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
   - HIFLEET_API_KEY
@@ -25,7 +25,7 @@ source: https://api.hifleet.com
 | 港口 Port guide | ✅ 已实现 | 港口列表/检索（港名或代码）、单港详情（`piuid`→`portId`）；`portguide/getPort/token`、`portguide/getPortDetail/token` |
 | 租船 Charter | ✅ 已实现（内置模块） | 船盘/货盘邮件检索解析、按港口距离排序、船期查询；使用 `hifleet-mytonnages/` 分册工作流 |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
-| 航程 Voyage | 待实现 | 航次、挂港、ETA/ETD |
+| 航程 Voyage | ✅ 已实现（部分） | 航程、航线规划、历史挂靠、历史航次、上一港、当前停船|
 | 航线 Route | 待实现 | 推荐航线、航路点 |
 | 航运 Shipping | 待实现 | 运价、市场、新闻 |
 | 气象海况 Weather | 待实现 | 风浪、台风、能见度 |
@@ -39,6 +39,12 @@ source: https://api.hifleet.com
 船位、档案、PSC、港口等已实现功能依赖 HiFleet API 鉴权：优先读取环境变量 `HIFLEET_API_KEY`，项目/ClawHub 内统一按 `api_key` 传入。
 
 ## 常用定义
+
+### API 基址（`{base}`）
+
+- 默认：`https://api.hifleet.com`；其它部署设环境变量 **`HIFLEET_API_BASE`**（无末尾 `/`）。
+- 下文与各分册接口均写作 **`{base}/路径`**，例如 `{base}/position/getcallport/token`。
+- 说明见 [references/api_base.md](references/api_base.md)。
 
 国际航行船舶 : 通常有有效的IMO注册号码的船舶
 电子围栏: 区域范围
@@ -77,6 +83,66 @@ source: https://api.hifleet.com
 
 **调用流程**：检查 `api_key` → 按 **IMO** 或 **MMSI** 调用档案接口（内贸船无 IMO 可传 MMSI）→ 解析 data，按 labelZh 分块展示。
 
+### 航程 / Voyage（OpenClaw）
+
+查询单船挂靠、航次、上一离港及当前停船信息。**均需 `api_key`**；用户仅给船名/关键字时，先走 `position/shipSearch` 取得 MMSI（规则同船位技能）。
+
+- **API 详情**：[references/voyage_api.md](references/voyage_api.md)
+
+| 能力 | capabilityCode | 接口 | 计费 |
+|------|----------------|------|------|
+| 历史挂靠 | `vessel.portcalls.history` | `GET/POST {base}/position/getcallport/token` | 按挂靠条数阶梯（每 20 条 1 点，最低 2 点） |
+| 历史航次（简版） | `vessel.voyage.history` | `GET/POST {base}/position/getvoyagelist/token` | 按航次条数阶梯（每 20 条 1 点，最低 2 点） |
+| 历史航次（详版） | `vessel.voyage.history` | `GET/POST {base}/portofcall/getvoyages` | 按航次条数阶梯（每 20 条 1 点，最低 2 点） |
+| 上一港 | `vessel.departure.last` | `GET/POST {base}/position/lastdeparture/token` | 固定计费（FIXED） |
+| 当前停船 | `vessel.stop.current` | `GET/POST {base}/position/getstop/token` | 固定计费（FIXED） |
+
+#### 历史挂靠 / Port call history
+
+查询某船在指定时间段内的靠港记录（已合并港外临时停船等噪声，按时间**降序**，最新在前）。
+
+- **触发**：历史挂靠、靠港记录、挂港历史、去过哪些港、port call history、port calls
+- **输入**：`mmsi`（必选）；`starttime`、`endtime`（必选，北京时间，如 `2019-01-01 00:00:00`）；可选 `accuracyval`（默认 `6`）
+- **接口**：`GET/POST {base}/position/getcallport/token?mmsi={mmsi}&starttime={start}&endtime={end}&api_key=...`
+- **响应**：`result=ok` 时 `list.shipRouteFeature[]` 含 `mPortname`/`cnportname`、`portcode`、`mUpdatetime`（到港/挂靠时间）、`mleavetime`（离港时间）、`country`/`countryCnName`、`lat`/`lon`、`fre`（近一年该港挂靠次数）等
+
+#### 历史航次 / Voyage history
+
+**路由建议**：
+
+| 用户意图 | 优先接口 |
+|----------|-----------|
+| 最近航次、默认时间窗、不需自定义区间 | `position/getvoyagelist/token`（服务端默认约最近 10 个月，仅传 `mmsi`） |
+| 指定起止时间、需航程/航速/吃水等明细 | `portofcall/getvoyages` |
+
+- **触发**：历史航次、航次列表、从哪到哪、航行记录、voyage history、voyage list
+- **简版输入**：`mmsi`
+- **详版输入**：`mmsi`；`starttime`、`endtime`（必选，北京时间）；可选 `accuracyval`（默认 `5`）、`updatedistance`（默认 `1`，是否补算航程距离）
+- **简版接口**：`GET/POST {base}/position/getvoyagelist/token?mmsi={mmsi}&api_key=...`
+- **详版接口**：`GET/POST {base}/portofcall/getvoyages?mmsi={mmsi}&starttime={start}&endtime={end}&api_key=...`
+- **简版响应**：`list.voyage[]` 含 `startport`/`endport`、`startportcode`/`endportcode`、`starttime`/`endtime`、`timelong`（航行小时数）
+- **详版响应**：`result=OK` 时 `list[]` 为 `ShipVoyageBean`，额外含中英文港名与国家、最大/平均航速、航程（海里）、吃水等
+
+#### 上一港 / Last departure
+
+查询船舶最近一次离港港口与离港时间。
+
+- **触发**：上一港、上次离港、从哪出发、last port、last departure、previous port
+- **输入**：`mmsi`
+- **接口**：`GET/POST {base}/position/lastdeparture/token?mmsi={mmsi}&api_key=...`
+- **响应**：`result=ok` 时 `list` 为单条 `LastDeparture`：`portcode`、`portname`、`departtime`（北京时间）、`country`、`countryCode`
+
+#### 当前停船 / Current stop
+
+查询船舶最新停船/到港位置与停船时长（同 legacy `/portofcall/get/shipstoppedplaceandtime` 语义）。
+
+- **触发**：当前停船、停在哪、在港停多久、锚泊、current stop、stopped at port
+- **输入**：`mmsi`
+- **接口**：`GET/POST {base}/position/getstop/token?mmsi={mmsi}&api_key=...`
+- **响应**：`message=ok` 时 `data[]` 含 `portcode`、`enportname`/`cnportname`、`encountry`/`cncountry`、`lat`/`lon`、`stoptime`、`starttime`、`accumulatetime`（累计停船时长描述）
+
+**调用流程**：检查 `api_key` → 若无 MMSI 则 `shipSearch` → 按上表选接口 → 解析并展示；无数据时如实说明（`result=failed` / `empty` / `data` 为空），勿伪造挂靠或航次。
+
 ### 红海与波斯湾海峡通航 / Strait Traffic
 
 咽喉航道通航船舶统计，支持曼德海峡、苏伊士运河、好望角、霍尔木兹海峡，按日期区间与方向返回船型统计及船舶明细。**无 `api_key` 仅可查最近 1 周，有 `api_key` 时间区间不限**。
@@ -86,7 +152,7 @@ source: https://api.hifleet.com
 - **API 文档**：[references/strait_traffic_api.md](references/strait_traffic_api.md)；完整接口以 [ShowDoc 45/2234](http://showdoc.hifleet.com/web/#/45/2234) 为准。
 - **脚本**：`scripts/get_strait_traffic.py`（海峡名或 oid + 可选 startdate/enddate/i18n，有 `api_key` 可查超 7 天）
 
-**接口**：**POST** `http://api.hifleet.com/position/statisticzonetraffic`，Query 参数 oid、startdate、enddate、i18n（可选）、`api_key`（可选）。**海峡 oid**：曼德海峡 24480、苏伊士运河 132808、好望角 1062830、霍尔木兹海峡 24471。无 `api_key` 时校验时间区间 ≤ 7 天。
+**接口**：**POST** `{base}/position/statisticzonetraffic`，Query 参数 oid、startdate、enddate、i18n（可选）、`api_key`（可选）。**海峡 oid**：曼德海峡 24480、苏伊士运河 132808、好望角 1062830、霍尔木兹海峡 24471。无 `api_key` 时校验时间区间 ≤ 7 天。
 
 ### 区域船舶 / Area Traffic
 
@@ -97,7 +163,7 @@ source: https://api.hifleet.com
 - **API 详情**：[references/area_traffic_api.md](references/area_traffic_api.md)（gettraffic 支持 bbox、areaId、polygon）；[references/areas_api.md](references/areas_api.md)（区域清单）
 - **脚本**：`scripts/get_areas.py`（获取区域清单，供按名称选区域）；`scripts/get_area_traffic.py`（bbox 四参数、`--area-id <id>` 或 `--polygon "POLYGON((...))"`，需 `api_key`）
 
-**调用流程**：检查 `api_key` → 若用户给的是**矩形坐标**：组 bbox → GET `position/gettraffic/token?bbox=...&api_key=...`；若用户给的是**文字描述**：GET `position/areas/token`（可选 `api_key`）→ 用 name/cnName 匹配得 id → GET `position/gettraffic/token?areaId={id}&api_key=...`；若用户给的是**WKT 多边形**：GET `position/gettraffic/token?polygon=...&api_key=...` → 解析 list 展示船名、MMSI、经纬度、航速、状态、目的港等。
+**调用流程**：检查 `api_key` → 若用户给的是**矩形坐标**：组 bbox → GET `{base}/position/gettraffic/token?bbox=...&api_key=...`；若用户给的是**文字描述**：GET `{base}/position/areas/token`（可选 `api_key`）→ 用 name/cnName 匹配得 id → GET `{base}/position/gettraffic/token?areaId={id}&api_key=...`；若用户给的是**WKT 多边形**：GET `{base}/position/gettraffic/token?polygon=...&api_key=...` → 解析 list 展示船名、MMSI、经纬度、航速、状态、目的港等。
 
 ### 进港指南 / Port guide
 
@@ -129,7 +195,7 @@ source: https://api.hifleet.com
 
 ### PSC 检查 / PSC Inspection
 
-根据 **IMO** 查询船舶 **港口国监督检查（PSC）** 数据。接口为 **GET** `https://api.hifleet.com/pscapi/get`，**必须**带 `api_key`（与其它需鉴权接口一致）。支持用户直接提供 IMO，或提供**船名/关键字**、**9 位 MMSI** 时先走 `position/shipSearch`，从命中结果的 `imonumber` 取得 IMO 再请求 PSC；**无 IMO 的内贸船**无法调本接口。
+根据 **IMO** 查询船舶 **港口国监督检查（PSC）** 数据。接口为 **GET** `{base}/pscapi/get`，**必须**带 `api_key`（与其它需鉴权接口一致）。支持用户直接提供 IMO，或提供**船名/关键字**、**9 位 MMSI** 时先走 `position/shipSearch`，从命中结果的 `imonumber` 取得 IMO 再请求 PSC；**无 IMO 的内贸船**无法调本接口。
 
 - **触发**：PSC、港口国监督、港口国检查、滞留、缺陷、检查记录、port state control、PSC inspection、detention、deficiency
 - **输入**：IMO（6～7 位数字，可带 `IMO` 前缀）；或船名/关键字；或 9 位 MMSI（与船位技能相同，先搜船再取 IMO）；`api_key` 从配置读取
@@ -151,9 +217,9 @@ source: https://api.hifleet.com
 
 **三类调用**（Agent 按需组合）：
 
-1. **汇总**：`GET .../pscapi/openclaw/anomalies/summary?api_key=...&dateFrom=...&dateTo=...` → 按 `severity` 计数，适合先答「严重异常有多少」。
-2. **列表**：`GET .../pscapi/openclaw/anomalies?api_key=...`（同上筛选 + 分页）→ `data.list` 展示 `title`、`dateEnd`、`severity`、`metric` 等。
-3. **详情**：`GET .../pscapi/openclaw/anomalies/{id}?api_key=...` → 展开 `description`、`evidence`（JSON 字符串可格式化）。
+1. **汇总**：`GET {base}/pscapi/openclaw/anomalies/summary?api_key=...&dateFrom=...&dateTo=...` → 按 `severity` 计数，适合先答「严重异常有多少」。
+2. **列表**：`GET {base}/pscapi/openclaw/anomalies?api_key=...`（同上筛选 + 分页）→ `data.list` 展示 `title`、`dateEnd`、`severity`、`metric` 等。
+3. **详情**：`GET {base}/pscapi/openclaw/anomalies/{id}?api_key=...` → 展开 `description`、`evidence`（JSON 字符串可格式化）。
 
 **数据稀疏时的回答规则（OpenClaw 必守）**  
 `psc_anomaly_event` 可能只有极少行或全空，**不得**据此下结论「没有 PSC 风险」「监管很松」等。须遵守 [references/psc_anomaly_api.md](references/psc_anomaly_api.md) 中的 **「异常表数据量过少」专节**，要点如下：
@@ -166,8 +232,6 @@ source: https://api.hifleet.com
 | 用户要「某船有没有被查」 | **不要用异常表代替**：应走上文 **PSC 检查**（`pscapi/get` + IMO）。 |
 | 用户问「为什么一直没有异常」 | 可简述：日批模型只标记**相对历史基线显著升高**的切片；`min-inspections`、Z 阈值、是否已跑异常补算均会影响条数；运维侧可调 newpsc `psc.stats` 或补跑 `backfill-anomalies`（不展开实现细节除非用户是运维）。 |
 
-**Base URL**：默认 `https://api.hifleet.com`；其它部署可设环境变量 `HIFLEET_API_BASE`（脚本与文档均支持）。
-
 #### PSC 宏观统计（OpenClaw，原始聚合 / 缺陷 / 占比）
 
 与 **异常事件表**互补：直接基于 **`pscdata.psc`**（及 **`psc_defect_distribution`**）做可引用数字，支撑「哪国变严」「哪旗/哪港风险」「缺陷热点」「是否某旗占比上升」等；**不替代**因果推断与预测。
@@ -179,11 +243,11 @@ source: https://api.hifleet.com
 
 | 用户意图 | 优先接口 |
 |----------|-----------|
-| 国家/全局监管变严、检查量/滞留率环比 | `GET .../pscapi/openclaw/stats/compare`（`groupBy=AUTHORITY`/`GLOBAL`，可用 `authorityContains`） |
+| 国家/全局监管变严、检查量/滞留率环比 | `GET {base}/pscapi/openclaw/stats/compare`（`groupBy=AUTHORITY`/`GLOBAL`，可用 `authorityContains`） |
 | 船旗风险排行、某旗滞留率 | `compare` + `groupBy=FLAG`；结合 `anomalies` |
 | **中国/某国主要检查港口、哪港严** | **`stats/compare` 必调**：`groupBy=PORT` 或 `AUTHORITY_PORT` + `authorityContains`（如 `China`）；**禁止**在未请求接口时用常识港口列表冒充数据；**禁止**谎称「港口接口故障」除非返回明确错误（并说明 code）。 |
-| 最近查什么缺陷、缺陷码热点 | `GET .../pscapi/openclaw/stats/defects/top`（需 newpsc 已写缺陷分布表） |
-| 是否「针对」某旗 / 检查类型占比变化 | `GET .../pscapi/openclaw/stats/mix/compare`（`mixDimension=FLAG` 或 `TYPE_INS`）；**勿断言政治针对**，`TYPE_INS` **不是**散货船等船型 |
+| 最近查什么缺陷、缺陷码热点 | `GET {base}/pscapi/openclaw/stats/defects/top`（需 newpsc 已写缺陷分布表） |
+| 是否「针对」某旗 / 检查类型占比变化 | `GET {base}/pscapi/openclaw/stats/mix/compare`（`mixDimension=FLAG` 或 `TYPE_INS`）；**勿断言政治针对**，`TYPE_INS` **不是**散货船等船型 |
 | 统计模型认定的异常 spike | 仍用 `openclaw/anomalies*` |
 | 某船/IMO | `pscapi/get` |
 
@@ -193,16 +257,18 @@ source: https://api.hifleet.com
 
 ## 安全与合规
 
-本技能仅向 api.hifleet.com（或 `HIFLEET_API_BASE`）的船位/档案/PSC/PSC openclaw（anomalies + stats）/海峡通航/区域船舶等接口发起只读请求（GET 或 POST）；鉴权的接口使用 `api_key`。详见 [SECURITY.md](SECURITY.md)。
+本技能仅向 `{base}`（默认 `https://api.hifleet.com`，可由 `HIFLEET_API_BASE` 覆盖）下的船位/档案/航程/PSC/海峡通航/区域船舶等固定路径发起只读请求（GET 或 POST）；鉴权接口使用 `api_key`。基址约定见 [references/api_base.md](references/api_base.md)；详见 [SECURITY.md](SECURITY.md)。
 
 ## 参考资料与脚本
 
 | 路径 | 说明 |
 |------|------|
 | [SECURITY.md](SECURITY.md) | 安全说明（网络行为、Token 用途、无动态代码） |
+| [references/api_base.md](references/api_base.md) | API 基址 `{base}` 与 `HIFLEET_API_BASE` 约定 |
 | [references/skills_index.md](references/skills_index.md) | 技能清单（中英双语、触发词） |
 | [references/position_api.md](references/position_api.md) | 船位 API 完整说明与响应字段 |
 | [references/archive_api.md](references/archive_api.md) | 档案 API 说明与 data 分类 |
+| [references/voyage_api.md](references/voyage_api.md) | 航程 API：历史挂靠、历史航次、上一港、当前停船（OpenClaw） |
 | [references/strait_traffic_api.md](references/strait_traffic_api.md) | 红海/波斯湾海峡通航 API（oid、时间范围） |
 | [references/area_traffic_api.md](references/area_traffic_api.md) | 区域船舶 API（bbox、areaId、polygon、api_key） |
 | [references/areas_api.md](references/areas_api.md) | 区域清单 API（海区/贸易区列表，供按名称选 areaId） |
@@ -210,11 +276,12 @@ source: https://api.hifleet.com
 | [references/psc_anomaly_api.md](references/psc_anomaly_api.md) | PSC 统计异常 API（openclaw/anomalies*，api_key，可选 HIFLEET_API_BASE） |
 | [references/psc_openclaw_stats_api.md](references/psc_openclaw_stats_api.md) | PSC 宏观统计（openclaw/stats/compare、defects/top、mix/compare） |
 | [references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md) | PSC 多表字段语义：`authority`=检查国、`ship_type`=检查类型（非船型） |
-| scripts/get_position.py | 按关键字或 MMSI 获取船位（需 `api_key`） |
-| scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（接口支持 mmsi 参数，内贸船无 IMO 可用 MMSI，需 `api_key`） |
-| scripts/get_strait_traffic.py | 海峡通航统计（POST statisticzonetraffic），oid+日期+i18n；无 `api_key` 限 7 天，有 `api_key` 不限 |
-| scripts/get_areas.py | 区域清单（海区/贸易区），供按名称匹配 areaId |
-| scripts/get_area_traffic.py | 区域船舶（bbox、--area-id 或 --polygon，需 `api_key`） |
-| scripts/get_psc.py | PSC 检查（IMO 或船名/MMSI 先搜船取 IMO，需 `api_key`） |
+| scripts/get_position.py | 按关键字或 MMSI 获取船位（需 `api_key`；可选 `HIFLEET_API_BASE`） |
+| scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（需 `api_key`；可选 `HIFLEET_API_BASE`） |
+| scripts/get_strait_traffic.py | 海峡通航统计（POST `{base}/position/statisticzonetraffic`）；可选 `HIFLEET_API_BASE` |
+| scripts/get_avoidredsea_traffic.py | 集装箱红海饶航（POST `{base}/routerisk/getAvoidRedSeaDetail/token`）；可选 `HIFLEET_API_BASE` |
+| scripts/get_areas.py | 区域清单（`{base}/position/areas/token`）；可选 `HIFLEET_API_BASE` |
+| scripts/get_area_traffic.py | 区域船舶（`{base}/position/gettraffic/token`，需 `api_key`）；可选 `HIFLEET_API_BASE` |
+| scripts/get_psc.py | PSC 检查（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_psc_anomalies.py | PSC 统计异常：list / summary / get id（需 `api_key`，可选 HIFLEET_API_BASE） |
 | scripts/get_psc_openclaw_stats.py | PSC 宏观统计：compare / defects / mix（需 `api_key`，可选 HIFLEET_API_BASE） |

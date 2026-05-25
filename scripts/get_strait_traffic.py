@@ -3,7 +3,8 @@
 """
 海峡通航统计。咽喉航道通航船舶统计。支持曼德海峡、苏伊士运河、好望角、霍尔木兹海峡。
 对于霍尔木兹海峡的方向：东是出湾，西是入湾。
-接口：POST http://api.hifleet.com/position/statisticzonetraffic，参数 oid、startdate、enddate、i18n（可选）、api_key（可选）。
+接口：POST {base}/position/statisticzonetraffic，参数 oid、startdate、enddate、i18n（可选）、api_key（可选）。
+可选 `HIFLEET_API_BASE`（默认 https://api.hifleet.com，无末尾斜杠）。
 无 `api_key` 仅可查最近 1 周；有 `api_key` 时间区间不限。
 
 用法:
@@ -11,7 +12,7 @@
   海峡: 曼德海峡|苏伊士运河|好望角|霍尔木兹海峡 或 oid(24480|132808|1062830|24471)
   日期: yyyy-MM-dd，不传则默认最近 7 天。无 `api_key` 时区间不得超过 7 天；有 `api_key` 不限。i18n 可选 zh 或 en。
 
-Security: 仅向 http://api.hifleet.com/position/statisticzonetraffic 发起 POST 请求；`api_key` 可选，仅用于扩展时间范围；仅使用标准库，无 eval/exec。
+Security: 仅向 HIFLEET_API_BASE 下 position/statisticzonetraffic 发起 POST；标准库 only。
 """
 import os
 import sys
@@ -20,7 +21,9 @@ import urllib.parse
 import json
 from datetime import datetime, timedelta
 
-STRAIT_TRAFFIC_URL = "http://api.hifleet.com/position/statisticzonetraffic"
+
+def api_base():
+    return (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
 
 STRAITS = {
     "曼德海峡": "24480",
@@ -43,7 +46,7 @@ def get_strait_traffic(oid: str, startdate: str, enddate: str, i18n: str = "zh",
     params = {"oid": oid, "startdate": startdate, "enddate": enddate, "i18n": i18n}
     if api_key:
         params["api_key"] = api_key
-    url = STRAIT_TRAFFIC_URL + "?" + urllib.parse.urlencode(params)
+    url = api_base() + "/position/statisticzonetraffic?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="POST", data=b"")
     req.add_header("Content-Type", "application/x-www-form-urlencoded")
     with urllib.request.urlopen(req) as resp:

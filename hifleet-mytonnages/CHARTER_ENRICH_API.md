@@ -12,20 +12,22 @@
 
 ---
 
-## 配置与根路径
+## 配置与 API 基址
+
+下文 **`{base}`** 表示**租船/船货盘 API 根**（无末尾 `/`），非仅主机名。
 
 | 含义 | 默认值 |
 |------|--------|
-| 租船/船货盘 API 根（无末尾 `/`） | `https://api.hifleet.com/openclaw/vessel/charter` |
+| `{base}`（租船 OpenClaw 根） | `https://api.hifleet.com/openclaw/vessel/charter`（主机部分可由 `HIFLEET_API_BASE` 覆盖，见 [../references/api_base.md](../references/api_base.md)） |
 
-**根路径**：`hifleet_charter_api_base`（config）→ `HIFLEET_CHARTER_API_BASE`（环境）→ 上表。  
+**解析顺序**：`hifleet_charter_api_base`（config）→ `HIFLEET_CHARTER_API_BASE`（环境）→ `HIFLEET_API_BASE` + `/openclaw/vessel/charter` → 上表默认。  
 无有效 **`hifleet_api_key`** 时：**不得**调本文接口；可仅基于邮件解析字段回答，并提示用户配置 Key（见 `CONFIG.example.md`）。
 
 ---
 
 ## 1. 船舶档案批量查询（按 IMO 补充船盘）
 
-**`POST {root}/ship-archive/batch?api_key={密钥}`**
+**`POST {base}/ship-archive/batch?api_key={密钥}`**
 
 - **方法**：**POST**（**禁止 GET**，现网对 GET 返回 method not supported）。  
 - **Header**：`Content-Type: application/json`  
@@ -46,7 +48,7 @@
 
 ## 2. 港口 ID 解析（OPEN / 装货港 / 卸货港）
 
-**`POST {root}/port/portid?api_key={密钥}`**
+**`POST {base}/port/portid?api_key={密钥}`**
 
 - **Header**：`Content-Type: application/json`  
 - **Body**：
@@ -83,7 +85,7 @@
 
 ### 3.3 批量港距
 
-**`POST {root}/port-distances/batch?api_key={密钥}`**
+**`POST {base}/port-distances/batch?api_key={密钥}`**
 
 - **Body**：
 

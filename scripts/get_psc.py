@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 根据 IMO 查询船舶 PSC（港口国监督检查）数据；支持直接 IMO，或通过船名/MMSI 先搜船再取 IMO。
-接口：GET https://api.hifleet.com/pscapi/get?imo=...&api_key=...
+接口：GET {base}/pscapi/get?imo=...&api_key=...
 需配置环境变量 `HIFLEET_API_KEY`。
+可选 `HIFLEET_API_BASE`（默认 https://api.hifleet.com，无末尾斜杠）。
 
 用法:
   python get_psc.py <IMO>                    # 7 位 IMO（可带 IMO 前缀）
@@ -11,8 +12,7 @@
   python get_psc.py <船名或关键字> <MMSI>    # 多条命中时指定 MMSI 再取 IMO 查 PSC
   python get_psc.py <9位MMSI>                # 以 MMSI 关键字搜船后取 IMO（同搜船逻辑）
 
-Security: 仅向 https://api.hifleet.com 的 position/shipSearch 与 pscapi/get 发起 GET 请求；
-`api_key` 仅用于 API 鉴权；仅使用标准库，无 eval/exec。
+Security: 仅向 HIFLEET_API_BASE 下 position/shipSearch 与 pscapi/get 发起 GET；标准库 only。
 """
 import os
 import sys
@@ -21,8 +21,9 @@ import urllib.parse
 import json
 from typing import Optional
 
-SHIP_SEARCH_URL = "https://api.hifleet.com/position/shipSearch"
-PSC_URL = "https://api.hifleet.com/pscapi/get"
+
+def api_base():
+    return (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
 
 
 def get_api_key():
@@ -36,7 +37,7 @@ def ship_search(shipname: str, api_key: str, i18n: str = "zh", count: str = "50"
         "i18n": i18n,
         "count": count,
     }
-    url = SHIP_SEARCH_URL + "?" + urllib.parse.urlencode(params)
+    url = api_base() + "/position/shipSearch?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode())
@@ -44,7 +45,7 @@ def ship_search(shipname: str, api_key: str, i18n: str = "zh", count: str = "50"
 
 def get_psc(api_key: str, imo: str) -> dict:
     params = {"imo": imo.strip(), "api_key": api_key}
-    url = PSC_URL + "?" + urllib.parse.urlencode(params)
+    url = api_base() + "/pscapi/get?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode())

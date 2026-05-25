@@ -4,12 +4,13 @@
 根据 IMO 或 MMSI 获取船舶档案（基本信息、尺度、舱容、建造、入级、动力、公司信息、互保协会等）。
 接口支持 imo 与 mmsi 二选一；内贸船无 IMO 时仅传 mmsi 即可。船名不支持，需先通过 shipSearch 得到 MMSI/IMO。
 需配置环境变量 `HIFLEET_API_KEY`。
+可选 `HIFLEET_API_BASE`（默认 https://api.hifleet.com，无末尾斜杠）。
 
 用法:
   python get_archive.py <IMO>   # 按 IMO 查档案（7 位）
   python get_archive.py <MMSI>  # 按 MMSI 查档案（9 位，支持内贸船无 IMO）
 
-Security: 仅向 https://api.hifleet.com/shiparchive/getShipArchiveWithEnginAndCompany 发起 GET 请求；`api_key` 仅用于 API 鉴权，不向第三方发送；仅使用标准库，无 eval/exec。
+Security: 仅向 HIFLEET_API_BASE 下 shiparchive 路径发起 GET；标准库 only。
 """
 import os
 import sys
@@ -17,7 +18,9 @@ import urllib.request
 import urllib.parse
 import json
 
-ARCHIVE_URL = "https://api.hifleet.com/shiparchive/getShipArchiveWithEnginAndCompany"
+
+def api_base():
+    return (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
 
 
 def get_api_key():
@@ -30,7 +33,7 @@ def get_archive(api_key: str, imo: str = None, mmsi: str = None) -> dict:
         params = {"mmsi": mmsi.strip(), "api_key": api_key}
     else:
         params = {"imo": (imo or "").strip(), "api_key": api_key}
-    url = ARCHIVE_URL + "?" + urllib.parse.urlencode(params)
+    url = api_base() + "/shiparchive/getShipArchiveWithEnginAndCompany?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode())

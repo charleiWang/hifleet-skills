@@ -4,7 +4,7 @@
 
 **多表字段语义（`authority` = 检查国、`ship_type`/`shipType` = 检查类型）**：见 **[psc_stats_field_semantics.md](psc_stats_field_semantics.md)**，OpenClaw 解读异常或向用户解释维度时应优先遵循该文档。
 
-**Base URL**：与船位/PSC 一致，默认 `https://api.hifleet.com`。若部署在内网或其它域名，可通过环境变量 `HIFLEET_API_BASE` 覆盖（脚本会读取，**不含**末尾 `/`）。
+**API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 `HIFLEET_API_BASE`（无末尾 `/`）。见 [api_base.md](api_base.md)。
 
 ## 响应包装 HiResult
 
@@ -31,7 +31,7 @@
 
 | 项目 | 值 |
 |------|-----|
-| URL | `{BASE}/pscapi/openclaw/anomalies` |
+| URL | `{base}/pscapi/openclaw/anomalies` |
 | 方法 | GET |
 
 ### Query 参数
@@ -66,7 +66,7 @@
 
 | 项目 | 值 |
 |------|-----|
-| URL | `{BASE}/pscapi/openclaw/anomalies/summary` |
+| URL | `{base}/pscapi/openclaw/anomalies/summary` |
 | 方法 | GET |
 
 ### Query 参数
@@ -83,7 +83,7 @@
 
 | 项目 | 值 |
 |------|-----|
-| URL | `{BASE}/pscapi/openclaw/anomalies/{id}` |
+| URL | `{base}/pscapi/openclaw/anomalies/{id}` |
 | 方法 | GET |
 
 ### Query 参数
