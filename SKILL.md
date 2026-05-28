@@ -2,7 +2,7 @@
 name: hifleet-skills
 description: >-
   HiFleet 综合技能，包含船位、档案、航程（历史轨迹/历史挂靠/历史航次/上一港/当前停船）、PSC、区域/海峡通航、港口、租船船货盘邮件检索、港距排序、班轮船期、航线、航运、气象海况、船队、AIS。Use for vessel position, ship info, track history, port calls, voyage history, last departure, current stop, PSC inspection/anomalies/statistics, area or strait traffic, port, charter/open-vessel/cargo email search, port-distance sorting, liner schedule, route, shipping, weather, fleet, or AIS.
-version: 0.3.2
+version: 0.3.3
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
   - HIFLEET_API_KEY
