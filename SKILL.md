@@ -1,8 +1,8 @@
 ---
 name: hifleet-skills
 description: >-
-  HiFleet 综合技能，包含船位、档案、航程（历史挂靠/历史航次/上一港/当前停船）、PSC、区域/海峡通航、港口、租船船货盘邮件检索、港距排序、班轮船期、航线、航运、气象海况、船队、AIS。Use for vessel position, ship info, port calls, voyage history, last departure, current stop, PSC inspection/anomalies/statistics, area or strait traffic, port, charter/open-vessel/cargo email search, port-distance sorting, liner schedule, route, shipping, weather, fleet, or AIS.
-version: 0.3.1
+  HiFleet 综合技能，包含船位、档案、航程（历史轨迹/历史挂靠/历史航次/上一港/当前停船）、PSC、区域/海峡通航、港口、租船船货盘邮件检索、港距排序、班轮船期、航线、航运、气象海况、船队、AIS。Use for vessel position, ship info, track history, port calls, voyage history, last departure, current stop, PSC inspection/anomalies/statistics, area or strait traffic, port, charter/open-vessel/cargo email search, port-distance sorting, liner schedule, route, shipping, weather, fleet, or AIS.
+version: 0.3.2
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
   - HIFLEET_API_KEY
@@ -25,7 +25,7 @@ source: https://api.hifleet.com
 | 港口 Port guide | ✅ 已实现 | 港口列表/检索（港名或代码）、单港详情（`piuid`→`portId`）；`portguide/getPort/token`、`portguide/getPortDetail/token` |
 | 租船 Charter | ✅ 已实现（内置模块） | 船盘/货盘邮件检索解析、按港口距离排序、船期查询；使用 `hifleet-mytonnages/` 分册工作流 |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
-| 航程 Voyage | ✅ 已实现（部分） | 航程、航线规划、历史挂靠、历史航次、上一港、当前停船|
+| 航程 Voyage | ✅ 已实现（部分） | 历史轨迹、航程、航线规划、历史挂靠、历史航次、上一港、当前停船|
 | 航线 Route | 待实现 | 推荐航线、航路点 |
 | 航运 Shipping | 待实现 | 运价、市场、新闻 |
 | 气象海况 Weather | 待实现 | 风浪、台风、能见度 |
@@ -85,17 +85,29 @@ source: https://api.hifleet.com
 
 ### 航程 / Voyage（OpenClaw）
 
-查询单船挂靠、航次、上一离港及当前停船信息。**均需 `api_key`**；用户仅给船名/关键字时，先走 `position/shipSearch` 取得 MMSI（规则同船位技能）。
+查询单船历史轨迹、挂靠、航次、上一离港及当前停船信息。**均需 `api_key`**；用户仅给船名/关键字时，先走 `position/shipSearch` 取得 MMSI（规则同船位技能）。
 
 - **API 详情**：[references/voyage_api.md](references/voyage_api.md)
 
-| 能力 | capabilityCode | 接口 | 计费 |
-|------|----------------|------|------|
-| 历史挂靠 | `vessel.portcalls.history` | `GET/POST {base}/position/getcallport/token` | 按挂靠条数阶梯（每 20 条 1 点，最低 2 点） |
-| 历史航次（简版） | `vessel.voyage.history` | `GET/POST {base}/position/getvoyagelist/token` | 按航次条数阶梯（每 20 条 1 点，最低 2 点） |
-| 历史航次（详版） | `vessel.voyage.history` | `GET/POST {base}/portofcall/getvoyages` | 按航次条数阶梯（每 20 条 1 点，最低 2 点） |
-| 上一港 | `vessel.departure.last` | `GET/POST {base}/position/lastdeparture/token` | 固定计费（FIXED） |
-| 当前停船 | `vessel.stop.current` | `GET/POST {base}/position/getstop/token` | 固定计费（FIXED） |
+| 能力 | 接口 | 计费 |
+|------|------|------|
+| 历史轨迹（压缩） | `GET/POST {base}/position/trajectory/token` | 按轨迹点数阶梯（每 100 点 1 点，最低 2 点） |
+| 历史轨迹（未压缩） | `GET/POST {base}/position/trajectory/nocompressed/token` | 按轨迹点数阶梯（每 100 点 1 点，最低 2 点） |
+| 历史挂靠 | `GET/POST {base}/position/getcallport/token` | 按挂靠条数阶梯（每 20 条 1 点，最低 2 点） |
+| 历史航次（简版） | `GET/POST {base}/position/getvoyagelist/token` | 按航次条数阶梯（每 20 条 1 点，最低 2 点） |
+| 历史航次（详版） | `GET/POST {base}/portofcall/getvoyages` | 按航次条数阶梯（每 20 条 1 点，最低 2 点） |
+| 上一港 | `GET/POST {base}/position/lastdeparture/token` | 固定计费（FIXED） |
+| 当前停船 | `GET/POST {base}/position/getstop/token` | 固定计费（FIXED） |
+
+#### 历史轨迹 / Track history
+
+按 MMSI 与时间区间查询 AIS 历史轨迹点（与挂靠/航次不同，返回**点序列**）。
+
+- **触发**：历史轨迹、轨迹回放、某时段走了哪、航行路线、track history、trajectory、AIS track
+- **输入**：`mmsi`（必选）；`starttime`、`endtime`（必选，北京时间）；可选 `bbox`（`左经,下纬,右经,上纬`，仅 `zoom≥8` 时过滤）、`zoom`（默认 `7`，最大 `16`）
+- **接口**：`GET/POST {base}/position/trajectory/token?mmsi={mmsi}&starttime={start}&endtime={end}&api_key=...`
+- **时间窗**：压缩版约 **3 个月**；未压缩版约 **1 个月**（见 [voyage_api.md](references/voyage_api.md)）
+- **响应**：`ships.offers.ship[]` 含 `ti`（报位时间）、`la`/`lo`、`sp`（航速）、`co`（航向）、`dis`（累计航程）、`isstoppoint` 及停船相关字段
 
 #### 历史挂靠 / Port call history
 
@@ -141,7 +153,7 @@ source: https://api.hifleet.com
 - **接口**：`GET/POST {base}/position/getstop/token?mmsi={mmsi}&api_key=...`
 - **响应**：`message=ok` 时 `data[]` 含 `portcode`、`enportname`/`cnportname`、`encountry`/`cncountry`、`lat`/`lon`、`stoptime`、`starttime`、`accumulatetime`（累计停船时长描述）
 
-**调用流程**：检查 `api_key` → 若无 MMSI 则 `shipSearch` → 按上表选接口 → 解析并展示；无数据时如实说明（`result=failed` / `empty` / `data` 为空），勿伪造挂靠或航次。
+**调用流程**：检查 `api_key` → 若无 MMSI 则 `shipSearch` → 按上表选接口 → 解析并展示；无数据时如实说明（`result=failed` / `empty` / `data` 或轨迹 `ship[]` 为空），勿伪造轨迹点、挂靠或航次。
 
 ### 红海与波斯湾海峡通航 / Strait Traffic
 

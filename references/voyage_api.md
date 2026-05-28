@@ -8,17 +8,67 @@
 
 ## 能力一览
 
-| 能力 | capabilityCode | 路径 | 方法 | 计费 |
-|------|----------------|------|------|------|
-| 历史挂靠 | `vessel.portcalls.history` | `/position/getcallport/token` | GET / POST | RESULT_COUNT：每 20 条 1 点，最低 2 点 |
-| 历史航次（简版） | `vessel.voyage.history` | `/position/getvoyagelist/token` | GET / POST | RESULT_COUNT：每 20 条 1 点，最低 2 点 |
-| 历史航次（详版） | `vessel.voyage.history` | `/portofcall/getvoyages` | GET / POST | RESULT_COUNT：每 20 条 1 点，最低 2 点 |
-| 上一港 | `vessel.departure.last` | `/position/lastdeparture/token` | GET / POST | FIXED |
-| 当前停船 | `vessel.stop.current` | `/position/getstop/token` | GET / POST | FIXED |
+| 能力 | 路径 | 方法 | 计费 |
+|------|------|------|------|
+| 历史轨迹（压缩） | `/position/trajectory/token` | GET / POST | RESULT_COUNT：每 100 点 1 点，最低 2 点 |
+| 历史轨迹（未压缩） | `/position/trajectory/nocompressed/token` | GET / POST | RESULT_COUNT：每 100 点 1 点，最低 2 点 |
+| 历史挂靠 | `/position/getcallport/token` | GET / POST | RESULT_COUNT：每 20 条 1 点，最低 2 点 |
+| 历史航次（简版） | `/position/getvoyagelist/token` | GET / POST | RESULT_COUNT：每 20 条 1 点，最低 2 点 |
+| 历史航次（详版） | `/portofcall/getvoyages` | GET / POST | RESULT_COUNT：每 20 条 1 点，最低 2 点 |
+| 上一港 | `/position/lastdeparture/token` | GET / POST | FIXED |
+| 当前停船 | `/position/getstop/token` | GET / POST | FIXED |
 
 ---
 
-## 1. 历史挂靠 / Port call history
+## 1. 历史轨迹 / Track history
+
+按 MMSI 与时间区间查询 AIS 历史轨迹点（可抽稀）。与挂靠/航次不同：返回的是**点序列**，不是到离港事件。
+
+### 路由建议
+
+| 用户意图 | 优先接口 |
+|----------|-----------|
+| 某时段走了哪条线、轨迹回放、历史路线 | `/position/trajectory/token`（压缩，默认） |
+| 需要高密度/未抽稀全量点 | `/position/trajectory/nocompressed/token` |
+
+### 1a. 压缩轨迹（推荐）
+
+#### 请求
+
+| 项目 | 值 |
+|------|-----|
+| 请求 URL | `{base}/position/trajectory/token` |
+| 请求方式 | `GET` 或 `POST` |
+
+#### Query 参数
+
+| 参数名 | 必选 | 说明 |
+|--------|------|------|
+| mmsi | 是 | 9 位 MMSI |
+| starttime | 是 | 开始时间（北京时间），如 `2019-01-01 00:00:00` |
+| endtime | 是 | 结束时间（北京时间） |
+| bbox | 否 | 视口边界 `左经,下纬,右经,上纬`；空表示不过滤；**仅 zoom ≥ 8 时生效** |
+| zoom | 否 | 抽稀级别，默认 `7`，最大 `16` |
+| api_key | 是 | 接口授权 |
+
+**时间窗**：起止区间不超过约 **3 个月**，否则报错。
+
+#### 响应要点
+
+- 根结构：`ships.offers.ship[]`
+- 单点字段：`m`（MMSI）、`n`（船名）、`ti`（报位时间）、`la`/`lo`（纬经度）、`sp`（航速节）、`co`（航向）、`dis`（累计航程海里）、`isstoppoint`（是否停船点）、`stoptime`/`starttime`/`accumulatetime`（停船相关）
+
+### 1b. 未压缩轨迹
+
+| 项目 | 值 |
+|------|-----|
+| 请求 URL | `{base}/position/trajectory/nocompressed/token` |
+
+参数同压缩版；默认 `zoom=16`，后端 `nocompressed=1`。**时间窗约 1 个月**。
+
+---
+
+## 2. 历史挂靠 / Port call history
 
 ### 请求
 
@@ -44,7 +94,7 @@
 
 ---
 
-## 2. 历史航次（简版）/ Voyage list (default window)
+## 3. 历史航次（简版）/ Voyage list (default window)
 
 默认返回约最近 10 个月航次，仅传 MMSI。
 
@@ -97,7 +147,7 @@
 
 ---
 
-## 4. 上一港 / Last departure
+## 5. 上一港 / Last departure
 
 ### 请求
 
@@ -119,7 +169,7 @@
 
 ---
 
-## 5. 当前停船 / Current stop
+## 6. 当前停船 / Current stop
 
 与 legacy `/portofcall/get/shipstoppedplaceandtime` 语义一致。
 
@@ -147,6 +197,8 @@
 
 | 用户意图 | 优先接口 |
 |----------|-----------|
+| 某时段轨迹/走了哪条线/轨迹回放 | `trajectory/token` |
+| 高密度未抽稀轨迹点 | `trajectory/nocompressed/token` |
 | 某时段挂靠/靠港记录 | `getcallport/token` |
 | 最近航次、不需自定义时间 | `getvoyagelist/token` |
 | 指定区间、要航程/航速明细 | `portofcall/getvoyages` |

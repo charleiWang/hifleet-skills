@@ -10,7 +10,7 @@
 |------|------|
 | 名称 | 船位 / Ship Position |
 | 描述 | 查询船舶实时或历史位置，支持 AIS 报位、锚位、靠泊等。 |
-| 触发词 | 船位、位置、报位、在哪、轨迹、AIS 位置 / ship position, vessel position, location, AIS position, track, where is |
+| 触发词 | 船位、位置、报位、在哪、AIS 位置 / ship position, vessel position, location, AIS position, where is |
 
 ## 2. 档案 / Archive ✅
 
@@ -85,8 +85,8 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 航程 / Voyage |
-| 描述 | OpenClaw 单船航程：**历史挂靠**（`{base}/position/getcallport/token`）、**历史航次**（`{base}/position/getvoyagelist/token` / `{base}/portofcall/getvoyages`）、**上一港**（`{base}/position/lastdeparture/token`）、**当前停船**（`{base}/position/getstop/token`）。均需 `api_key`；无 MMSI 时先 `shipSearch`。 |
-| 触发词 | 历史挂靠、靠港记录、挂港、历史航次、航次列表、上一港、上次离港、当前停船、停在哪 / port call history, voyage history, last departure, current stop, stopped at port |
+| 描述 | OpenClaw 单船航程：**历史轨迹**（`{base}/position/trajectory/token`）、**历史挂靠**（`{base}/position/getcallport/token`）、**历史航次**（`{base}/position/getvoyagelist/token` / `{base}/portofcall/getvoyages`）、**上一港**（`{base}/position/lastdeparture/token`）、**当前停船**（`{base}/position/getstop/token`）。均需 `api_key`；无 MMSI 时先 `shipSearch`。 |
+| 触发词 | 历史轨迹、轨迹回放、航行路线、历史挂靠、靠港记录、挂港、历史航次、航次列表、上一港、上次离港、当前停船、停在哪 / track history, trajectory, port call history, voyage history, last departure, current stop, stopped at port |
 
 **API**：[voyage_api.md](voyage_api.md)
 
@@ -137,8 +137,8 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | AIS |
-| 描述 | AIS 报文、船舶识别、动态/静态数据、轨迹回放与导出。 |
-| 触发词 | AIS、报文、MMSI、轨迹回放、AIS 数据 / AIS, message, MMSI, track replay, AIS data |
+| 描述 | AIS 报文、船舶识别、动态/静态数据、轨迹回放与导出（历史轨迹见 **航程 / Voyage**）。 |
+| 触发词 | AIS、报文、MMSI、AIS 数据 / AIS, message, MMSI, AIS data |
 
 ---
 
