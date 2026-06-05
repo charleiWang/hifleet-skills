@@ -12,7 +12,7 @@
 
 ### 路由 B — 船期（HiFleet 服务端数据，经 API 拉取）
 
-- **含义**：用户要的是 **HiFleet 在 `ttseapi` 上维护的班轮船期**（装/卸港、Laycan、船名、航线等），**不是**从用户自己的邮件里检索。**未解锁**记录仅可展示白名单字段（Laycan、装/卸港、`id`、航线），敏感项须 **`/unlock`**；**已解锁**须标注 **`（已解锁）`** 且勿再提示解锁（详见 **`SCHEDULE_API.md`**、**`WORKFLOW_OUTPUT.md`**）。  
+- **含义**：用户要的是 **HiFleet 在 `api.hifleet.com` 上维护的班轮船期**（装/卸港、Laycan、船名、航线等），**不是**从用户自己的邮件里检索。**未解锁**记录仅可展示白名单字段（Laycan、装/卸港、`id`、航线），敏感项须 **`/unlock`**；**已解锁**须标注 **`（已解锁）`** 且勿再提示解锁（详见 **`SCHEDULE_API.md`**、**`WORKFLOW_OUTPUT.md`**）。  
 - **触发关键词（示例，非穷举）**：船期、班轮、航线时刻、schedule、line、班次、周班；或「从 A 港到 B 港**有没有船**/**哪天开**」且语境为**查公司数据**而非「谁发来的邮件里的船期」。  
 - **执行**：仅 **Workflow 3**——先检查 **`hifleet_api_key`**，再按 **`SCHEDULE_API.md`** 调用 **GET `/ports/suggest`**（**装、卸都提则各取 1 条，解出两枚 `portId`）→ **`POST /schedules?sk=`**（分页直至 **`data` 全量**，`params` 中两港须**同时**带 `portid`+`dischargingPortid` 当用户已明确两港）→ **逐条全部**展示；**禁止**只带装港 `portid` 再靠港名筛卸港。用户同意扣积分后再 **`POST /unlock?...`**。详见 **`SCHEDULE_API.md`**。  
 - **典型查询维度**：装货港、卸货港、受载/解约日窗（请求体仍用 `openDateStart` / `openDateEnd` 等；**对用户输出**合并为 **Laycan** 一行，见 **`SCHEDULE_API.md`**），**以 portId 为唯一**查询主键。  

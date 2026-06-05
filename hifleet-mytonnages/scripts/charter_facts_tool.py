@@ -445,6 +445,17 @@ def resolve_charter_api_base(cfg_value: str | None = None) -> str:
     return root + "/openclaw/vessel/charter"
 
 
+def resolve_charter_api_base(cfg_value: str | None = None) -> str:
+    """租船 OpenClaw 根地址：config > HIFLEET_CHARTER_API_BASE > HIFLEET_API_BASE + 路径 > 默认公网。"""
+    if cfg_value and str(cfg_value).strip():
+        return str(cfg_value).strip().rstrip("/")
+    explicit = os.environ.get("HIFLEET_CHARTER_API_BASE", "").strip()
+    if explicit:
+        return explicit.rstrip("/")
+    root = (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
+    return root + "/openclaw/vessel/charter"
+
+
 def load_api_config() -> tuple[str, str]:
     api_key = os.environ.get("HIFLEET_API_KEY", "").strip()
     api_base = resolve_charter_api_base()
@@ -829,7 +840,7 @@ def main(argv: list[str] | None = None) -> int:
     pr.add_argument("--limit", type=int, default=50)
     pr.set_defaults(func=cmd_search)
 
-    pe = sub.add_parser("enrich", help="调用 ttseapi 补充船舶档案与 portid 并写回 SQLite")
+    pe = sub.add_parser("enrich", help="调用 api.hifleet.com 公开接口补充船舶档案与 portid 并写回 SQLite")
     pe.add_argument("--db", help="sqlite3 路径")
     pe.set_defaults(func=cmd_enrich)
 

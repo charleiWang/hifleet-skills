@@ -91,6 +91,8 @@
 
 ### 2.4.1 解析结果写入 SQLite（硬性要求）
 
+**写入前（零基础）**：若本机尚未确认可写 `charter_facts.sqlite3`，须先按 **`SQLITE_SETUP.md`** 完成 **B** 检查；失败时经用户同意走 **D→E** 引导（优先修复/安装 **Python 3**，**勿**让用户单独装 MySQL 或手写 SQL）。检查通过或用户明确拒绝本地库后，再执行下列落库。
+
 每封邮件在完成 **2.4** 结构化提取后，助手**必须**将结果持久化到**本地嵌入式 SQLite**，供 **2.3** 及后续提问使用。
 
 - **文件路径**（默认）：当前安装包内的 `hifleet-mytonnages/charter_facts.sqlite3`（脚本按自身所在目录解析；可用 `HIFLEET_CHARTER_DB_PATH` 覆盖为任意 sqlite 文件路径）。例如 Codex 可位于 `$CODEX_HOME/skills/hifleet-skills/hifleet-mytonnages/charter_facts.sqlite3`，OpenClaw 可位于 `~/.openclaw/workspace/skills/hifleet-skills/hifleet-mytonnages/charter_facts.sqlite3`。该文件是**单文件**，用户**无需**安装数据库服务。  
