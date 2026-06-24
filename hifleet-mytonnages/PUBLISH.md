@@ -8,9 +8,13 @@
 clawhub publish ./hifleet-charter-ai --name hifleet-mytonnages --version 1.0.0
 ```
 
-发布前请将 **`SKILL.md` frontmatter 中的 `version`** 与命令行 **`--version`** 保持一致（当前均为 **1.0.0**）。
+发布前请将 **`SKILL.md` frontmatter 中的 `version`** 与命令行 **`--version`** 保持一致（当前均为 **1.1.0**）。
 
-**v1.0.0** 包含：`SKILL.md` 总纲；**`SKILL_CONTEXT.md`**、**`ROUTING_AND_WHEN.md`**、**`MEMORY_LANCEDB.md`**、**`WORKFLOW_1_MAIL.md`** / **`WORKFLOW_2_MAIL.md`**、**`WORKFLOW_OUTPUT.md`**；路由 B 契约 **`SCHEDULE_API.md`**；解析 schema **`PARSE_SCHEMA.md`**；示例配置 **`CONFIG.example.md`**；脚本 **`scripts/charter_facts_tool.py`**、**`scripts/desensitize_for_llm.py`**。发布前建议用 UTF-8 字节数确认 **`SKILL.md`** 未超过平台单文件体积限制。
+**v1.2.0**：移除公开船盘/公开货盘（原 C/D）；**路由 C** 改为 **预抵船舶**（`DESTINATION_SEARCH_API.md`）；单行补充信息默认公网 **`enrich-row`**；新增 **`USER_WORDING.md`**（对用户口语规范）。
+
+**v1.1.0**：新增路由 C/D（公开船盘/货盘，**已在 v1.2.0 移除**）；**`FIRST_SETUP.md`**；路由 A/B/C/D；解锁 `typeCode` 区分班轮/公开船/货盘。
+
+**v1.0.0** 包含：`SKILL.md` 总纲；**`SKILL_CONTEXT.md`**、**`ROUTING_AND_WHEN.md`**、**`MEMORY_LANCEDB.md`**、**`WORKFLOW_1_MAIL.md`** / **`WORKFLOW_2_MAIL.md`**、**`WORKFLOW_OUTPUT.md`**；路由 B 契约 **`SCHEDULE_API.md`**；邮件解析字段 **`PARSE_SCHEMA.md`**；示例配置 **`CONFIG.example.md`**；脚本 **`scripts/charter_facts_tool.py`**、**`scripts/desensitize_for_llm.py`**。发布前建议用 UTF-8 字节数确认 **`SKILL.md`** 未超过平台单文件体积限制。
 
 ---
 
