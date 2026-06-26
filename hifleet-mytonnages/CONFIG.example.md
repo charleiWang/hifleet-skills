@@ -1,16 +1,25 @@
-# config.json 示例（船期路由 B）
-
-将下列字段合并进本 Skill 目录下的 `config.json`（与邮箱等配置同一文件即可）。**勿**把真实 Key 提交到公开仓库。
-
-```json
-{
-  "hifleet_api_key": "在 HiFleet 网站获取的 API Key（与账号绑定、按次计费）",
-  "hifleet_liner_api_base": "https://api.hifleet.com/openclaw/vessel/charter/liner",
-  "hifleet_charter_api_base": "https://api.hifleet.com/openclaw/vessel/charter"
-}
-```
-
-- `hifleet_api_key`：路由 A 富化（船舶档案、港口 ID、港距）与路由 B 班轮船期**共用**；必填（或等价环境变量 `HIFLEET_API_KEY`，见 `SKILL.md`）。`config.json` 默认位于当前安装包内的 `hifleet-mytonnages/` 目录；Codex、OpenClaw 等宿主可按各自技能目录安装，或通过 `HIFLEET_MYTONNAGES_DIR` 指定该目录。
-- `{base}`：与主技能一致，默认 `https://api.hifleet.com`，可由环境变量 **`HIFLEET_API_BASE`** 覆盖（见 [../references/api_base.md](../references/api_base.md)）。上列 URL 示例中 `{base}` 即该根地址。
-- `hifleet_liner_api_base`：可选，路由 B 默认 `{base}/openclaw/vessel/charter/liner`；私有化/联调时可改。
-- `hifleet_charter_api_base`：可选，路由 A 富化与按距排序默认 `{base}/openclaw/vessel/charter`；见 **`CHARTER_ENRICH_API.md`**。
+# config.json 示例（路由 A 邮箱 + B/C 线上 API）
+
+将下列字段合并进本 Skill 目录下的 `config.json`。**勿**把真实 Key 提交到公开仓库。
+
+```json
+{
+  "hifleet_api_key": "在 HiFleet / mytonnages 网站获取的 API Key（与账号绑定、按次计费）",
+  "hifleet_liner_api_base": "https://api.hifleet.com/openclaw/vessel/charter/liner",
+  "hifleet_charter_api_base": "https://api.hifleet.com/openclaw/vessel/charter",
+  "charter_enrich_url": "https://api.hifleet.com/openclaw/vessel/charter/enrich-row",
+  "mail_parse_interval_minutes": 10,
+  "imap_host": "imap.example.com",
+  "imap_port": 993,
+  "email": "user@example.com",
+  "email_password": "第三方客户端密码（本地存储，勿提交仓库）"
+}
+```
+
+- **`hifleet_api_key`**：**路由 B（班轮）、C（预抵）必填**；路由 A 补充船舶信息也需要。或 **`HIFLEET_API_KEY`**。见 **`FIRST_SETUP.md` §C**。  
+- **邮箱字段**：**仅路由 A**；见 **`WORKFLOW_1_MAIL.md`**。  
+- **`hifleet_liner_api_base`**：路由 B；班轮解锁 `POST …/liner/unlock`。  
+- **`hifleet_charter_api_base`**：路由 A 档案/portid、**路由 C** 预抵查询根路径。  
+- **`charter_enrich_url`**：路由 A 单行补充信息（IMO/tags/档案），默认公网 **`…/enrich-row`**。  
+- **`mail_parse_interval_minutes`**：邮件定时解析，默认 **10** 分钟（**`MAIL_PARSE_SCHEDULE.md`**）。
+

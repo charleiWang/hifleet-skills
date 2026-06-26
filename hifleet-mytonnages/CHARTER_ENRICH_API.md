@@ -8,7 +8,7 @@
 
 1. 船舶档案、港口 ID、港间距离由 **HiFleet `api.hifleet.com`** 提供；助手在环境中发 **HTTPS** 请求，**不得**臆造 IMO 档案字段或 `portid`。  
 2. 密钥与路由 B 相同：`hifleet_api_key`（`config.json`）或 `HIFLEET_API_KEY`（环境变量）；各接口 Query 参数 **`api_key`** = 该串，**勿在对话中完整暴露**。  
-3. **写入顺序（硬性）**：邮件 **2.4** 解析 → **2.4.1** `charter_facts_tool.py save` 落库 → **2.4.2** 按本文批量富化并 **UPDATE** 同行 → 之后 **2.3 / 2.5** 检索与筛选。未富化行可展示邮件字段，但**距离排序查询**须先完成 **§3** 所需 `portid` 富化。
+3. **写入顺序（硬性）**：定时任务 **2.4** 解析 → **2.4.1** `save` → **2.4.2** 富化（顺序见下节）→ 用户提问时 **2.3** 只读库检索。
 
 ---
 
@@ -21,11 +21,57 @@
 | `{base}`（租船 OpenClaw 根） | `https://api.hifleet.com/openclaw/vessel/charter`（主机部分可由 `HIFLEET_API_BASE` 覆盖，见 [../references/api_base.md](../references/api_base.md)） |
 
 **解析顺序**：`hifleet_charter_api_base`（config）→ `HIFLEET_CHARTER_API_BASE`（环境）→ `HIFLEET_API_BASE` + `/openclaw/vessel/charter` → 上表默认。  
-无有效 **`hifleet_api_key`** 时：**不得**调本文接口；可仅基于邮件解析字段回答，并提示用户配置 Key（见 `CONFIG.example.md`）。
+无有效 **`hifleet_api_key`** 时：**不得**调需鉴权接口；可仅基于邮件解析字段回答，并提示用户配置 Key。
+
+**补充船货信息 API（enrich-row）**：`https://api.hifleet.com/openclaw/vessel/charter/enrich-row`（config：`charter_enrich_url`；兼容旧键 `charter_enrich_internal_base` 仅本地调试）。
 
 ---
 
-## 1. 船舶档案批量查询（按 IMO 补充船盘）
+## 0. 单行补充信息 enrich-row（船盘 IMO + tags + 档案 · 货盘 tags · 推荐）
+
+**每行只调一次**。
+
+**`POST https://api.hifleet.com/openclaw/vessel/charter/enrich-row?api_key={密钥}`**
+
+| Body 字段 | 说明 |
+|-----------|------|
+| `kind` | `vessel` 或 `cargo` |
+| `source` | 固定 `parse_schema` |
+| `row` | **2.4** 单条船盘/货盘对象 |
+| `imo` / `mmsi` | 船盘可选；行内已有 IMO 时跳过 lookup |
+| `charter_api_base` | 可选，档案 API 根，默认公网 OpenClaw 租船根 |
+| `include_archive` | 船盘默认 `true`；设为 `false` 可跳过档案 |
+
+**船盘成功响应**：
+
+```json
+{
+  "ok": true,
+  "kind": "vessel",
+  "imo": "9743332",
+  "mmsi": "372866000",
+  "data": { "tags": "Geared,MPP,...", "YearOfBuild": 2015, "dwt": 55408 },
+  "archive": {
+    "档案_船名": "...",
+    "档案_dwt": "55408",
+    "ship_archive_json": "{...}"
+  }
+}
+```
+
+**货盘成功响应**：`{ "ok": true, "kind": "cargo", "data": { "tags": "..." } }`
+
+**落库**：船盘写 **`IMO`**、**`mmsi`**、**`tags`**、**`档案_*`**、**`ship_archive_json`**（及展示列覆盖）；货盘写 **`tags`**。
+
+**`enrich` 命令顺序（硬性）**：§0 enrich_row（每行一次，含档案）→ §1 portid（批量）。
+
+> `lookup_imo`、`generate_tags`、单独 `ship-archive/batch` 仍可用；**enrich 默认路径**只用 **enrich_row** + portid。
+
+---
+
+## 1. 船舶档案批量查询（按 IMO · 可选 / 兼容）
+
+单独批量查档案时仍可用（**enrich_row 已内置单行档案，一般不必再调**）：
 
 **`POST {base}/ship-archive/batch?api_key={密钥}`**
 
@@ -39,17 +85,20 @@
 }
 ```
 
-- **IMO 来源**：`openvessel_plate` 行上邮件解析的 **`IMO`** 列；去重、去空、仅数字串；无 IMO 的行**跳过**本接口。  
+- **IMO 来源**：优先 **§0** 补齐后的 **`IMO`**；须为 7 位数字；无 IMO **跳过**本接口。  
 - **成功**（`status` 为 `"1"`、`msg` 为 `SUCCESS`）：`data.list[]` 每项含 `ShipName`、`imo`、`callsign`、`YearOfBuild`、`dwt`、`flagname`、`flagcode`、`Length`、`width`、`draught`、`GrossTonnage`、`Shipbuilder`、`type`、`registeredOwner`、`operator`、`shipManager`、`minotype` 等。  
 - **落库**：按 **`imo`** 匹配 `openvessel_plate` 行，将档案字段写入 **`ship_archive_json`**（完整 JSON 备份），并同步写入分列（见 **`WORKFLOW_2_MAIL.md` §2.4.2**）：`档案_船名`、`档案_呼号`、`档案_建造年`、`档案_dwt`、`档案_船旗`、`档案_船长`、`档案_船宽`、`档案_吃水`、`档案_总吨`、`档案_造船厂`、`档案_船型`、`档案_船东`、`档案_经营人`、`档案_管理公司`、`档案_细分船型`。邮件已有同义字段且档案非空时，**以档案 API 为准覆盖**对应展示列（如 `载重吨`、`建造年份`、`船型`）。  
 - **失败**：单批 IMO 失败时记录错误、**不**伪造档案；其余行继续。
 
 ---
 
-## 2. 港口 ID 解析（OPEN / 装货港 / 卸货港）
+## 2. 港口 ID 解析（OPEN / 装货港 / 卸货港 · 硬性，与 enrich-row 解耦）
 
 **`POST {base}/port/portid?api_key={密钥}`**
 
+- **执行时机**：在 **enrich-row 之后**（或 enrich-row 失败时**仍须执行**）；定时任务 **`enrich`** 中 portid 与 enrich-row **分行提交**，**不得**因 IMO/tags/档案失败而跳过 portid。  
+- **覆盖范围**：库内**每一行**船盘/货盘，只要存在 **OPEN位置 / 装货港 / 卸货港** 非空，就必须尝试解析并 **UPDATE** `portid` / `discharging_portid`。  
+- **策略**：先按港名批量请求；批量未命中某港名时，对该行**单独再请求一次** portid。  
 - **Header**：`Content-Type: application/json`  
 - **Body**：
 
@@ -71,7 +120,7 @@
 
 ## 3. 船盘/货盘按距离排序查询
 
-用户输入**查询港口**（如「新加坡附近 open 的船」「离天津最近的船盘」）时，在 **2.3** SQLite 初筛之后、**2.5** 展示之前，**默认按距离升序**排序（除非用户明确要求仅按邮件时间）。
+用户问题涉及**某一港口**的船盘或货盘（如「上海港的船盘」「新加坡 open」「X 港货盘」）时，在 **2.3** 之后、**2.5** 之前，**必须**按距离升序排序（**不要求**用户说「附近」「最近」；仅当用户明确要求「按邮件时间」时改按时间排序）。
 
 ### 3.1 解析查询港 `queryPortid`
 
@@ -122,7 +171,7 @@
 ## 与 `charter_facts_tool.py` 的衔接
 
 - **落库 / 检索**：`save`、`search`（见 **`WORKFLOW_2_MAIL.md` §2.4.1**）。  
-- **富化回写**：`python scripts/charter_facts_tool.py enrich [--db …]`（拉取 §1、§2 并 UPDATE；须已配置 `hifleet_api_key`）。  
-- **按港距排序查询**：`python scripts/charter_facts_tool.py query-by-port --port "Singapore" [--db …] [--limit 50]`（内部 §2 + §3；输出 JSON 已按 `dist` 排序）。
+- **富化回写**：`python scripts/charter_facts_tool.py enrich [--db …]`（enrich-row 与 portid **解耦**；portid 逐行保证，见 §2）。  
+- **按港距排序查询**：`python scripts/charter_facts_tool.py query-by-port --port "Shanghai" [--limit 50]`（**全库**候选，缺 portid 时查询前自动补解析）。
 
 当前宿主环境以允许的方式调用；**勿**要求零基础用户自行拼 curl。

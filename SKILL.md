@@ -190,11 +190,12 @@ source: https://api.hifleet.com
 
 ### 租船 / Charter
 
-租船能力已合并为 `hifleet-skills` 的内置模块，分册与脚本位于 `hifleet-mytonnages/`：支持船盘/货盘邮件检索解析、按港口距离排序，以及 HiFleet 服务端船期查询。
+租船能力已合并为 `hifleet-skills` 的内置模块，分册与脚本位于 `hifleet-mytonnages/`：支持船盘/货盘邮件检索解析、按港口距离排序，以及 HiFleet 服务端**班轮船期、预抵船舶**查询。
 
-- **触发**：租船、船盘、货盘、船期、open vessel、cargo、租约、租家、租金、租期、合同、charter、charterer、hire、period、班轮船期、schedule、line
-- **使用条件**：邮件船盘/货盘查询需按 `hifleet-mytonnages/` 分册配置邮箱与记忆；船舶档案富化、港口 ID、距离排序和船期接口需配置 `hifleet_api_key` 或 `HIFLEET_API_KEY`
-- **路由规则**：用户明确说“邮件里”“最近船盘/货盘”“帮我查邮箱”时走邮件船货盘流程；用户询问班轮、航线时刻、schedule、line 或装卸港船期时走 HiFleet 服务端船期接口；不得伪造邮件、船期、港口距离或档案数据
+- **触发**：租船、船盘、货盘、船期、预抵、即将到港、ETA、open vessel、cargo、租约、班轮船期、schedule、line
+- **使用条件**：邮件船盘/货盘查询需按 `hifleet-mytonnages/` 分册配置邮箱与记忆；补充船舶信息、港口 ID、距离排序和 B/C 线上接口需配置 `hifleet_api_key` 或 `HIFLEET_API_KEY`
+- **路由规则**：见 `hifleet-mytonnages/ROUTING_AND_WHEN.md`（A 邮件 / B 班轮船期 / C 预抵船舶）；**B/C 列表须全量返回**，见 `hifleet-mytonnages/FULL_LIST_POLICY.md`；对用户说话见 `USER_WORDING.md`；不得伪造数据
+- **执行入口**：触发租船相关能力时须 `read_file` `hifleet-mytonnages/SKILL.md`
 
 ### 集装箱红海饶航 / Container ship Red Sea detour
 
