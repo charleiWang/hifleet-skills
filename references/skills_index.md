@@ -140,6 +140,16 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 描述 | AIS 报文、船舶识别、动态/静态数据、轨迹回放与导出（历史轨迹见 **航程 / Voyage**）。 |
 | 触发词 | AIS、报文、MMSI、AIS 数据 / AIS, message, MMSI, AIS data |
 
+## 15. 账户与用量 / Account & Usage ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 账户与用量 / Account & Usage |
+| 描述 | OpenClaw **api_key** 自助查询：**积分概览**（`openclaw/account/summary`）、**调用汇总**（`usage`）、**调用明细**（`usage/details`）、**积分流水**（`transactions`）。查询不扣积分。响应含 **`agentSummary`** 供 Agent 直接转述。 |
+| 触发词 | 积分、余额、还剩多少、用了多少、调用记录、扣费、消费、流水、account balance、usage、credits、billing |
+
+**Agent 必守**：余额只强调 **`availablePoints`**；真正扣款看 **`transactions`**；调用明细与流水勿混谈。详见 [account_api.md](account_api.md)。
+
 ---
 
-建议实现顺序：船位 → AIS → 档案 → PSC → 港口指南 → 租船 → 航程 → 航线 → 性能 → 气象海况 → 船队 → 航运。
+建议实现顺序：船位 → AIS → 档案 → PSC → 港口指南 → 租船 → 航程 → 航线 → 性能 → 气象海况 → 船队 → 航运 → 账户与用量。

@@ -2,7 +2,7 @@
 name: hifleet-skills
 description: >-
   HiFleet 综合技能：船位、档案、轨迹/航程/航次、PSC、区域通航、港口、租船船货盘、港距排序、船期、航线、气象、船队、AIS。Position, track, voyage, PSC, port, charter, fleet, weather, AIS.
-version: 0.3.4
+version: 0.3.6
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
   - HIFLEET_API_KEY
@@ -31,6 +31,7 @@ source: https://api.hifleet.com
 | 气象海况 Weather | 待实现 | 风浪、台风、能见度 |
 | 船队 Fleet | 待实现 | 多船监控、船队报表 |
 | AIS | 待实现 | AIS 报文、轨迹回放 |
+| 账户与用量 Account & Usage | ✅ 已实现 | api_key 积分余额、调用汇总/明细、入账出账流水 |
 
 ---
 
@@ -266,6 +267,32 @@ source: https://api.hifleet.com
 
 **合规**：勿输出投资建议（「必避开某港」）；可陈述事实与风险提示。无「风险预测」专用接口，对未来表述须谨慎。
 
+
+### 账户与用量 / Account & Usage
+
+用户询问**积分余额、调用记录、扣费流水**时使用（与业务查询共用同一 `api_key`）。**查询本身不扣积分**。
+
+- **触发**：积分、余额、还剩多少、用了多少、调用记录、扣费、消费、流水、account balance、usage、credits、billing
+- **输入**：`api_key` 从 `HIFLEET_API_KEY` 读取；可选时间范围（见分册）
+- **API 详情**：[references/account_api.md](references/account_api.md)
+
+**Agent 路由（必守）**：
+
+| 用户意图 | 接口 |
+|----------|------|
+| 还能用多少积分 | `GET/POST {base}/openclaw/account/summary` → 只向用户强调 **`availablePoints`** |
+| 最近调了哪些接口 | `{base}/openclaw/account/usage/details` |
+| 什么时候真正扣款 | `{base}/openclaw/account/transactions` |
+| 按小时统计 | `{base}/openclaw/account/usage` |
+
+**回答规则**：
+
+1. 优先朗读或改写响应中的 **`agentSummary`**；列表可引用 **`items[].itemSummary`**。  
+2. 余额问题**只引用 `availablePoints`**，勿自行对 `accountBalance` 与 `pendingDeduction` 做加减。  
+3. **调用明细 ≠ 积分流水**：明细是每次请求；流水是账户真正入账/出账。用户问「扣了没有」而流水暂无 → 说明可能**待入账**（小时结算后出现在 `transactions`）。  
+4. 勿向用户解释内部结算、unsettled 等运维术语；`pendingDeduction` 出现时按 `balanceHint` / `agentSummary` 简述即可。  
+5. 勿伪造积分、调用次数或流水。
+
 ---
 
 ## 安全与合规
@@ -289,6 +316,7 @@ source: https://api.hifleet.com
 | [references/psc_anomaly_api.md](references/psc_anomaly_api.md) | PSC 统计异常 API（openclaw/anomalies*，api_key，可选 HIFLEET_API_BASE） |
 | [references/psc_openclaw_stats_api.md](references/psc_openclaw_stats_api.md) | PSC 宏观统计（openclaw/stats/compare、defects/top、mix/compare） |
 | [references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md) | PSC 多表字段语义：`authority`=检查国、`ship_type`=检查类型（非船型） |
+| [references/account_api.md](references/account_api.md) | 账户与用量：summary / usage / usage/details / transactions（需 `api_key`） |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST `{base}/position/statisticzonetraffic`）；可选 `HIFLEET_API_BASE` |
