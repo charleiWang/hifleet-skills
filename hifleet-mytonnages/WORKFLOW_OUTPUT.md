@@ -14,6 +14,7 @@ Use **`USER_WORDING.md`** and **`LOCALIZATION.md`**.
 - Show **`联系电话` / `即时通讯`** when present in DB (from original-body extract).  
 - Laycan one line for cargo / open windows.  
 - **`preview_url`** on each row when mail preview server is running — link **「查看原邮件」** per **`MAIL_PREVIEW.md`**.
+- **`webmail_url`** when `imap_host` maps to a known webmail — link **「在网页邮箱中打开」** (browser must already be logged in).
 
 ## Liner schedule
 

@@ -1,4 +1,4 @@
-﻿# 对用户说话时的用词规范（硬性）
+# 对用户说话时的用词规范（硬性）
 
 助手在**回复用户**时须用业务口语，**禁止**暴露内部实现术语。分册文件名（如 `WORKFLOW_2_MAIL.md`）仅助手 `read_file` 使用，**不要**在对话里让用户去读。
 
@@ -22,6 +22,7 @@
 | offset/limit、filterLabels | **分页**、**筛选条件**（或直接用船龄、船型等中文） |
 | typeCode、product_* | **班轮船期解锁**（仅 **hifleet-schedule**；公开船货盘 **hifleet-opentonnages** 无需解锁） |
 | preview_url、mail_preview | **查看原邮件**（系统内预览，见 **`MAIL_PREVIEW.md`**） |
+| webmail_url、webmail_locate | **在您的邮箱网页里打开**（浏览器须已登录该邮箱） |
 | stat、payload_json | **统计汇总**、**详细记录** |
 
 ---

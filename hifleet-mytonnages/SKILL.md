@@ -1,4 +1,4 @@
-﻿---
+---
 name: hifleet-mytonnages
 version: 1.3.0
 description: >

@@ -38,6 +38,7 @@ from imap_mail import (  # noqa: E402
     parse_for_preview,
     preview_token_for_message_id,
 )
+from webmail_locate import build_webmail_locate  # noqa: E402
 
 logger = logging.getLogger("mail_preview_server")
 
@@ -114,6 +115,38 @@ def _render_preview_page(token: str, parsed: dict[str, Any], meta: dict[str, Any
     if att_rows:
         attachments_html = f"<h3>附件</h3><ul>{att_rows}</ul>"
 
+    webmail_btn = ""
+    locate = build_webmail_locate(
+        message_id=str(meta.get("message_id") or ""),
+        from_addr=str(parsed.get("from_addr") or meta.get("from_addr") or ""),
+        subject=str(parsed.get("subject") or meta.get("subject") or ""),
+        email_date_utc=str(parsed.get("date") or meta.get("email_date_utc") or ""),
+    )
+    wurl = locate.get("webmail_url") or ""
+    if wurl:
+        whint = html.escape(str(locate.get("webmail_hint") or ""))
+        webmail_btn = (
+            f'<p style="margin:12px 0">'
+            f'<a class="btn-webmail" href="{html.escape(wurl)}" target="_blank" rel="noopener noreferrer" '
+            f'title="{whint}">在网页邮箱中打开</a>'
+            f'<span class="hint">（使用浏览器已登录的邮箱；未登录请先登录）</span></p>'
+        )
+        tiers = locate.get("webmail_search_tiers") or []
+        if len(tiers) > 1:
+            fallback_rows = ""
+            for t in tiers[1:]:
+                label = html.escape(str(t.get("label") or t.get("method") or "放宽搜索"))
+                q = html.escape(str(t.get("query") or ""))
+                tu = html.escape(str(t.get("url") or ""))
+                fallback_rows += (
+                    f'<li><a href="{tu}" target="_blank" rel="noopener noreferrer">{label}</a>'
+                    f'<span class="hint"> — {q}</span></li>'
+                )
+            webmail_btn += (
+                f'<details class="webmail-fallback"><summary>搜不到？尝试放宽搜索（{len(tiers) - 1} 档）</summary>'
+                f'<ul>{fallback_rows}</ul></details>'
+            )
+
     html_body = parsed.get("html_body") or ""
     text_body = html.escape(parsed.get("text_body") or "")
     if html_body:
@@ -143,12 +176,19 @@ def _render_preview_page(token: str, parsed: dict[str, Any], meta: dict[str, Any
     pre.mail-text {{ white-space: pre-wrap; word-break: break-word; background: #fafafa; padding: 12px; border-radius: 4px; border: 1px solid #eee; }}
     ul {{ padding-left: 1.2rem; }}
     .badge {{ display: inline-block; background: #e8f0fe; color: #1967d2; font-size: 12px; padding: 2px 8px; border-radius: 4px; }}
+    .btn-webmail {{ display: inline-block; background: #fff; border: 1px solid #1967d2; color: #1967d2; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 14px; }}
+    .btn-webmail:hover {{ background: #e8f0fe; }}
+    .hint {{ font-size: 12px; color: #666; margin-left: 8px; }}
+    .webmail-fallback {{ margin: 8px 0 16px; font-size: 13px; }}
+    .webmail-fallback summary {{ cursor: pointer; color: #1967d2; }}
+    .webmail-fallback ul {{ margin: 8px 0 0; padding-left: 1.2rem; }}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <p><span class="badge">原始邮件</span></p>
+      {webmail_btn}
       <h1>{subject}</h1>
       <dl class="meta">
         <dt>发件人</dt><dd>{from_addr}</dd>
@@ -198,6 +238,15 @@ class MailPreviewHandler(BaseHTTPRequestHandler):
                     _json_response(self, 400, {"ok": False, "error": "message_id required"})
                     return
                 url = build_preview_url(mid)
+                from_addr = (qs.get("from_addr") or [""])[0]
+                subject = (qs.get("subject") or [""])[0]
+                date_u = (qs.get("email_date_utc") or [""])[0]
+                locate = build_webmail_locate(
+                    message_id=mid,
+                    from_addr=from_addr,
+                    subject=subject,
+                    email_date_utc=date_u,
+                )
                 _json_response(
                     self,
                     200,
@@ -206,8 +255,26 @@ class MailPreviewHandler(BaseHTTPRequestHandler):
                         "message_id": mid,
                         "preview_token": preview_token_for_message_id(mid),
                         "preview_url": url,
+                        **locate,
                     },
                 )
+                return
+
+            if path == "/api/mail/webmail-url":
+                mid = (qs.get("message_id") or [""])[0]
+                from_addr = (qs.get("from_addr") or [""])[0]
+                subject = (qs.get("subject") or [""])[0]
+                date_u = (qs.get("email_date_utc") or [""])[0]
+                locate = build_webmail_locate(
+                    message_id=mid,
+                    from_addr=from_addr,
+                    subject=subject,
+                    email_date_utc=date_u,
+                )
+                if not locate.get("webmail_url"):
+                    _json_response(self, 404, {"ok": False, **locate})
+                    return
+                _json_response(self, 200, {"ok": True, **locate})
                 return
 
             m = re.match(r"^/mail/preview/([a-f0-9]{32})$", path)

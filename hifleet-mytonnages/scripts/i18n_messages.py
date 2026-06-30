@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """User-facing messages: English source keys; translate per agent locale. Do NOT translate business data."""
 

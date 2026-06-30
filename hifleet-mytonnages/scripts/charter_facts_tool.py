@@ -28,6 +28,15 @@ except ImportError:  # pragma: no cover
     def build_preview_url(message_id: str, base_url: str | None = None) -> str:  # type: ignore
         return ""
 
+try:
+    from webmail_locate import build_webmail_locate, build_webmail_locate_from_row
+except ImportError:  # pragma: no cover
+    def build_webmail_locate_from_row(row: dict[str, Any]) -> dict[str, Any]:  # type: ignore
+        return {}
+
+    def build_webmail_locate(**kwargs: Any) -> dict[str, Any]:  # type: ignore
+        return {}
+
 # 与 SKILL.md §2.4 JSON 键一致
 CARGO_FIELD_KEYS: tuple[str, ...] = (
     "客户名称",
@@ -804,13 +813,27 @@ def default_skill_dir() -> Path:
 
 
 def attach_preview_urls(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """为检索结果附加 preview_url（供前端「查看原邮件」按钮）。"""
+    """为检索结果附加 preview_url、webmail_url（供前端「查看原邮件」按钮）。"""
     for row in rows:
         if row.get("_error"):
             continue
         mid = str(row.get("message_id") or "").strip()
         if mid:
             row["preview_url"] = build_preview_url(mid)
+        locate = build_webmail_locate_from_row(row)
+        if locate.get("webmail_url"):
+            row["webmail_url"] = locate["webmail_url"]
+        if locate.get("webmail_provider"):
+            row["webmail_provider"] = locate["webmail_provider"]
+        if locate.get("webmail_method"):
+            row["webmail_method"] = locate["webmail_method"]
+        if locate.get("webmail_hint"):
+            row["webmail_hint"] = locate["webmail_hint"]
+        tiers = locate.get("webmail_search_tiers")
+        if tiers:
+            row["webmail_search_tiers"] = tiers
+        if locate.get("webmail_fallback_count") is not None:
+            row["webmail_fallback_count"] = locate["webmail_fallback_count"]
     return rows
 
 
@@ -1223,13 +1246,44 @@ def cmd_preview_url(args: argparse.Namespace) -> int:
         print(json.dumps({"ok": False, "error": "message_id required"}, ensure_ascii=False))
         return 1
     url = build_preview_url(mid)
-    print(
-        json.dumps(
-            {"ok": True, "message_id": mid, "preview_url": url},
-            ensure_ascii=False,
-            indent=2,
-        )
+    payload: dict[str, Any] = {"ok": True, "message_id": mid, "preview_url": url}
+    locate = build_webmail_locate_from_row(
+        {
+            "message_id": mid,
+            "from_addr": args.from_addr or "",
+            "subject": args.subject or "",
+            "email_date_utc": args.email_date_utc or "",
+        }
     )
+    payload.update(locate)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_webmail_url(args: argparse.Namespace) -> int:
+    locate = build_webmail_locate(
+        message_id=args.message_id or "",
+        from_addr=args.from_addr or "",
+        subject=args.subject or "",
+        email_date_utc=args.email_date_utc or "",
+        tier=getattr(args, "tier", 0) or 0,
+    )
+    if not locate.get("webmail_url"):
+        print(json.dumps({"ok": False, **locate}, ensure_ascii=False, indent=2))
+        return 1
+    if args.open:
+        from webmail_locate import open_webmail_in_browser
+
+        result = open_webmail_in_browser(
+            message_id=args.message_id or "",
+            from_addr=args.from_addr or "",
+            subject=args.subject or "",
+            email_date_utc=args.email_date_utc or "",
+            tier=getattr(args, "tier", 0) or 0,
+        )
+        print(json.dumps({"ok": True, **result}, ensure_ascii=False, indent=2))
+        return 0
+    print(json.dumps({"ok": True, **locate}, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -1263,7 +1317,19 @@ def main(argv: list[str] | None = None) -> int:
 
     pu = sub.add_parser("preview-url", help="生成原始邮件预览链接（供前端按钮）")
     pu.add_argument("--message-id", required=True, help="邮件 Message-ID")
+    pu.add_argument("--from-addr", default="", help="发件人（用于附带 webmail_url）")
+    pu.add_argument("--subject", default="", help="主题（用于附带 webmail_url）")
+    pu.add_argument("--email-date-utc", default="", help="发件时间 UTC（用于附带 webmail_url）")
     pu.set_defaults(func=cmd_preview_url)
+
+    pw = sub.add_parser("webmail-url", help="生成网页邮箱定位链接（在已登录浏览器中打开）")
+    pw.add_argument("--message-id", default="", help="邮件 Message-ID")
+    pw.add_argument("--from-addr", default="", help="发件人")
+    pw.add_argument("--subject", default="", help="主题")
+    pw.add_argument("--email-date-utc", default="", help="发件时间 UTC")
+    pw.add_argument("--tier", type=int, default=0, help="搜索档位 0=最精确")
+    pw.add_argument("--open", action="store_true", help="用系统默认浏览器打开")
+    pw.set_defaults(func=cmd_webmail_url)
 
     args = p.parse_args(argv)
     return int(args.func(args))
