@@ -27,7 +27,7 @@
 用户说中文或英文港名时，须先得到 **`params.portcode`**（五字码，如 `CNTIZ`）再调 §1：
 
 1. **港口指南**（推荐）：`GET https://api.hifleet.com/portguide/getPort/token?api_key={密钥}&portName={港名}`，从命中列表取 **`portCode`**（见 `hifleet-skills/references/port_api.md`）。  
-2. **班轮港口联想**（备选）：`GET {liner_base}/ports/suggest`（**`SCHEDULE_API.md` §1**）；若响应项含 **`portCode`** 则采用，否则仍用 §0.1。  
+2. **班轮港口联想**（备选）：`GET {liner_base}/ports/suggest`（**`hifleet-schedule` / SCHEDULE_API.md** §1）；若响应项含 **`portCode`** 则采用，否则仍用 §0.1。  
 3. 多条命中时向用户确认主港，**不得**臆造 portcode。
 
 ---

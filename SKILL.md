@@ -1,4 +1,4 @@
----
+﻿---
 name: hifleet-skills
 description: >-
   HiFleet 综合技能：船位、档案、轨迹/航程/航次、PSC、区域通航、港口、租船船货盘、港距排序、船期、航线、气象、船队、AIS。Position, track, voyage, PSC, port, charter, fleet, weather, AIS.
@@ -23,7 +23,7 @@ source: https://api.hifleet.com
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT） |
 | PSC 检查 PSC Inspection | ✅ 已实现 | 单船 PSC（按 IMO）→ 统计异常 `openclaw/anomalies*` → 宏观统计 `openclaw/stats/compare|defects/top|mix/compare` |
 | 港口 Port guide | ✅ 已实现 | 港口列表/检索（港名或代码）、单港详情（`piuid`→`portId`）；`portguide/getPort/token`、`portguide/getPortDetail/token` |
-| 租船 Charter | ✅ 已实现（内置模块） | 船盘/货盘邮件检索解析、按港口距离排序、船期查询；使用 `hifleet-mytonnages/` 分册工作流 |
+| 租船 Charter | ✅ 已实现（内置模块） | 邮箱船货盘+预抵（`hifleet-mytonnages`）；班轮（`hifleet-schedule`）；**公开船货**（`hifleet-opentonnages`） |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | ✅ 已实现（部分） | 历史轨迹、航程、航线规划、历史挂靠、历史航次、上一港、当前停船|
 | 航线 Route | 待实现 | 推荐航线、航路点 |
@@ -191,12 +191,17 @@ source: https://api.hifleet.com
 
 ### 租船 / Charter
 
-租船能力已合并为 `hifleet-skills` 的内置模块，分册与脚本位于 `hifleet-mytonnages/`：支持船盘/货盘邮件检索解析、按港口距离排序，以及 HiFleet 服务端**班轮船期、预抵船舶**查询。
+租船能力拆为**四个**分册：
 
-- **触发**：租船、船盘、货盘、船期、预抵、即将到港、ETA、open vessel、cargo、租约、班轮船期、schedule、line
-- **使用条件**：邮件船盘/货盘查询需按 `hifleet-mytonnages/` 分册配置邮箱与记忆；补充船舶信息、港口 ID、距离排序和 B/C 线上接口需配置 `hifleet_api_key` 或 `HIFLEET_API_KEY`
-- **路由规则**：见 `hifleet-mytonnages/ROUTING_AND_WHEN.md`（A 邮件 / B 班轮船期 / C 预抵船舶）；**B/C 列表须全量返回**，见 `hifleet-mytonnages/FULL_LIST_POLICY.md`；对用户说话见 `USER_WORDING.md`；不得伪造数据
-- **执行入口**：触发租船相关能力时须 `read_file` `hifleet-mytonnages/SKILL.md`
+| 分册 | 能力 | 说明 |
+|------|------|------|
+| **`hifleet-mytonnages/`** | 邮箱船货盘 + 预抵 | 需邮箱（A）与 `hifleet_api_key`（C + 富化） |
+| **`hifleet-schedule/`** | 班轮船期 | 散杂货/滚装/集装箱 |
+| **`hifleet-opentonnages/`** | **公开船盘 + 公开货盘** | 全公开数据（**无需解锁**）；可选 enrich 档案/港距 |
+| （综合） | 船位/档案/航程等 | 本仓库 `hifleet-skills` 其它模块 |
+
+- **触发**：租船、船盘、货盘、预抵、**公开船盘/公开货盘/平台船货** / charter, open vessel, cargo, public tonnage, public cargo, marketplace
+- **执行入口**：邮箱/预抵 → `hifleet-mytonnages/SKILL.md`；班轮 → `hifleet-schedule/SKILL.md`；**公开船货** → `hifleet-opentonnages/SKILL.md`
 
 ### 集装箱红海饶航 / Container ship Red Sea detour
 

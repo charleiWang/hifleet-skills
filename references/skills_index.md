@@ -1,4 +1,4 @@
-# 技能清单 / Skills Index
+﻿# 技能清单 / Skills Index
 
 中英双语。
 
@@ -102,11 +102,31 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 
 | 中文 | 英文 |
 |------|------|
-| 名称 | 租船 / Charter |
-| 描述 | `hifleet-skills` 内置租船模块（分册 `hifleet-mytonnages/`）：A 邮件船货盘；B 班轮船期；C 预抵船舶。**B/C 列表须全量返回**（`FULL_LIST_POLICY.md`）。邮件需邮箱与记忆；B/C 及 A 补充信息需 `hifleet_api_key` 或 `HIFLEET_API_KEY`。 |
-| 触发词 | 租船、船盘、货盘、船期、预抵、即将到港、ETA / charter, open vessel, cargo, schedule, charter party, hire, period, line |
+| 名称 | 租船 / Charter（邮箱船货盘 + 预抵） |
+| 描述 | 分册 **`hifleet-mytonnages/`**：**A** 邮件船货盘；**C** 预抵船舶（全量列表见 `FULL_LIST_POLICY.md`）。需邮箱（A）与 `hifleet_api_key`（C + 富化）。班轮船期见下条 **`hifleet-schedule`**。 |
+| 触发词 | 租船、船盘、货盘、预抵、即将到港、ETA、我的邮件 / charter, open vessel, cargo, pre-arrival, in my mail |
 
-**路由**：A=邮件里；B=班轮船期；C=预抵船舶。详见 `hifleet-mytonnages/ROUTING_AND_WHEN.md`。
+**路由**：A=邮件；C=预抵。详见 `hifleet-mytonnages/ROUTING_AND_WHEN.md`。
+
+## 10b. 班轮船期 / Liner schedule ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 班轮船期 / Liner schedule |
+| 描述 | 分册 **`hifleet-schedule/`**：散杂货、滚装、集装箱班轮船期；需 `hifleet_api_key`；**须全量返回**（`FULL_LIST_POLICY.md`）。 |
+| 触发词 | 班轮船期、船期表、航线班轮、散杂货船期、滚装船期、集装箱船期 / liner schedule, line schedule, bulk schedule, Ro-Ro schedule, container schedule |
+
+**API**：`hifleet-schedule/SCHEDULE_API.md`。
+
+## 10c. 公开船货盘 / Public open market ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 公开船货盘 / Public open tonnage & cargo |
+| 描述 | 分册 **`hifleet-opentonnages/`**：HiFleet 平台**公开** OPEN 船盘与货盘；**全量明文**（含联系人），**无需 unlock**；可选 **`enrich-row`** 补充船舶档案、标签、港距。需 `hifleet_api_key`。 |
+| 触发词 | 公开船盘、公开货盘、平台船货、HiFleet 船盘/货盘、open market / public tonnage, public cargo, platform listings |
+
+**API**：`VESSEL_SEARCH_API.md`、`CARGO_SEARCH_API.md`。
 
 ## 11. 航运 / Shipping
 
