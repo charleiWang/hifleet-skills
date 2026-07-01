@@ -1,6 +1,6 @@
 ﻿# Public open vessel search (route V)
 
-HiFleet **public open tonnage** — **fully open** API (v1.0: **no `/unlock`**, show all returned fields including contacts).
+HiFleet **public open tonnage** — list via **`POST /vessels/search`**; **contact details on demand** via **`CONTACT_API.md`** (`POST {liner}/unlock`, `typeCode=product_vessel_charter`).
 
 ---
 
@@ -82,7 +82,13 @@ Put resolved ID in **`params.portid`** or **`params.openPort`** per API behaviou
 | `params.openDateStart` / `openDateEnd` | no | OPEN window (`yyyy-MM-dd`) |
 | `filterLabels` | no | Label filters from response **`stat`** (values mean **exclude** that bucket — see destination API pattern) |
 
-**Response**: **`total`**, **`stat`** (facet statistics), **`data[]`** (vessel rows). Typical fields: ship name, DWT, type, OPEN port/dates, owner, contact phone/email, `imo`, `tags`, `id`, etc. — **show all non-empty fields returned** (v1.0 public product).
+**Response**: **`total`**, **`stat`**, **`data[]`**. Typical fields: ship name, DWT, type, OPEN port/dates, `imo`, `tags`, **`id`**, owner/contact (often **masked** in list).
+
+**Output rules**:
+
+- Show **all non-empty non-sensitive** fields + **record `id`** per **`WORKFLOW_OUTPUT.md`**.
+- **Do not** present masked owner/phone/email as real data.
+- After list, **guide** user to request contacts by **record id** or **all** — see **`CONTACT_API.md`**.
 
 ---
 

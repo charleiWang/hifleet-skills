@@ -6,23 +6,29 @@
 
 - State **Total: N** per **`FULL_LIST_POLICY.md`**.
 - **Laycan / OPEN window**: one line `Laycan: yyyy/MM/dd~yyyy/MM/dd` when dates present.
-- **Show all non-empty API fields**, including owner, company, phone, email, WeChat — **no unlock prompt**.
-- Vessel names, ports, cargo names: **verbatim** (no translation).
-- Optional footer: `💡 **More open tonnage:** https://mytonnages.hifleet.com`
+- **Each row must show record `id`** (for later contact fetch).
+- **Default list (no contact request yet)**:
+  - Show: vessel name (if plain), DWT, type, OPEN port, OPEN/Laycan window, IMO, tags, route hints, etc.
+  - **Do not** show owner, company, phone, email, WeChat, or expand `******`.
+- **After contact fetch** (`CONTACT_API.md`): mark **（已获取联系方式）**; show plaintext contact fields from unlock response.
+- Vessel names, ports: **verbatim** (no translation).
+- **Footer after list** (when contacts not yet fetched): brief line inviting user to give **record id** or ask for **all** contacts — **no “unlock” wording**.
+- Optional site footer: `💡 **More open tonnage:** https://mytonnages.hifleet.com`
 
 ## Public cargo (G)
 
-- **Total: N**; full list.
-- Laycan one line from `laycanStart`~`laycanEnd` (or API field names).
-- Show charterer / contact / email / phone when API returns them.
+- **Total: N**; full list; each row **`id`** visible.
+- Laycan one line from `laycanStart`~`laycanEnd`.
+- **Default**: cargo type, quantity, load/discharge ports, laycan, distance, tags — **not** charterer/phone/email if masked.
+- **After contact fetch**: show charterer / contact / email / phone from unlock response.
 - Sort by distance when user asked and API provides `dischargingDist`.
-- Same footer as above.
 
 ## Enrich bundle
 
-When **`ENRICH_OPENTONNAGES.md`** was used, append archive/tags/distance blocks under each row clearly labeled (e.g. “Ship archive”, “Tags”, “Distance to query port”).
+When **`ENRICH_OPENTONNAGES.md`** was used, append archive/tags/distance under each row. Enrich does **not** replace contact fetch.
 
-## Never
+## Never (user-facing)
 
-- “Confirm points to unlock contacts” for this skill.
-- Hide contacts that API already returned in plaintext.
+- Say **「解锁」** / unlock / decrypt / typeCode.
+- Treat `******` from list API as real contact data.
+- Omit **record id** from list rows.

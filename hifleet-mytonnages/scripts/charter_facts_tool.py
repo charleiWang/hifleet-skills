@@ -23,9 +23,18 @@ except ImportError:  # pragma: no cover
     merge_contacts_into_parsed = None  # type: ignore
 
 try:
-    from imap_mail import build_preview_url
+    from imap_mail import build_preview_url, preview_token_for_message_id
 except ImportError:  # pragma: no cover
     def build_preview_url(message_id: str, base_url: str | None = None) -> str:  # type: ignore
+        return ""
+
+    def preview_token_for_message_id(message_id: str) -> str:  # type: ignore
+        return ""
+
+try:
+    from mail_reply import build_reply_url
+except ImportError:  # pragma: no cover
+    def build_reply_url(preview_token: str, base_url: str | None = None) -> str:  # type: ignore
         return ""
 
 try:
@@ -35,7 +44,7 @@ except ImportError:  # pragma: no cover
         return {}
 
     def build_webmail_locate(**kwargs: Any) -> dict[str, Any]:  # type: ignore
-        return {}
+        return ""
 
 # 与 SKILL.md §2.4 JSON 键一致
 CARGO_FIELD_KEYS: tuple[str, ...] = (
@@ -820,6 +829,7 @@ def attach_preview_urls(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         mid = str(row.get("message_id") or "").strip()
         if mid:
             row["preview_url"] = build_preview_url(mid)
+            row["reply_url"] = build_reply_url(preview_token_for_message_id(mid))
         locate = build_webmail_locate_from_row(row)
         if locate.get("webmail_url"):
             row["webmail_url"] = locate["webmail_url"]

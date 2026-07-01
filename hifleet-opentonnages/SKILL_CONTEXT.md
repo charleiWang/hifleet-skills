@@ -2,28 +2,31 @@
 
 ## What this is
 
-HiFleet **public** open tonnage (vessels for hire) and **public** cargo listings on the platform — **not** the user’s private mailbox.
+HiFleet **public** open tonnage (vessels for hire) and **public** cargo listings — **not** the user’s private mailbox.
 
-## Commercial model (v1.0)
+## Commercial model (v1.1)
 
-- List/search APIs return **plaintext, fully open** records (contacts included). **No decrypt / unlock step.**
-- Optional **`enrich-row`** bundles **vessel archive**, **tags**, and **port-distance** context — billed via the user’s **`hifleet_api_key`** (same as other OpenClaw charter APIs).
-- Do **not** describe contacts as “hidden until unlock”.
+- **List** (`vessels/search`, `cargo/search`): vessel/cargo facts; **contact fields masked** in default response.
+- **Contact fetch** (on demand): **`POST {liner}/unlock`** with row **`id`** + **`typeCode`** — see **`CONTACT_API.md`**. User wording: **获取联系方式**, not 「解锁」.
+- Optional **`enrich-row`**: vessel archive, tags, port distance (API points) — **`ENRICH_OPENTONNAGES.md`**.
 
-## API root
+## API roots
 
-`https://api.hifleet.com/openclaw/vessel/charter` (`hifleet_charter_api_base` / `HIFLEET_CHARTER_API_BASE`).
+| Use | Base |
+|-----|------|
+| Search | `{charter}` = `https://api.hifleet.com/openclaw/vessel/charter` |
+| Contacts + liner schedules unlock | `{liner}` = `https://api.hifleet.com/openclaw/vessel/charter/liner` |
 
-| Route | Endpoint |
-|-------|----------|
-| **V** Open vessels | `POST /vessels/search` |
-| **G** Open cargo | `POST /cargo/search` |
-| Enrich (optional) | `POST /enrich-row` |
+| Route | List | Contact `typeCode` |
+|-------|------|-------------------|
+| **V** | `POST /vessels/search` | `product_vessel_charter` |
+| **G** | `POST /cargo/search` | `product_cargo_charter` |
+| Enrich | `POST /enrich-row` | — |
 
 ## Sibling skills
 
 | Skill | Scope |
 |-------|--------|
-| **hifleet-mytonnages** | User mailbox A + pre-arrival C |
-| **hifleet-schedule** | Liner schedules (may still use liner `/unlock` — separate product) |
+| **hifleet-mytonnages** | Mailbox A + pre-arrival C |
+| **hifleet-schedule** | Liner schedules (`product_vessel_liner_charter`) |
 | **hifleet-opentonnages** | **This** — public open vessel + cargo |

@@ -2,24 +2,25 @@
 
 ## Routes (this skill only)
 
-| Route | Meaning | API |
-|-------|---------|-----|
-| **V** | HiFleet **public open tonnage** | `VESSEL_SEARCH_API.md` |
-| **G** | HiFleet **public cargo** | `CARGO_SEARCH_API.md` |
+| Route | Meaning | APIs |
+|-------|---------|------|
+| **V** | HiFleet **public open tonnage** | **`VESSEL_SEARCH_API.md`** → optional **`CONTACT_API.md`** |
+| **G** | HiFleet **public cargo** | **`CARGO_SEARCH_API.md`** → optional **`CONTACT_API.md`** |
 
 ---
 
 ### Route V — public open vessels
 
-- **Triggers**: public/open tonnage, platform ship list, HiFleet open vessels, “what bulkers are open”, not “in my mail”.
+- **Triggers**: public/open tonnage, platform ship list, “bulkers open from Shanghai”, not “in my mail”.
 - **Needs**: `hifleet_api_key`.
-- **Never**: mailbox SQLite, email parse, **`/unlock`**.
+- **Flow**: search → full list with **record id** → guide contact fetch → **`CONTACT_API.md`** when user asks.
+- **Never**: mailbox SQLite, email parse.
 
 ### Route G — public cargo
 
-- **Triggers**: public/open cargo, platform cargo list, charter cargo on HiFleet, not “in my mail”.
+- **Triggers**: public/open cargo, platform cargo, not “in my mail”.
 - **Needs**: `hifleet_api_key`.
-- **Never**: mailbox, **`/unlock`**.
+- **Same contact-on-demand flow** as V.
 
 ---
 
@@ -39,8 +40,9 @@
 | Situation | Action |
 |-----------|--------|
 | First install | **`FIRST_SETUP.md`** |
-| User wants archive + distance on public rows | **`ENRICH_OPENTONNAGES.md`** after list fetch |
-| List query | **`FULL_LIST_POLICY.md`** — paginate to **`total`** |
+| List query | **`FULL_LIST_POLICY.md`** |
+| User wants phone/email/owner | **`CONTACT_API.md`** (by **record id** or **all**) |
+| User wants archive + distance | **`ENRICH_OPENTONNAGES.md`** after list |
 
 ---
 

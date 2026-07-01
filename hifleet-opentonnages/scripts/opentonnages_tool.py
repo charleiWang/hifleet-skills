@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""HiFleet public open vessel / cargo search (fully open, no unlock)."""
+"""HiFleet public open vessel / cargo search; contacts on demand."""
 
 from __future__ import annotations
 
@@ -19,7 +19,11 @@ if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
 DEFAULT_CHARTER_BASE = "https://api.hifleet.com/openclaw/vessel/charter"
+DEFAULT_LINER_BASE = "https://api.hifleet.com/openclaw/vessel/charter/liner"
 DEFAULT_ENRICH_URL = "https://api.hifleet.com/openclaw/vessel/charter/enrich-row"
+
+TYPE_CODE_VESSEL = "product_vessel_charter"
+TYPE_CODE_CARGO = "product_cargo_charter"
 
 
 def default_skill_dir() -> Path:
@@ -32,6 +36,7 @@ def default_skill_dir() -> Path:
 def load_config() -> dict[str, Any]:
     api_key = os.environ.get("HIFLEET_API_KEY", "").strip()
     api_base = os.environ.get("HIFLEET_CHARTER_API_BASE", "").strip().rstrip("/")
+    liner_base = os.environ.get("HIFLEET_LINER_API_BASE", "").strip().rstrip("/")
     enrich_url = os.environ.get("HIFLEET_CHARTER_ENRICH_URL", "").strip()
     cfg_path = default_skill_dir() / "config.json"
     if cfg_path.is_file():
@@ -41,6 +46,8 @@ def load_config() -> dict[str, Any]:
                 api_key = api_key or str(cfg.get("hifleet_api_key") or "").strip()
                 if not api_base:
                     api_base = str(cfg.get("hifleet_charter_api_base") or "").strip().rstrip("/")
+                if not liner_base:
+                    liner_base = str(cfg.get("hifleet_liner_api_base") or "").strip().rstrip("/")
                 if not enrich_url:
                     enrich_url = str(cfg.get("charter_enrich_url") or "").strip()
         except (json.JSONDecodeError, OSError):
@@ -48,11 +55,14 @@ def load_config() -> dict[str, Any]:
     if not api_base:
         root = (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
         api_base = root + "/openclaw/vessel/charter"
+    if not liner_base:
+        liner_base = DEFAULT_LINER_BASE
     if not enrich_url:
         enrich_url = DEFAULT_ENRICH_URL
     return {
         "api_key": api_key,
         "api_base": api_base.rstrip("/"),
+        "liner_base": liner_base.rstrip("/"),
         "enrich_url": enrich_url,
     }
 
@@ -177,6 +187,70 @@ def paginated_search(
     }
 
 
+def _http_post_empty(url: str, timeout: int = 90) -> dict[str, Any]:
+    req = urllib.request.Request(url, data=b"", method="POST")
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def type_code_for_kind(kind: str) -> str:
+    k = (kind or "").strip().lower()
+    if k in ("cargo", "g"):
+        return TYPE_CODE_CARGO
+    return TYPE_CODE_VESSEL
+
+
+def fetch_contacts(data_id: str, *, kind: str = "vessel") -> dict[str, Any]:
+    """POST {liner}/unlock — internal API; user-facing text: 获取联系方式."""
+    cfg = load_config()
+    api_key = cfg["api_key"]
+    if not api_key:
+        return {"ok": False, "error": "missing hifleet_api_key"}
+    rid = str(data_id or "").strip()
+    if not rid:
+        return {"ok": False, "error": "record id required"}
+    type_code = type_code_for_kind(kind)
+    base = cfg["liner_base"]
+    qs = urllib.parse.urlencode(
+        {"dataId": rid, "typeCode": type_code, "api_key": api_key}
+    )
+    url = f"{base}/unlock?{qs}"
+    try:
+        resp = _http_post_empty(url)
+    except urllib.error.HTTPError as e:
+        try:
+            detail = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            detail = str(e)
+        return {"ok": False, "error": f"HTTP {e.code}", "detail": detail}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    return {
+        "ok": True,
+        "dataId": rid,
+        "kind": kind,
+        "typeCode": type_code,
+        "contacts": resp,
+    }
+
+
+def fetch_contacts_batch(ids: list[str], *, kind: str = "vessel") -> dict[str, Any]:
+    results: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    for rid in ids:
+        r = fetch_contacts(rid, kind=kind)
+        if r.get("ok"):
+            results.append(r)
+        else:
+            errors.append({"dataId": rid, **r})
+    return {
+        "ok": not errors or bool(results),
+        "count": len(results),
+        "results": results,
+        "errors": errors,
+    }
+
+
 def enrich_row(
     kind: str,
     row: dict[str, Any],
@@ -238,6 +312,28 @@ def cmd_search_cargo(args: argparse.Namespace) -> int:
     return 0 if result.get("ok") else 1
 
 
+def cmd_fetch_contacts(args: argparse.Namespace) -> int:
+    if args.all_from_file:
+        data = json.loads(Path(args.all_from_file).read_text(encoding="utf-8"))
+        ids: list[str] = []
+        if isinstance(data, list):
+            for row in data:
+                if isinstance(row, dict) and row.get("id") is not None:
+                    ids.append(str(row["id"]))
+        elif isinstance(data, dict):
+            for row in data.get("data") or []:
+                if isinstance(row, dict) and row.get("id") is not None:
+                    ids.append(str(row["id"]))
+        result = fetch_contacts_batch(ids, kind=args.kind)
+    else:
+        if not args.id:
+            print(json.dumps({"ok": False, "error": "record id required"}, ensure_ascii=False))
+            return 1
+        result = fetch_contacts(args.id, kind=args.kind)
+    print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+    return 0 if result.get("ok") else 1
+
+
 def cmd_enrich(args: argparse.Namespace) -> int:
     row = json.loads(Path(args.file).read_text(encoding="utf-8"))
     if not isinstance(row, dict):
@@ -277,6 +373,16 @@ def main(argv: list[str] | None = None) -> int:
     pe.add_argument("--file", "-f", required=True, help="JSON row file")
     pe.add_argument("--query-port", default="")
     pe.set_defaults(func=cmd_enrich)
+
+    pf = sub.add_parser("fetch-contacts", help="POST /unlock for contact details (by record id)")
+    pf.add_argument("--kind", choices=("vessel", "cargo"), default="vessel")
+    pf.add_argument("--id", default="", help="Record id from list response")
+    pf.add_argument(
+        "--all-from-file",
+        default="",
+        help="JSON file from search (list or {data:[]}) — fetch all ids",
+    )
+    pf.set_defaults(func=cmd_fetch_contacts)
 
     args = p.parse_args(argv)
     return int(args.func(args))

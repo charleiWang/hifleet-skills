@@ -39,6 +39,12 @@ from imap_mail import (  # noqa: E402
     preview_token_for_message_id,
 )
 from webmail_locate import build_webmail_locate  # noqa: E402
+from mail_reply import (  # noqa: E402
+    build_reply_url,
+    prepare_reply_draft,
+    send_reply_by_token,
+    smtp_is_configured,
+)
 
 logger = logging.getLogger("mail_preview_server")
 
@@ -147,6 +153,31 @@ def _render_preview_page(token: str, parsed: dict[str, Any], meta: dict[str, Any
                 f'<ul>{fallback_rows}</ul></details>'
             )
 
+    reply_actions = ""
+    reply_url = html.escape(build_reply_url(token))
+    if wurl:
+        reply_actions = (
+            f'<div class="reply-actions">'
+            f'<span class="badge">回复</span> '
+            f'<a class="btn-reply" href="{html.escape(wurl)}" target="_blank" rel="noopener noreferrer" '
+            f'title="在已登录的网页邮箱中打开原信，使用邮箱自带的「回复」">在网页邮箱中回复</a>'
+        )
+        if smtp_is_configured():
+            reply_actions += (
+                f'<a class="btn-reply secondary" href="{reply_url}">或用 SMTP 回复</a>'
+            )
+        else:
+            reply_actions += (
+                f'<span class="hint">（系统内 SMTP 回复需配置 smtp_host / smtp_port）</span>'
+            )
+        reply_actions += "</div>"
+    elif smtp_is_configured():
+        reply_actions = (
+            f'<div class="reply-actions">'
+            f'<a class="btn-reply" href="{reply_url}">回复邮件（SMTP）</a>'
+            f'<span class="hint">未识别网页邮箱，将使用 SMTP 发送</span></div>'
+        )
+
     html_body = parsed.get("html_body") or ""
     text_body = html.escape(parsed.get("text_body") or "")
     if html_body:
@@ -182,6 +213,9 @@ def _render_preview_page(token: str, parsed: dict[str, Any], meta: dict[str, Any
     .webmail-fallback {{ margin: 8px 0 16px; font-size: 13px; }}
     .webmail-fallback summary {{ cursor: pointer; color: #1967d2; }}
     .webmail-fallback ul {{ margin: 8px 0 0; padding-left: 1.2rem; }}
+    .btn-reply {{ display: inline-block; background: #1967d2; color: #fff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 14px; margin-right: 8px; }}
+    .btn-reply.secondary {{ background: #fff; color: #1967d2; border: 1px solid #1967d2; }}
+    .reply-actions {{ margin: 12px 0; }}
   </style>
 </head>
 <body>
@@ -189,6 +223,7 @@ def _render_preview_page(token: str, parsed: dict[str, Any], meta: dict[str, Any
     <div class="card">
       <p><span class="badge">原始邮件</span></p>
       {webmail_btn}
+      {reply_actions}
       <h1>{subject}</h1>
       <dl class="meta">
         <dt>发件人</dt><dd>{from_addr}</dd>
@@ -205,6 +240,72 @@ def _render_preview_page(token: str, parsed: dict[str, Any], meta: dict[str, Any
 </html>"""
 
 
+def _render_reply_page(token: str, draft: dict[str, Any]) -> str:
+    to_addr = html.escape(str(draft.get("to") or ""))
+    subject = html.escape(str(draft.get("subject") or ""))
+    from_email = html.escape(str(draft.get("from_email") or ""))
+    preview_url = html.escape(f"/mail/preview/{token}")
+    wurl = html.escape(str((draft.get("webmail") or {}).get("webmail_url") or ""))
+    webmail_link = ""
+    if wurl:
+        webmail_link = (
+            f'<p><a class="btn-webmail" href="{wurl}" target="_blank" rel="noopener noreferrer">'
+            f"优先：在网页邮箱中打开并回复</a></p>"
+        )
+    smtp_note = ""
+    if not draft.get("smtp_configured"):
+        smtp_note = '<p class="hint">未配置 SMTP，无法从此页发送。请配置 smtp_host、smtp_port，或使用上方网页邮箱回复。</p>'
+    quote_hint = html.escape(str(draft.get("quote_suffix") or "")[:200])
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>回复 — {subject}</title>
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f4f6f8; }}
+    .wrap {{ max-width: 720px; margin: 0 auto; padding: 16px; }}
+    .card {{ background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }}
+    label {{ display: block; font-size: 13px; color: #555; margin: 12px 0 4px; }}
+    input, textarea {{ width: 100%; box-sizing: border-box; padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }}
+    textarea {{ min-height: 200px; }}
+    .actions {{ margin-top: 16px; }}
+    button {{ background: #1967d2; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; cursor: pointer; }}
+    .hint {{ font-size: 12px; color: #666; }}
+    .btn-webmail {{ color: #1967d2; }}
+    a {{ color: #1967d2; }}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <p><a href="{preview_url}">← 返回原邮件预览</a></p>
+      <h1>回复邮件（SMTP）</h1>
+      {webmail_link}
+      {smtp_note}
+      <form method="post" action="/api/mail/send-reply">
+        <input type="hidden" name="preview_token" value="{html.escape(token)}"/>
+        <label>发件人</label>
+        <input type="text" value="{from_email}" readonly/>
+        <label>收件人</label>
+        <input type="text" name="to" value="{to_addr}" readonly/>
+        <label>主题</label>
+        <input type="text" name="subject" value="{subject}"/>
+        <label>正文</label>
+        <textarea name="body" placeholder="输入回复内容…" required></textarea>
+        <label><input type="checkbox" name="include_quote" value="1" checked/> 附上引用原文</label>
+        <p class="hint">引用预览：{quote_hint}…</p>
+        <div class="actions">
+          <button type="submit" {"disabled" if not draft.get("smtp_configured") else ""}>发送回复</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>"""
+
+
 class MailPreviewHandler(BaseHTTPRequestHandler):
     server_version = "HiFleetMailPreview/1.0"
 
@@ -214,9 +315,72 @@ class MailPreviewHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self) -> None:
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", _cors_origin())
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "X-HIFLEET-Preview-Token, Content-Type")
         self.end_headers()
+
+    def _read_post_body(self) -> tuple[dict[str, str], dict[str, Any]]:
+        length = int(self.headers.get("Content-Length") or 0)
+        raw = self.rfile.read(length) if length else b""
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype == "application/json":
+            try:
+                data = json.loads(raw.decode("utf-8") or "{}")
+                if isinstance(data, dict):
+                    return {k: str(v) for k, v in data.items()}, data
+            except json.JSONDecodeError:
+                pass
+        # application/x-www-form-urlencoded
+        form = urllib.parse.parse_qs(raw.decode("utf-8", errors="replace"))
+        flat = {k: (v[0] if v else "") for k, v in form.items()}
+        return flat, flat
+
+    def do_POST(self) -> None:
+        if not _check_auth(self):
+            _json_response(self, 401, {"ok": False, "error": "unauthorized"})
+            return
+        parsed_path = urllib.parse.urlparse(self.path)
+        path = parsed_path.path.rstrip("/") or "/"
+        if path != "/api/mail/send-reply":
+            _json_response(self, 404, {"ok": False, "error": "not found"})
+            return
+        try:
+            flat, _raw = self._read_post_body()
+            token = (flat.get("preview_token") or "").strip()
+            body = flat.get("body") or ""
+            subject = flat.get("subject") or ""
+            include_quote = flat.get("include_quote") in ("1", "true", "True", "on", "yes")
+            if not token:
+                _json_response(self, 400, {"ok": False, "error": "preview_token required"})
+                return
+            if not body.strip():
+                _json_response(self, 400, {"ok": False, "error": "body required"})
+                return
+            result = send_reply_by_token(
+                token,
+                body,
+                subject=subject,
+                include_quote=include_quote,
+            )
+            accept = (self.headers.get("Accept") or "").lower()
+            if "application/json" in accept or flat.get("_json"):
+                _json_response(self, 200 if result.get("ok") else 400, result)
+                return
+            if result.get("ok"):
+                page = (
+                    f"<html><body><h1>已发送</h1><p>收件人：{html.escape(str(result.get('to')))}</p>"
+                    f'<p><a href="/mail/preview/{html.escape(token)}">返回预览</a></p></body></html>'
+                )
+                _html_response(self, 200, page)
+            else:
+                err = html.escape(str(result.get("hint") or result.get("error") or "send failed"))
+                if result.get("webmail_url"):
+                    w = html.escape(str(result["webmail_url"]))
+                    err += f'<p><a href="{w}" target="_blank">在网页邮箱中回复</a></p>'
+                _html_response(self, 400, f"<html><body><h1>发送失败</h1><p>{err}</p></body></html>")
+        except Exception as e:
+            logger.exception("send-reply failed")
+            _json_response(self, 500, {"ok": False, "error": str(e)})
 
     def do_GET(self) -> None:
         if not _check_auth(self):
@@ -275,6 +439,20 @@ class MailPreviewHandler(BaseHTTPRequestHandler):
                     _json_response(self, 404, {"ok": False, **locate})
                     return
                 _json_response(self, 200, {"ok": True, **locate})
+                return
+
+            m = re.match(r"^/mail/reply/([a-f0-9]{32})$", path)
+            if m:
+                token = m.group(1)
+                draft = prepare_reply_draft(token)
+                page = _render_reply_page(token, draft)
+                _html_response(self, 200, page)
+                return
+
+            m = re.match(r"^/api/mail/reply-draft/([a-f0-9]{32})$", path)
+            if m:
+                draft = prepare_reply_draft(m.group(1))
+                _json_response(self, 200, {"ok": True, **draft})
                 return
 
             m = re.match(r"^/mail/preview/([a-f0-9]{32})$", path)

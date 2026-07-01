@@ -34,7 +34,7 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "config.missing_api_key": "HiFleet API Key is required. See FIRST_SETUP.md to configure hifleet_api_key.",
     "config.missing_email": "Email (IMAP) configuration is required for mailbox tonnage/cargo queries.",
     "schedule.redirect": "Liner schedules (bulk / Ro-Ro / container) moved to skill **hifleet-schedule**.",
-    "opentonnages.redirect": "Public open tonnage/cargo moved to skill **hifleet-opentonnages** (fully open, no unlock).",
+    "opentonnages.redirect": "Public open tonnage/cargo → skill **hifleet-opentonnages** (contacts on demand by record id).",
   },
   "zh": {
     "skill.reply_language": "除用户主动使用其他语言外，优先用简体中文回复；业务数据（船名、港口、货物名等）保持原文。",
@@ -52,7 +52,7 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "config.missing_api_key": "需要配置 HiFleet API Key，请在 FIRST_SETUP.md 中设置 hifleet_api_key。",
     "config.missing_email": "查询邮箱船货盘需要先配置邮箱（IMAP）。",
     "schedule.redirect": "班轮船期（散杂货/滚装/集装箱）已独立为 **hifleet-schedule** 技能。",
-    "opentonnages.redirect": "公开船盘/公开货盘已独立为 **hifleet-opentonnages** 技能（全公开，无需解锁）。",
+    "opentonnages.redirect": "公开船盘/公开货盘 → **hifleet-opentonnages** 技能（列表默认不含联系方式，按记录 id 获取）。",
   },
   "zh-CN": {},  # alias filled below
   "zh-TW": {
@@ -71,7 +71,7 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "config.missing_api_key": "需要設定 HiFleet API Key，請參閱 FIRST_SETUP.md 設定 hifleet_api_key。",
     "config.missing_email": "查詢郵箱船貨盤需要先設定郵箱（IMAP）。",
     "schedule.redirect": "班輪船期（散雜貨/滾裝/集裝箱）已獨立為 **hifleet-schedule** 技能。",
-    "opentonnages.redirect": "公開船盤/公開貨盤已獨立為 **hifleet-opentonnages** 技能（全公開，無需解鎖）。",
+    "opentonnages.redirect": "公開船盤/公開貨盤 → **hifleet-opentonnages** 技能（列表預設不含聯絡方式，按記錄 id 獲取）。",
   },
 }
 

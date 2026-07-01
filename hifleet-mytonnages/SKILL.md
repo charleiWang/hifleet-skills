@@ -19,11 +19,11 @@ metadata:
 
 **Liner schedules** (bulk / Ro-Ro / container): use skill **`hifleet-schedule`** — not this package.
 
-**Public open tonnage/cargo** (platform marketplace, fully open): use skill **`hifleet-opentonnages`** — not this package.
+**Public open tonnage/cargo** (platform marketplace): use skill **`hifleet-opentonnages`** — list first, contacts on demand.
 
 **User wording**: **`USER_WORDING.md`**. **First setup**: **`FIRST_SETUP.md`**.
 
-**Route A**: **`MAIL_PARSE_SCHEDULE.md`**, **`WORKFLOW_2_MAIL.md`**, **`LLM_TOKEN_LIMITS.md`**, **`MAIL_PREVIEW.md`** (original email preview for frontend).
+**Route A**: **`MAIL_PARSE_SCHEDULE.md`**, **`WORKFLOW_2_MAIL.md`**, **`LLM_TOKEN_LIMITS.md`**, **`MAIL_PREVIEW.md`**, **`MAIL_REPLY.md`** (original email preview + reply).
 
 **Route C full list**: **`FULL_LIST_POLICY.md`**, **`DESTINATION_SEARCH_API.md`**.
 
@@ -66,6 +66,7 @@ hifleet-skills/hifleet-mytonnages/
 ├── FULL_LIST_POLICY.md
 ├── MAIL_PARSE_SCHEDULE.md
 ├── MAIL_PREVIEW.md
+├── MAIL_REPLY.md
 ├── CHARTER_ENRICH_API.md
 ├── PARSE_SCHEMA.md
 ├── CONFIG.example.md
@@ -73,7 +74,8 @@ hifleet-skills/hifleet-mytonnages/
 │   ├── charter_facts_tool.py
 │   ├── imap_mail.py
 │   ├── mail_parse_loop.py
-│   └── mail_preview_server.py
+│   ├── mail_preview_server.py
+│   └── mail_reply.py
 ├── SCHEDULE_MOVED.md
 ```
 

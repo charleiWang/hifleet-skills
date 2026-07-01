@@ -1,6 +1,6 @@
 ﻿# Public cargo search (route G)
 
-HiFleet **public cargo** listings — **fully open** API (v1.0: **no `/unlock`**, show all returned fields including charterer contacts).
+HiFleet **public cargo** listings — **`POST /cargo/search`**; contacts on demand via **`CONTACT_API.md`** (`typeCode=product_cargo_charter`).
 
 ---
 
@@ -58,7 +58,9 @@ When user asks “cargo near X” or sort by distance, set sort fields per API (
 | `laycanStart` / `laycanEnd` | Laycan window inside `params` if required by API |
 | `filterLabels` | Optional; keys from response **`stat`** |
 
-**Response**: **`total`**, **`stat`**, **`data[]`**. Typical fields: cargo type, quantity, load/discharge ports, laycan, charterer, contact, email, phone, `dischargingDist`, `tags`, `id` — **display all non-empty values** (public product).
+**Response**: **`total`**, **`stat`**, **`data[]`**. Typical fields: cargo type, quantity, ports, laycan, `dischargingDist`, `tags`, **`id`**; charterer/contact often **masked** in list.
+
+**Output**: per **`WORKFLOW_OUTPUT.md`**; contact plaintext only after **`CONTACT_API.md`**.
 
 **Sort**: when user cares about distance to a discharge area, use API-supported sort (e.g. by `dischargingDist` descending) after portid resolution.
 

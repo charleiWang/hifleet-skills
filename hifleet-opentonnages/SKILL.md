@@ -1,9 +1,10 @@
 ﻿---
 name: hifleet-opentonnages
-version: 1.0.0
+version: 1.1.0
 description: >
-  HiFleet public open tonnage and cargo marketplace (fully open API data, no unlock/decrypt).
-  Optional enrich-row for vessel archive, tags, and port distance. Requires hifleet_api_key.
+  HiFleet public open tonnage and cargo marketplace. List APIs return vessel/cargo
+  details; contact fields are fetched on demand via contact API (record id).
+  Optional enrich-row for archive, tags, port distance. Requires hifleet_api_key.
 metadata:
   openclaw:
     homepage: https://mytonnages.hifleet.com
@@ -23,7 +24,7 @@ metadata:
 
 **Full list (mandatory)**: **`FULL_LIST_POLICY.md`**.
 
-**No unlock**: responses are **fully public** — show contacts and company fields as returned. **Do not** call `/unlock`.
+**Contacts**: list responses are **masked** by default. Fetch on user request via **`CONTACT_API.md`** (`POST {liner}/unlock` + `typeCode`). **Do not** say 「解锁」to the user — use **获取联系方式**.
 
 ---
 
@@ -31,13 +32,15 @@ metadata:
 
 ### Open vessels (route V)
 
-1. **`ROUTING_AND_WHEN.md`** → **`VESSEL_SEARCH_API.md`**
-2. Optional value-add: **`ENRICH_OPENTONNAGES.md`** (`enrich-row` for archive / tags / port distance)
+1. **`ROUTING_AND_WHEN.md`** → **`VESSEL_SEARCH_API.md`** → show list + **record id**
+2. User wants contacts → **`CONTACT_API.md`**
+3. Optional: **`ENRICH_OPENTONNAGES.md`** (`enrich-row`)
 
 ### Open cargo (route G)
 
 1. **`ROUTING_AND_WHEN.md`** → **`CARGO_SEARCH_API.md`**
-2. Optional: **`ENRICH_OPENTONNAGES.md`**
+2. User wants contacts → **`CONTACT_API.md`**
+3. Optional: **`ENRICH_OPENTONNAGES.md`**
 
 ### Output
 
@@ -56,6 +59,7 @@ hifleet-skills/hifleet-opentonnages/
 ├── FIRST_SETUP.md
 ├── VESSEL_SEARCH_API.md
 ├── CARGO_SEARCH_API.md
+├── CONTACT_API.md
 ├── ENRICH_OPENTONNAGES.md
 ├── FULL_LIST_POLICY.md
 ├── WORKFLOW_OUTPUT.md

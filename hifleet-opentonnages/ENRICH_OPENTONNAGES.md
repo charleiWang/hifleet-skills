@@ -1,8 +1,8 @@
 ﻿# Enrich public listings (value-add bundle)
 
-Optional **`enrich-row`** on public vessel/cargo rows — **ship archive**, **tags**, **port distance** — charged via user **`hifleet_api_key`**.
+Optional **`enrich-row`** on public vessel/cargo rows — **ship archive**, **tags**, **port distance** — billed via **`hifleet_api_key`**.
 
-**This is not unlock/decrypt.** List APIs already return open contact fields in v1.0.
+**Separate from contact fetch**: enrich does not return owner phone/email; use **`CONTACT_API.md`** for contacts.
 
 ---
 
@@ -72,10 +72,11 @@ Map API list row → parse-schema-like object (minimum **`船名`**, **`载重�
 
 ## Agent rules
 
-1. **Do not** call **`/liner/unlock`** or any `typeCode` unlock for public opentonnages routes.
-2. Show **contacts from list API** directly; enrich adds **archive/tags/distance**, not contact decryption.
+1. List first; contacts only when user asks (**`CONTACT_API.md`**).
+2. Enrich adds **archive/tags/distance**, not contact decryption.
 3. If enrich fails for one row, still show the public list row; note partial enrich failure briefly.
 4. Batch: for large **`total`**, enrich only rows the user asked about, or first page if they said “with full ship info”.
+5. **Contacts**: never from enrich — use **`CONTACT_API.md`**.
 
 ---
 

@@ -9,7 +9,7 @@
 
 **Liner schedule** (bulk / Ro-Ro / container) → install and use **`hifleet-schedule`**.
 
-**Public open tonnage/cargo** (HiFleet marketplace, fully open) → **`hifleet-opentonnages`**.
+**Public open tonnage/cargo** (HiFleet marketplace) → **`hifleet-opentonnages`** (contacts on demand).
 
 ---
 

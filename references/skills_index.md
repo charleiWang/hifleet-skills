@@ -123,7 +123,7 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 公开船货盘 / Public open tonnage & cargo |
-| 描述 | 分册 **`hifleet-opentonnages/`**：HiFleet 平台**公开** OPEN 船盘与货盘；**全量明文**（含联系人），**无需 unlock**；可选 **`enrich-row`** 补充船舶档案、标签、港距。需 `hifleet_api_key`。 |
+| 描述 | 分册 **`hifleet-opentonnages/`**：HiFleet 平台**公开** OPEN 船盘与货盘；列表默认**不含联系方式**；用户指定**记录 id**（或全部）后调用原 **`/unlock`** 获取；可选 **`enrich-row`**。需 `hifleet_api_key`。 |
 | 触发词 | 公开船盘、公开货盘、平台船货、HiFleet 船盘/货盘、open market / public tonnage, public cargo, platform listings |
 
 **API**：`VESSEL_SEARCH_API.md`、`CARGO_SEARCH_API.md`。
