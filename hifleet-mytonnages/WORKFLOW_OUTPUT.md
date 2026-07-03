@@ -5,7 +5,13 @@ Use **`USER_WORDING.md`** and **`LOCALIZATION.md`**.
 ## Route C (pre-arrival)
 
 - Full list per **`FULL_LIST_POLICY.md`**.  
+- **Each row must show record `id`** (for contact fetch).
 - Show distance, ETA, vessel names **as in API** (do not translate).
+- **Default list (no contact request yet)**:
+  - Show: ship name, IMO, MMSI, destination, ETA, distance, DWT, type, age, tags, etc.
+  - **Do not** show owner, company, phone, email, WeChat, or expand `******`.
+- **After contact fetch** (`CONTACT_API.md`): mark **（已获取联系方式）**; show plaintext from unlock response.
+- **Footer after list** (contacts not yet fetched): invite user to give **record id** or ask for **all** contacts — no 「解锁」 wording.
 
 ## Route A (mailbox)
 

@@ -71,9 +71,17 @@
 
 **`filterLabels` 含义**：传入某标签值表示**过滤掉**该标签对应的数据（与接口文档「有该值代表需要过滤掉」一致）；取值须来自当次或上次响应 `stat.*.statistics[].label`。
 
-**成功响应**：含 **`total`**、**`stat`**（各维度统计）、**`data[]`**（船舶明细）。`data` 字段含 `ShipName`、`imo`、`mmsi`、`destination`、`eta`、`dist`、`dwt`、`type`、`vesselAge`、`tags` 等。
+**成功响应**：含 **`total`**、**`stat`**（各维度统计）、**`data[]`**（船舶明细）。典型字段：`ShipName`、`imo`、`mmsi`、`destination`、`eta`、`dist`、`dwt`、`type`、`vesselAge`、`tags`、**`id`**；船东/联系人/电话/邮箱在列表中常为 **脱敏**（`******`）。
+
+**输出规则**：
+
+- 展示全部非敏感字段 + **记录 `id`**（见 **`WORKFLOW_OUTPUT.md`** 路由 C）。
+- **不得**把脱敏联系人当真实数据展示。
+- 列表末尾引导用户按 **记录 id** 或 **全部** 获取联系方式 — **`CONTACT_API.md`**（`typeCode=product_will_arrive_charter`）。
 
 **分页**：须拉齐 **`total`** 后再向用户输出，禁止只展示第一页。
+
+**`id` 与解锁**：每条 `data[]` 须含顶层 **`id`**，作为 **`POST {liner}/unlock`** 的 **`dataId`**。统一 typeCode 表见 **`references/charter_contact_unlock.md`**。
 
 ---
 

@@ -21,7 +21,11 @@ HiFleet **public** open tonnage (vessels for hire) and **public** cargo listings
 |-------|------|-------------------|
 | **V** | `POST /vessels/search` | `product_vessel_charter` |
 | **G** | `POST /cargo/search` | `product_cargo_charter` |
+| **B** Liner (sibling) | `POST {liner}/schedules` | `product_vessel_liner_charter` |
+| **C** Pre-arrival (sibling) | `POST /destination/search` | `product_will_arrive_charter` |
 | Enrich | `POST /enrich-row` | — |
+
+Full table: **`references/charter_contact_unlock.md`**.
 
 ## Sibling skills
 

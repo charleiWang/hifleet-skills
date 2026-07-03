@@ -23,7 +23,8 @@
 
 - Triggers: pre-arrival, ETA, vessels arriving at port (not “in my mail”).  
 - Needs: **`hifleet_api_key`**.  
-- Docs: **`DESTINATION_SEARCH_API.md`**, **`FULL_LIST_POLICY.md`**.
+- Flow: search → full list with **record id** → guide contact fetch → **`CONTACT_API.md`** when user asks (`typeCode=product_will_arrive_charter`).  
+- Docs: **`DESTINATION_SEARCH_API.md`**, **`FULL_LIST_POLICY.md`**, **`CONTACT_API.md`**.
 
 ---
 
@@ -34,6 +35,7 @@
 | First install | **`FIRST_SETUP.md`** |
 | Liner / line schedule question | **`hifleet-schedule`** skill |
 | Mail + pre-arrival in one question | Run **A** and **C** separately |
+| User wants phone/email/owner (pre-arrival) | **`CONTACT_API.md`** (by **record id** or **all**) |
 | Parse / JSON / token error | **`LLM_TOKEN_LIMITS.md`** + localized message |
 
 ---

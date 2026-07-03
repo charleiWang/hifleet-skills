@@ -4,6 +4,7 @@
 {
   "hifleet_api_key": "from HiFleet website",
   "hifleet_charter_api_base": "https://api.hifleet.com/openclaw/vessel/charter",
+  "hifleet_liner_api_base": "https://api.hifleet.com/openclaw/vessel/charter/liner",
   "charter_enrich_url": "https://api.hifleet.com/openclaw/vessel/charter/enrich-row",
   "mail_parse_interval_minutes": 10,
   "imap_host": "imap.example.com",
@@ -20,7 +21,7 @@
 }
 ```
 
-**Liner schedule API base** (`hifleet_liner_api_base`) is for **`hifleet-schedule`**, not this skill.
+**Liner schedule API base** (`hifleet_liner_api_base`) is also used for **route C contact fetch** (`POST …/unlock`, `typeCode=product_will_arrive_charter` — **`CONTACT_API.md`**). Primary consumer: **`hifleet-schedule`**.
 
 | SMTP | 说明 |
 |------|------|

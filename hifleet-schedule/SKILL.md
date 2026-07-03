@@ -31,7 +31,7 @@ Before any schedule query: **`read_file` `SKILL_CONTEXT.md`**, **`read_file` `RO
 
 1. Route check: **`ROUTING_AND_WHEN.md`** (schedule types: bulk/general, Ro-Ro, container).  
 2. If `hifleet_api_key` missing → **`FIRST_SETUP.md`**.  
-3. Execute **`SCHEDULE_API.md`** (port suggest → `POST /schedules` → optional `/unlock`).
+3. Execute **`SCHEDULE_API.md`** (port suggest → `POST /schedules` → contact fetch on user request via **`/unlock`**, `typeCode=product_vessel_liner_charter`; batch **全部** supported). Unlock table: **`references/charter_contact_unlock.md`**.
 
 ### 1. Output
 

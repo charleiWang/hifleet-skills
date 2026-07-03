@@ -3,7 +3,7 @@
 ## A. Capabilities (this skill)
 
 1. **Mailbox** open tonnage / cargo (route A) — needs **email**.  
-2. **Pre-arrival** at a port (route C) — needs **API Key**.
+2. **Pre-arrival** at a port (route C) — needs **API Key**; contacts on demand per **`CONTACT_API.md`**.
 
 **Liner schedules** (bulk / Ro-Ro / container): install **`hifleet-schedule`**.
 
@@ -12,6 +12,7 @@
 | Item | For |
 |------|-----|
 | `hifleet_api_key` | Route C; route A enrich |
+| `hifleet_liner_api_base` | Route C contact fetch (`CONTACT_API.md`) |
 | Email IMAP | Route A only |
 | `mail_preview_server.py` | Route A「查看原邮件」按钮（见 **`MAIL_PREVIEW.md`**） |
 

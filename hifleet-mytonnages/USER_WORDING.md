@@ -20,7 +20,7 @@
 | memory_search、向量库 | **邮件检索**、**在您的邮件里搜索** |
 | API 路径、POST、Query | **在 HiFleet 上查询**（必要时只说「需要您的 API Key」） |
 | offset/limit、filterLabels | **分页**、**筛选条件**（或直接用船龄、船型等中文） |
-| typeCode、product_*、unlock | **班轮船期**联系 **hifleet-schedule**；**公开船/货盘**说 **获取联系方式**（用记录 id），禁止对用户说「解锁」 |
+| typeCode、product_*、unlock | **班轮/公开船货/预抵**均说 **获取联系方式**（用记录 id）；禁止对用户说「解锁」；typeCode 表见 **`references/charter_contact_unlock.md`** |
 | preview_url、mail_preview | **查看原邮件**（系统内预览，见 **`MAIL_PREVIEW.md`**） |
 | webmail_url、webmail_locate | **在您的邮箱网页里打开**（浏览器须已登录该邮箱） |
 | reply_url、mail_reply | **回复这封邮件**（优先网页邮箱回复，或配置 SMTP 后系统内发送） |
@@ -31,6 +31,8 @@
 ## 路由 C（预抵）对用户的说法
 
 - ✅ 「正在查询**预抵**天津港的船舶…」「共找到 **N** 艘预抵船」  
+- ✅ 列表后：「如需某条船的联系方式，请告诉我 **记录 id**；若要本页全部，请说 **全部**。」  
+- ✅ 获取后：「已获取联系方式」— **不要**说「已解锁」  
 - ❌ 「调用 destination/search 接口」「filterLabels.vesselAge」
 
 ---

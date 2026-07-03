@@ -103,7 +103,7 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 租船 / Charter（邮箱船货盘 + 预抵） |
-| 描述 | 分册 **`hifleet-mytonnages/`**：**A** 邮件船货盘；**C** 预抵船舶（全量列表见 `FULL_LIST_POLICY.md`）。需邮箱（A）与 `hifleet_api_key`（C + 富化）。班轮船期见下条 **`hifleet-schedule`**。 |
+| 描述 | 分册 **`hifleet-mytonnages/`**：**A** 邮件船货盘；**C** 预抵船舶（全量列表见 `FULL_LIST_POLICY.md`）；联系方式按需 **`CONTACT_API.md`**（`product_will_arrive_charter`）。需邮箱（A）与 `hifleet_api_key`（C + 富化）。班轮船期见下条 **`hifleet-schedule`**。 |
 | 触发词 | 租船、船盘、货盘、预抵、即将到港、ETA、我的邮件 / charter, open vessel, cargo, pre-arrival, in my mail |
 
 **路由**：A=邮件；C=预抵。详见 `hifleet-mytonnages/ROUTING_AND_WHEN.md`。
@@ -113,10 +113,10 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 班轮船期 / Liner schedule |
-| 描述 | 分册 **`hifleet-schedule/`**：散杂货、滚装、集装箱班轮船期；需 `hifleet_api_key`；**须全量返回**（`FULL_LIST_POLICY.md`）。 |
+| 描述 | 分册 **`hifleet-schedule/`**：散杂货、滚装、集装箱班轮船期；需 `hifleet_api_key`；**须全量返回**（`FULL_LIST_POLICY.md`）；联系方式按需 unlock（`product_vessel_liner_charter`）。 |
 | 触发词 | 班轮船期、船期表、航线班轮、散杂货船期、滚装船期、集装箱船期 / liner schedule, line schedule, bulk schedule, Ro-Ro schedule, container schedule |
 
-**API**：`hifleet-schedule/SCHEDULE_API.md`。
+**API**：`hifleet-schedule/SCHEDULE_API.md`；四类产品 unlock 对照 **`references/charter_contact_unlock.md`**。
 
 ## 10c. 公开船货盘 / Public open market ✅
 
@@ -126,7 +126,7 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 描述 | 分册 **`hifleet-opentonnages/`**：HiFleet 平台**公开** OPEN 船盘与货盘；列表默认**不含联系方式**；用户指定**记录 id**（或全部）后调用原 **`/unlock`** 获取；可选 **`enrich-row`**。需 `hifleet_api_key`。 |
 | 触发词 | 公开船盘、公开货盘、平台船货、HiFleet 船盘/货盘、open market / public tonnage, public cargo, platform listings |
 
-**API**：`VESSEL_SEARCH_API.md`、`CARGO_SEARCH_API.md`。
+**API**：`VESSEL_SEARCH_API.md`、`CARGO_SEARCH_API.md`、`CONTACT_API.md`；unlock 总表 **`references/charter_contact_unlock.md`**。
 
 ## 11. 航运 / Shipping
 

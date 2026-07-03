@@ -35,6 +35,13 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "config.missing_email": "Email (IMAP) configuration is required for mailbox tonnage/cargo queries.",
     "schedule.redirect": "Liner schedules (bulk / Ro-Ro / container) moved to skill **hifleet-schedule**.",
     "opentonnages.redirect": "Public open tonnage/cargo → skill **hifleet-opentonnages** (contacts on demand by record id).",
+    "prearrival.list_note": (
+      "Contact details are not shown in the pre-arrival list. "
+      "To get them, tell me the record id (shown on each row) or say you want contacts for all rows."
+    ),
+    "prearrival.contacts_fetched": "Contact details retrieved for record id {id}.",
+    "prearrival.contacts_need_id": "Please provide the record id from the list, or say you want all contacts.",
+    "prearrival.contact_api_error": "Could not fetch contact details: {detail}",
   },
   "zh": {
     "skill.reply_language": "除用户主动使用其他语言外，优先用简体中文回复；业务数据（船名、港口、货物名等）保持原文。",
@@ -53,6 +60,13 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "config.missing_email": "查询邮箱船货盘需要先配置邮箱（IMAP）。",
     "schedule.redirect": "班轮船期（散杂货/滚装/集装箱）已独立为 **hifleet-schedule** 技能。",
     "opentonnages.redirect": "公开船盘/公开货盘 → **hifleet-opentonnages** 技能（列表默认不含联系方式，按记录 id 获取）。",
+    "prearrival.list_note": (
+      "预抵列表默认不展示联系方式。如需查看，请告诉我该条的 **记录 id**，"
+      "或说需要 **全部** 预抵船的联系方式。"
+    ),
+    "prearrival.contacts_fetched": "已获取记录 id {id} 的联系方式。",
+    "prearrival.contacts_need_id": "请提供列表中的记录 id，或说明需要全部联系方式。",
+    "prearrival.contact_api_error": "获取联系方式失败：{detail}",
   },
   "zh-CN": {},  # alias filled below
   "zh-TW": {
@@ -72,6 +86,13 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "config.missing_email": "查詢郵箱船貨盤需要先設定郵箱（IMAP）。",
     "schedule.redirect": "班輪船期（散雜貨/滾裝/集裝箱）已獨立為 **hifleet-schedule** 技能。",
     "opentonnages.redirect": "公開船盤/公開貨盤 → **hifleet-opentonnages** 技能（列表預設不含聯絡方式，按記錄 id 獲取）。",
+    "prearrival.list_note": (
+      "預抵列表預設不展示聯絡方式。如需查看，請告訴我該條的 **記錄 id**，"
+      "或說需要 **全部** 預抵船的聯絡方式。"
+    ),
+    "prearrival.contacts_fetched": "已獲取記錄 id {id} 的聯絡方式。",
+    "prearrival.contacts_need_id": "請提供列表中的記錄 id，或說明需要全部聯絡方式。",
+    "prearrival.contact_api_error": "獲取聯絡方式失敗：{detail}",
   },
 }
 

@@ -1,8 +1,9 @@
 ---
 name: hifleet-mytonnages
-version: 1.3.0
+version: 1.4.0
 description: >
   HiFleet mailbox open tonnage/cargo (route A) and pre-arrival vessel search (route C).
+  Pre-arrival contacts on demand via unlock (product_will_arrive_charter).
   Liner schedules moved to hifleet-schedule. Needs hifleet_api_key (C + enrich) and email (A).
 metadata:
   openclaw:
@@ -27,6 +28,8 @@ metadata:
 
 **Route C full list**: **`FULL_LIST_POLICY.md`**, **`DESTINATION_SEARCH_API.md`**.
 
+**Route C contacts (on demand)**: **`CONTACT_API.md`** (`typeCode=product_will_arrive_charter`); shared unlock table: **`references/charter_contact_unlock.md`**.
+
 ---
 
 ## Query steps
@@ -43,7 +46,7 @@ metadata:
 
 ### 2. Pre-arrival (C)
 
-**`DESTINATION_SEARCH_API.md`** + **`FULL_LIST_POLICY.md`**.
+**`DESTINATION_SEARCH_API.md`** + **`FULL_LIST_POLICY.md`**. User wants contacts → **`CONTACT_API.md`**.
 
 ## Output
 
@@ -63,6 +66,7 @@ hifleet-skills/hifleet-mytonnages/
 ├── WORKFLOW_2_MAIL.md
 ├── WORKFLOW_OUTPUT.md
 ├── DESTINATION_SEARCH_API.md
+├── CONTACT_API.md
 ├── FULL_LIST_POLICY.md
 ├── MAIL_PARSE_SCHEDULE.md
 ├── MAIL_PREVIEW.md
@@ -75,7 +79,8 @@ hifleet-skills/hifleet-mytonnages/
 │   ├── imap_mail.py
 │   ├── mail_parse_loop.py
 │   ├── mail_preview_server.py
-│   └── mail_reply.py
+│   ├── mail_reply.py
+│   └── destination_tool.py
 ├── SCHEDULE_MOVED.md
 ```
 

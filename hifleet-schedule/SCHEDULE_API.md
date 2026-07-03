@@ -72,6 +72,23 @@ Each item in `data` must have top-level **`id`** for unlock (`dataId`).
 
 **`POST {base}/unlock?dataId={id}&typeCode=product_vessel_liner_charter&api_key=...`**
 
+| Query | Notes |
+|-------|--------|
+| `dataId` | Top-level **`id`** from schedule list row |
+| `typeCode` | Fixed **`product_vessel_liner_charter`** |
+
+**User-facing wording**: **获取联系方式** — not 「解锁」. All four charter `typeCode` values: **`references/charter_contact_unlock.md`**.
+
+### Single row
+
+User gives record id or picks a row → one `POST /unlock`.
+
+### All rows (batch)
+
+User says **all** / **全部联系方式** → loop **`dataId`** for **each** `id` from the last schedule list (confirm API points if many rows).
+
+Do not call unlock again for the same `id` in the same session unless the user asks.
+
 Show unlocked fields per **`WORKFLOW_OUTPUT.md`**.
 
 ---

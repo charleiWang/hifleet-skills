@@ -195,9 +195,9 @@ source: https://api.hifleet.com
 
 | 分册 | 能力 | 说明 |
 |------|------|------|
-| **`hifleet-mytonnages/`** | 邮箱船货盘 + 预抵 | 需邮箱（A）与 `hifleet_api_key`（C + 富化） |
-| **`hifleet-schedule/`** | 班轮船期 | 散杂货/滚装/集装箱 |
-| **`hifleet-opentonnages/`** | **公开船盘 + 公开货盘** | 列表查船货信息；**联系方式按需**（记录 id + 原 unlock 接口）；可选 enrich |
+| **`hifleet-mytonnages/`** | 邮箱船货盘 + 预抵 | 需邮箱（A）与 `hifleet_api_key`（C + 富化）；预抵联系方式按需 unlock |
+| **`hifleet-schedule/`** | 班轮船期 | 散杂货/滚装/集装箱；联系方式按需 unlock |
+| **`hifleet-opentonnages/`** | **公开船盘 + 公开货盘** | 列表查船货信息；**联系方式按需**（记录 id + unlock）；可选 enrich |
 | （综合） | 船位/档案/航程等 | 本仓库 `hifleet-skills` 其它模块 |
 
 - **触发**：租船、船盘、货盘、预抵、**公开船盘/公开货盘/平台船货** / charter, open vessel, cargo, public tonnage, public cargo, marketplace
