@@ -53,7 +53,22 @@ Detail per skill:
 | **全部** / all contacts | Loop **`dataId`** for **each** `id` from the last list (confirm points if many rows) |
 | Ship name only, no id | Ask user to pick **record id** from the list already shown |
 
-3. After success: show plaintext fields; mark **（已获取联系方式）**; do not repeat unlock for same `id` in session unless user asks again.
+3. After success: **deduplicate contacts** (see § Contact dedup below); show deduped plaintext; mark **（已获取联系方式）**; do not repeat unlock for same `id` in session unless user asks again.
+
+---
+
+## Contact dedup (mandatory after unlock)
+
+Applies to **schedule**, **open tonnage/cargo**, and **pre-arrival** — all skills that call **`POST /unlock`**.
+
+After unlock (or when showing **`senderInfoList`** plaintext from list/unlock):
+
+1. Treat each contact row as one record (email, phone, instant messaging / 即时通讯, date).  
+2. **Merge** rows where **email, phone, and IM are all the same** (after trim; case-insensitive for email).  
+3. When merging, **keep the row with the latest date** (`updatetime`, `updateTime`, `date`, etc. — field names vary by API).  
+4. **Show only deduped rows** to the user; do not repeat identical contact triples.
+
+CLI tools attach **`contacts_deduped`** on fetch-contacts output. Agents must apply the same rule when formatting unlock JSON manually.
 
 ---
 
@@ -65,3 +80,9 @@ Detail per skill:
 | Pre-arrival | `hifleet-mytonnages/scripts/destination_tool.py fetch-contacts` |
 
 Schedule: agent calls HTTP directly per **`SCHEDULE_API.md`** (no bundled CLI).
+
+---
+
+## Port ID (list queries)
+
+Resolve **`portid`** via **`references/charter_port_suggest.md`** (`GET {liner}/ports/suggest`) — **not** `portguide/getPort/token`.

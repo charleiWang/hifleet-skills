@@ -15,8 +15,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-if str(_SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(_SCRIPT_DIR))
+_SKILLS_SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
+for _p in (_SCRIPT_DIR, _SKILLS_SCRIPTS):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+from charter_contact_dedup import dedupe_unlock_payload
 
 DEFAULT_CHARTER_BASE = "https://api.hifleet.com/openclaw/vessel/charter"
 DEFAULT_LINER_BASE = "https://api.hifleet.com/openclaw/vessel/charter/liner"
@@ -251,11 +255,15 @@ def fetch_contacts(data_id: str) -> dict[str, Any]:
         return {"ok": False, "error": f"HTTP {e.code}", "detail": detail}
     except Exception as e:
         return {"ok": False, "error": str(e)}
+    deduped = dedupe_unlock_payload(resp)
     return {
         "ok": True,
         "dataId": rid,
         "typeCode": TYPE_CODE_PRE_ARRIVAL,
         "contacts": resp,
+        "contacts_deduped": deduped.get("contacts_deduped", []),
+        "deduped_count": deduped.get("deduped_count", 0),
+        "original_contact_count": deduped.get("original_contact_count", 0),
     }
 
 

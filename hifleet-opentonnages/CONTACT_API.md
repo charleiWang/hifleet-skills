@@ -55,7 +55,7 @@ When the user **asks for contact details**, call **`POST /unlock`** with the row
 | All rows: “contacts for all” / “全部联系方式” | Loop **`dataId`** for **each** `id` from the last list (confirm points if many rows) |
 | By ship name without id | Ask user to pick **record id** from the list you already showed |
 
-3. After success, show **plaintext** contact fields from unlock response; mark row **（已获取联系方式）** / *(contacts retrieved)*.
+3. After success: **deduplicate** per **`references/charter_contact_unlock.md`** § Contact dedup; show deduped plaintext; mark row **（已获取联系方式）** / *(contacts retrieved)*.
 4. **Do not** call unlock again for the same `id` in the same session unless user asks.
 
 ---

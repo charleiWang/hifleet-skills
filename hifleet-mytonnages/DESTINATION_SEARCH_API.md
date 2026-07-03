@@ -25,23 +25,17 @@
 
 ## 0. 港口 ID（`portid`）
 
-预抵列表 **必选** **`params.portid`**（港口 id 字符串，如 `"15843"`）。用户说中文或英文港名时，须先解析 portid 再调 §1。
-
-**推荐：`GET {liner}/ports/suggest`**（与班轮船期相同，详见 **`hifleet-schedule/SCHEDULE_API.md`** §1）
+预抵列表 **必选** **`params.portid`**。用户说港名时，**仅**用 **`GET {liner}/ports/suggest`** 解析（全文见 **`references/charter_port_suggest.md`**）。
 
 | | |
 |--|--|
-| Header `api_key` | 用户密钥 |
-| Query `keyword` | **英文**港名（如 `Tianjin`，勿用中文） |
-| Query `from` | `0` |
-| Query `size` | `1`（多条命中时增至 `5` 让用户选） |
-| Query `api_key` | 与 Header 相同 |
+| 接口 | **`GET https://api.hifleet.com/openclaw/vessel/charter/liner/ports/suggest`** |
+| Query `keyword` | **英文**港名 |
+| 取值 | **`data[0].portId`** → **`params.portid`** |
 
-取命中项 **`data[0].portId`**（或列表项中的 `portId` 字段）写入 **`params.portid`**。
+**禁止**使用 `portguide/getPort/token` 或其它港口指南接口替代本步骤。
 
-**备选**：`GET https://api.hifleet.com/portguide/getPort/token?api_key=…&portName=…` → 若响应含可与现网对齐的港口 id 字段则采用；**以 `ports/suggest` 的 `portId` 为准**。
-
-多条命中时向用户确认主港，**不得**臆造 portid。
+多条命中时向用户确认，**不得**臆造 portid。
 
 **CLI**：`python scripts/destination_tool.py ports-suggest --keyword Tianjin`
 

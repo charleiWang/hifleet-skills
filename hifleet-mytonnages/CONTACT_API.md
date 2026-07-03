@@ -50,7 +50,7 @@ If user asks for contacts and row is not yet purchased / `senderInfoList` empty 
 | **全部联系方式** | Loop every **`id`** from the last pre-arrival list |
 | By ship name without id | Ask user to pick **record id** from the list |
 
-3. After success: show plaintext from unlock response; mark **（已获取联系方式）**.
+3. After success: **deduplicate** per **`references/charter_contact_unlock.md`** § Contact dedup; show **`contacts_deduped`**; mark **（已获取联系方式）**.
 4. Do not call unlock again for the same `id` in the same session unless user asks.
 
 ---

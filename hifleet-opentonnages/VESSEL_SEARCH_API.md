@@ -25,12 +25,11 @@ Resolve: `hifleet_charter_api_base` → `HIFLEET_CHARTER_API_BASE` → default.
 
 ## Port ID (when user names a port)
 
-Before filtering by load/open port:
+Before filtering by open/load/discharge port, resolve **`params.portid`** (and cargo **`params.dischargingPortid`**) via **`GET {liner}/ports/suggest`** only — see **`references/charter_port_suggest.md`**.
 
-1. **Port guide** (recommended): `GET https://api.hifleet.com/portguide/getPort/token?api_key=...&portName=...` → **`portCode`** / list `piuid` as needed (see `hifleet-skills/references/port_api.md`).
-2. **Liner suggest** (fallback): `GET {liner}/ports/suggest` from **`hifleet-schedule`** if port guide misses.
+**Do not** use `portguide/getPort/token` for this skill.
 
-Put resolved ID in **`params.portid`** or **`params.openPort`** per API behaviour.
+Put resolved **`portId`** in **`params.portid`** / **`params.dischargingPortid`**. Text port name in **`params.openPort`** only when API accepts name filter without id.
 
 ---
 

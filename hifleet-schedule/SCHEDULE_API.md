@@ -36,6 +36,10 @@ Resolve: `hifleet_liner_api_base` → `HIFLEET_LINER_API_BASE` → default.
 
 **`GET {base}/ports/suggest`**
 
+Full URL: **`https://api.hifleet.com/openclaw/vessel/charter/liner/ports/suggest`**
+
+Also documented in **`references/charter_port_suggest.md`**. **Do not** use `portguide/getPort/token` for schedule portid.
+
 | | |
 |--|--|
 | Header `api_key` | user key |
@@ -88,6 +92,8 @@ User gives record id or picks a row → one `POST /unlock`.
 User says **all** / **全部联系方式** → loop **`dataId`** for **each** `id` from the last schedule list (confirm API points if many rows).
 
 Do not call unlock again for the same `id` in the same session unless the user asks.
+
+**Contact dedup (mandatory)**: after unlock, merge rows with identical **email + phone + instant messaging**; keep **latest date** — **`references/charter_contact_unlock.md`** § Contact dedup.
 
 Show unlocked fields per **`WORKFLOW_OUTPUT.md`**.
 
