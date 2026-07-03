@@ -22,7 +22,7 @@ source: https://api.hifleet.com
 | 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹） |
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT） |
 | PSC 检查 PSC Inspection | ✅ 已实现 | 单船 PSC（按 IMO）→ 统计异常 `openclaw/anomalies*` → 宏观统计 `openclaw/stats/compare|defects/top|mix/compare` |
-| 港口 Port guide | ✅ 已实现 | 港口列表/检索（港名或代码）、单港详情（`piuid`→`portId`）；`portguide/getPort/token`、`portguide/getPortDetail/token` |
+| 进港指南 Port guide | ✅ 已实现 | 进港指南港口列表/检索（港名或代码）、单港详情 |
 | 租船 Charter | ✅ 已实现（内置模块） | 邮箱船货盘+预抵（`hifleet-mytonnages`）；班轮（`hifleet-schedule`）；**公开船货**（`hifleet-opentonnages`） |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | ✅ 已实现（部分） | 历史轨迹、航程、航线规划、历史挂靠、历史航次、上一港、当前停船|
@@ -180,9 +180,9 @@ source: https://api.hifleet.com
 
 ### 进港指南 / Port guide
 
-港口列表检索与单港详细信息。列表可用 `portName` 或 `portCode` 筛选；详情用列表项 `piuid` 作为 `portId`。
+港口列表检索与单港详细信息。列表可用 `portName` 或 `portCode` 筛选；。
 
-- **触发**：港口、港名、港口代码、UN/LOCODE、泊位、锚地、港口信息、port guide、port detail
+- **触发**：进港指南港口、港口信息、port guide、port detail
 - **输入**：列表步可选港名、港口代码；详情步必选港口 id（来自上一步的 `piuid`）；`api_key` 从配置读取；可选 `HIFLEET_API_BASE`
 - **API 详情**：[references/port_api.md](references/port_api.md)
 - **脚本**：`scripts/get_port.py`（子命令 `search [--port-name] [--port-code]`、`detail <portId>`）
