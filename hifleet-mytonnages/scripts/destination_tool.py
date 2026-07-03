@@ -110,6 +110,48 @@ def _api_ok(payload: dict[str, Any]) -> bool:
     return False
 
 
+def _http_get_json(url: str, headers: Optional[dict[str, str]] = None, timeout: int = 90) -> dict[str, Any]:
+    req = urllib.request.Request(url, method="GET", headers=headers or {})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def port_suggest(keyword: str, *, size: int = 1) -> dict[str, Any]:
+    """GET {liner}/ports/suggest — resolve portId for params.portid."""
+    cfg = load_config()
+    api_key = cfg["api_key"]
+    if not api_key:
+        return {"ok": False, "error": "missing hifleet_api_key"}
+    kw = (keyword or "").strip()
+    if not kw:
+        return {"ok": False, "error": "keyword required (English port name)"}
+    qs = urllib.parse.urlencode(
+        {
+            "keyword": kw,
+            "from": 0,
+            "size": max(1, size),
+            "api_key": api_key,
+        }
+    )
+    url = f"{cfg['liner_base']}/ports/suggest?{qs}"
+    headers = {"api_key": api_key}
+    try:
+        resp = _http_get_json(url, headers=headers)
+    except urllib.error.HTTPError as e:
+        try:
+            detail = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            detail = str(e)
+        return {"ok": False, "error": f"HTTP {e.code}", "detail": detail}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    data = resp.get("data")
+    ports: list[dict[str, Any]] = []
+    if isinstance(data, list):
+        ports = [x for x in data if isinstance(x, dict)]
+    return {"ok": True, "keyword": kw, "ports": ports, "payload": resp}
+
+
 def paginated_destination_search(
     *,
     params: dict[str, Any],
@@ -125,6 +167,7 @@ def paginated_destination_search(
     base = cfg["api_base"]
     url = f"{base}/destination/search?{urllib.parse.urlencode({'api_key': api_key})}"
     fl = filter_labels if filter_labels is not None else {}
+    merged_params = {"isPublic": True, **params}
 
     all_rows: list[dict[str, Any]] = []
     total_expected: Optional[int] = None
@@ -136,7 +179,7 @@ def paginated_destination_search(
         body: dict[str, Any] = {
             "offset": offset,
             "limit": page_limit,
-            "params": params,
+            "params": merged_params,
             "filterLabels": fl,
         }
         try:
@@ -250,12 +293,15 @@ def _ids_from_json_file(path: Path) -> list[str]:
 
 def cmd_search(args: argparse.Namespace) -> int:
     params: dict[str, Any] = {}
-    if args.portcode:
-        params["portcode"] = args.portcode
+    if args.portid:
+        params["portid"] = str(args.portid).strip()
     if args.sortcolumn:
         params["sortcolumn"] = args.sortcolumn
     if args.sorttype:
         params["sorttype"] = args.sorttype
+    if not params.get("portid"):
+        print(json.dumps({"ok": False, "error": "portid required"}, ensure_ascii=False))
+        return 1
     fl: dict[str, Any] = {}
     if args.filter_labels_file:
         fl = json.loads(Path(args.filter_labels_file).read_text(encoding="utf-8"))
@@ -264,6 +310,12 @@ def cmd_search(args: argparse.Namespace) -> int:
         filter_labels=fl,
         page_limit=args.limit,
     )
+    print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+    return 0 if result.get("ok") else 1
+
+
+def cmd_ports_suggest(args: argparse.Namespace) -> int:
+    result = port_suggest(args.keyword, size=args.size)
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     return 0 if result.get("ok") else 1
 
@@ -285,10 +337,15 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="hifleet-mytonnages pre-arrival search + contacts")
     sub = p.add_subparsers(dest="cmd", required=True)
 
+    pp = sub.add_parser("ports-suggest", help="GET {liner}/ports/suggest → portId")
+    pp.add_argument("--keyword", required=True, help="English port name e.g. Tianjin")
+    pp.add_argument("--size", type=int, default=1)
+    pp.set_defaults(func=cmd_ports_suggest)
+
     ps = sub.add_parser("search", help="POST /destination/search (full pagination)")
-    ps.add_argument("--portcode", required=True, help="Port UN/LOCODE e.g. CNTIZ")
+    ps.add_argument("--portid", required=True, help="Port id from ports-suggest (e.g. 15843)")
     ps.add_argument("--sortcolumn", default="dist")
-    ps.add_argument("--sorttype", default="desc", choices=("asc", "desc"))
+    ps.add_argument("--sorttype", default="asc", choices=("asc", "desc"))
     ps.add_argument("--limit", type=int, default=200, help="page size")
     ps.add_argument("--filter-labels-file", default="", help="JSON object for filterLabels")
     ps.set_defaults(func=cmd_search)

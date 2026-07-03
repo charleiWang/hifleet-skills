@@ -33,7 +33,7 @@
 - ✅ 「正在查询**预抵**天津港的船舶…」「共找到 **N** 艘预抵船」  
 - ✅ 列表后：「如需某条船的联系方式，请告诉我 **记录 id**；若要本页全部，请说 **全部**。」  
 - ✅ 获取后：「已获取联系方式」— **不要**说「已解锁」  
-- ❌ 「调用 destination/search 接口」「filterLabels.vesselAge」
+- ❌ 「调用 destination/search 接口」「filterLabels.vesselAge」「portid」「portcode」
 
 ---
 

@@ -21,7 +21,7 @@
 }
 ```
 
-**Liner schedule API base** (`hifleet_liner_api_base`) is also used for **route C contact fetch** (`POST …/unlock`, `typeCode=product_will_arrive_charter` — **`CONTACT_API.md`**). Primary consumer: **`hifleet-schedule`**.
+**Liner API base** (`hifleet_liner_api_base`): route C **port suggest** (`GET …/ports/suggest`) and **contact unlock** (`POST …/unlock`, `typeCode=product_will_arrive_charter` — **`CONTACT_API.md`**). Also used by **`hifleet-schedule`**.
 
 | SMTP | 说明 |
 |------|------|

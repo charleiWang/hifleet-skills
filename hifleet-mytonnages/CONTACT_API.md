@@ -20,9 +20,19 @@ When the user **asks for contact details**, call **`POST {liner}/unlock`** with 
 | Resolve | `hifleet_liner_api_base` → `HIFLEET_LINER_API_BASE` → default |
 | `{charter}` | Same as **`DESTINATION_SEARCH_API.md`** (search only) |
 
----
+## List response hints (pre-arrival)
 
-## Agent flow
+| Field | Agent use |
+|-------|-----------|
+| **`id`** | **`dataId`** for unlock (top-level; often MMSI string) |
+| `purchased` | `true` → account may already have contacts; prefer showing `senderInfoList` if plaintext |
+| `requireUnLock` | When `true`, user request for contacts → call unlock |
+| `senderInfoList` | Contact objects when unlocked/purchased; **do not** use nested ids as `dataId` |
+| `hasSenderInfoList` | `有` / `未知` — list filter only; not a substitute for unlock |
+
+If user asks for contacts and row is not yet purchased / `senderInfoList` empty or masked → **`POST /unlock`** with top-level **`id`**.
+
+---
 
 ### 1. List (default)
 
@@ -48,8 +58,14 @@ When the user **asks for contact details**, call **`POST {liner}/unlock`** with 
 ## CLI
 
 ```bash
-# Single row
-python scripts/destination_tool.py fetch-contacts --id 12345
+# Port suggest → portId
+python scripts/destination_tool.py ports-suggest --keyword Tianjin
+
+# Pre-arrival search
+python scripts/destination_tool.py search --portid 15843
+
+# Single row contacts
+python scripts/destination_tool.py fetch-contacts --id 352005839
 
 # All ids from last search JSON
 python scripts/destination_tool.py fetch-contacts --all-from-file result.json

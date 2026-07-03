@@ -1,6 +1,6 @@
 ---
 name: hifleet-mytonnages
-version: 1.4.0
+version: 1.4.1
 description: >
   HiFleet mailbox open tonnage/cargo (route A) and pre-arrival vessel search (route C).
   Pre-arrival contacts on demand via unlock (product_will_arrive_charter).
