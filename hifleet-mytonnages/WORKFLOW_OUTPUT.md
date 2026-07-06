@@ -10,7 +10,7 @@ Use **`USER_WORDING.md`** and **`LOCALIZATION.md`**.
 - **Default list (no contact request yet)**:
   - Show: ship name, IMO, MMSI, destination, ETA, distance, DWT, type, age, tags, etc.
   - **Do not** show owner, company, phone, email, WeChat, or expand `******`.
-- **After contact fetch** (`CONTACT_API.md`): mark **（已获取联系方式）**; show plaintext from unlock response.
+- **After contact fetch** (`CONTACT_API.md`): mark **（已获取联系方式）**; show **deduped** contacts (`references/charter_contact_unlock.md` § Contact dedup).
 - **Footer after list** (contacts not yet fetched): invite user to give **record id** or ask for **all** contacts — no 「解锁」 wording.
 
 ## Route A (mailbox)
