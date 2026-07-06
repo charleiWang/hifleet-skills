@@ -21,6 +21,11 @@ for _p in (_SCRIPT_DIR, _SKILLS_SCRIPTS):
         sys.path.insert(0, str(_p))
 
 from charter_contact_dedup import dedupe_unlock_payload
+from charter_enrich_helpers import (
+    enrich_response_usable,
+    normalize_cargo_row_for_enrich,
+    normalize_vessel_row_for_enrich,
+)
 
 DEFAULT_CHARTER_BASE = "https://api.hifleet.com/openclaw/vessel/charter"
 DEFAULT_LINER_BASE = "https://api.hifleet.com/openclaw/vessel/charter/liner"
@@ -309,14 +314,40 @@ def enrich_row(
     url = cfg["enrich_url"]
     if "?" not in url:
         url = f"{url}?{urllib.parse.urlencode({'api_key': api_key})}"
-    body: dict[str, Any] = {"kind": kind, "row": row}
+
+    k = (kind or "").strip().lower()
+    imo: Any = None
+    mmsi: Any = None
+    if k in ("cargo", "g"):
+        mapped_row = normalize_cargo_row_for_enrich(row)
+    else:
+        mapped_row, imo, mmsi = normalize_vessel_row_for_enrich(row)
+
+    body: dict[str, Any] = {
+        "kind": "cargo" if k in ("cargo", "g") else "vessel",
+        "source": "parse_schema",
+        "row": mapped_row,
+        "include_archive": True,
+        "charter_api_base": cfg["api_base"],
+    }
+    if imo:
+        body["imo"] = imo
+    if mmsi:
+        body["mmsi"] = mmsi
     if query_port:
         body["query_port"] = query_port
     try:
         resp = _http_post_json(url, body)
     except Exception as e:
         return {"ok": False, "error": str(e)}
-    return {"ok": True, "enrich": resp}
+    if not enrich_response_usable(resp):
+        return {
+            "ok": False,
+            "error": resp.get("message") or resp.get("error") or resp.get("msg") or "enrich_empty",
+            "enrich": resp,
+            "request_row": mapped_row,
+        }
+    return {"ok": True, "enrich": resp, "request_row": mapped_row}
 
 
 def cmd_search_vessels(args: argparse.Namespace) -> int:

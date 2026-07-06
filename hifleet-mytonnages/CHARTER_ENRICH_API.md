@@ -42,6 +42,31 @@
 | `charter_api_base` | 可选，档案 API 根，默认公网 OpenClaw 租船根 |
 | `include_archive` | 船盘默认 `true`；设为 `false` 可跳过档案 |
 
+**船盘请求体示例**（`IMO` 可 null，靠 lookup 补齐）：
+
+```json
+{
+  "kind": "vessel",
+  "source": "parse_schema",
+  "include_archive": true,
+  "row": {
+    "船名": "ZHONG XING MEN",
+    "IMO": null,
+    "载重吨": 55408,
+    "船型": "杂货船",
+    "OPEN位置": "Singapore",
+    "是否有船吊": 1,
+    "吊机数量": 4,
+    "是否可装危险品": 0,
+    "租船类型": "OPEN"
+  }
+}
+```
+
+> **常见误用**：`row.IMO` 填错误/占位 IMO（如 `9123456`）→ `tags` 为空、`archive` 失败、`data.dwt` 等为 null，但 `ok` 仍为 true（因返回了错误 IMO）。**无 IMO 时应传 `null` 并确保 Query 带 `api_key`。**
+
+> **船名**：传入 enrich 前须去掉 **`MV` / `M.V.` / `MT`** 等前缀（如 `MV WILSON NEWPORT` → `WILSON NEWPORT`）；skill CLI 与 `charter_enrich_helpers` 会自动处理。
+
 **船盘成功响应**：
 
 ```json

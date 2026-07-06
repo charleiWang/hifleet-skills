@@ -46,6 +46,18 @@ except ImportError:  # pragma: no cover
     def build_webmail_locate(**kwargs: Any) -> dict[str, Any]:  # type: ignore
         return ""
 
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_SKILLS_SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
+for _p in (_SCRIPT_DIR, _SKILLS_SCRIPTS):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+from charter_enrich_helpers import (
+    enrich_response_usable,
+    normalize_cargo_row_for_enrich,
+    normalize_vessel_row_for_enrich,
+)
+
 # 与 SKILL.md §2.4 JSON 键一致
 CARGO_FIELD_KEYS: tuple[str, ...] = (
     "客户名称",
@@ -623,23 +635,40 @@ def _fetch_enrich_row(
     q = _enrich_auth_query(api_key, enrich_url)
     sep = "&" if "?" in enrich_url else "?"
     url = f"{enrich_url}{sep}{q}"
-    body: dict[str, Any] = {"kind": kind, "row": row, "source": source}
-    if imo is not None:
-        body["imo"] = imo
-    if mmsi is not None:
-        body["mmsi"] = mmsi
+
+    k = (kind or "").strip().lower()
+    if k in ("cargo", "g"):
+        mapped_row = normalize_cargo_row_for_enrich(row)
+        body_imo, body_mmsi = imo, mmsi
+    else:
+        mapped_row, row_imo, row_mmsi = normalize_vessel_row_for_enrich(row)
+        body_imo = imo if imo is not None else row_imo
+        body_mmsi = mmsi if mmsi is not None else row_mmsi
+
+    body: dict[str, Any] = {
+        "kind": "cargo" if k in ("cargo", "g") else "vessel",
+        "row": mapped_row,
+        "source": source,
+        "include_archive": True,
+    }
+    if body_imo is not None:
+        body["imo"] = body_imo
+    if body_mmsi is not None:
+        body["mmsi"] = body_mmsi
     if charter_api_base:
         body["charter_api_base"] = charter_api_base
     try:
         resp = _http_post_json_url(url, body)
     except (urllib.error.URLError, json.JSONDecodeError, TimeoutError) as e:
         return {"_fetch_error": str(e)}
-    if resp.get("ok"):
+    if enrich_response_usable(resp):
+        if not resp.get("ok"):
+            resp["partial"] = True
         return resp
-    if resp.get("imo") or resp.get("data") or resp.get("archive"):
-        resp["partial"] = True
-        return resp
-    return {}
+    err = resp.get("message") or resp.get("error") or resp.get("msg")
+    if err:
+        return {"_fetch_error": str(err), "_raw": resp, "_request_row": mapped_row}
+    return {"_fetch_error": "enrich_empty", "_raw": resp, "_request_row": mapped_row}
 
 
 def _apply_vessel_enrich_updates(
