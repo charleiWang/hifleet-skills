@@ -1,4 +1,4 @@
-﻿# Routing and when to run
+# Routing and when to run
 
 ## Routes (this skill only)
 

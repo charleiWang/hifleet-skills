@@ -1,4 +1,4 @@
-﻿---
+---
 name: hifleet-skills
 description: >-
   HiFleet 综合技能：船位、档案、轨迹/航程/航次、PSC、区域通航、港口、租船船货盘、港距排序、船期、航线、气象、船队、AIS。Position, track, voyage, PSC, port, charter, fleet, weather, AIS.

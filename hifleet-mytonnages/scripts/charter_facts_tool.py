@@ -54,8 +54,12 @@ for _p in (_SCRIPT_DIR, _SKILLS_SCRIPTS):
 
 from charter_enrich_helpers import (
     enrich_response_usable,
+    geared_from_archive_dict,
     normalize_cargo_row_for_enrich,
+    normalize_geared_for_storage,
+    normalize_is_geared,
     normalize_vessel_row_for_enrich,
+    resolve_vessel_type_category,
 )
 
 # 与 SKILL.md §2.4 JSON 键一致
@@ -184,6 +188,58 @@ def _q(name: str) -> str:
     return '"' + name.replace('"', '""') + '"'
 
 
+def _normalize_openvessel_row_vals(row_vals: dict[str, Any]) -> None:
+    """入库前：船型六类归一 + 吊机字段分离（in-place）。"""
+    cat = resolve_vessel_type_category(
+        row_vals.get("船型"),
+        use_llm=True,
+    )
+    if cat:
+        row_vals["船型"] = cat
+    g = normalize_geared_for_storage(row_vals.get("是否有船吊"))
+    if g is None and row_vals.get("吊机数量") not in (None, ""):
+        try:
+            g = 1 if int(float(str(row_vals.get("吊机数量")).strip())) > 0 else 0
+        except (TypeError, ValueError):
+            pass
+    if g is not None:
+        row_vals["是否有船吊"] = g
+
+
+def _resolve_vessel_type_from_enrich(
+    r: dict[str, Any],
+    archive: dict[str, Any],
+) -> Optional[str]:
+    """富化后写入 船型：六类归一，禁止 raw IHS type 直接覆盖。"""
+    return resolve_vessel_type_category(
+        r.get("船型"),
+        minotype_archive=archive.get("档案_细分船型"),
+        shiptype_archive=archive.get("档案_船型"),
+        use_llm=True,
+    )
+
+
+def _geared_from_enrich_archive(archive: dict[str, Any]) -> Optional[int]:
+    """从 enrich 档案列推断是否有船吊。"""
+    for key in ("吊机数量",):
+        raw = archive.get(key)
+        if raw in (None, ""):
+            continue
+        try:
+            return 1 if int(float(str(raw).strip())) > 0 else 0
+        except (TypeError, ValueError):
+            pass
+    sj = archive.get("ship_archive_json")
+    if sj:
+        try:
+            item = json.loads(sj) if isinstance(sj, str) else sj
+            if isinstance(item, dict):
+                return geared_from_archive_dict(item)
+        except json.JSONDecodeError:
+            pass
+    return None
+
+
 def _norm_intent(intent: Any) -> list[str]:
     if intent is None:
         return []
@@ -197,6 +253,9 @@ def _norm_intent(intent: Any) -> list[str]:
 def coerce_field(key: str, val: Any, int_keys: set[str], real_keys: set[str]) -> Any:
     if val is None:
         return None
+    if key in ("是否有船吊", "是否要求船吊"):
+        g = normalize_geared_for_storage(val)
+        return g
     if key in int_keys:
         if isinstance(val, bool):
             return 1 if val else 0
@@ -385,6 +444,7 @@ class CharterFactsDB:
             row_vals = {}
             for k in OPENVESSEL_FIELD_KEYS:
                 row_vals[k] = coerce_field(k, raw.get(k), OPENVESSEL_INT_KEYS, OPENVESSEL_REAL_KEYS)
+            _normalize_openvessel_row_vals(row_vals)
             payload = json.dumps(raw, ensure_ascii=False)
             st = _search_parts(subject, from_addr, row_vals, OPENVESSEL_FIELD_KEYS)
             vals = [message_id, email_date_utc, from_addr, subject, idx]
@@ -696,10 +756,14 @@ def _apply_vessel_enrich_updates(
             updates["载重吨"] = archive["档案_dwt"]
         if archive.get("档案_建造年"):
             updates["建造年份"] = archive["档案_建造年"]
-        if archive.get("档案_船型"):
-            updates["船型"] = archive["档案_船型"]
+        vtype = _resolve_vessel_type_from_enrich(r, archive)
+        if vtype:
+            updates["船型"] = vtype
         if archive.get("档案_船名"):
             updates["船名"] = archive["档案_船名"]
+        geared = _geared_from_enrich_archive(archive)
+        if geared is not None and r.get("是否有船吊") in (None, ""):
+            updates["是否有船吊"] = geared
 
 
 def _apply_cargo_enrich_updates(updates: dict[str, Any], resp: dict[str, Any]) -> None:
@@ -732,19 +796,30 @@ def _row_enrich_key(row: dict[str, Any]) -> str:
 
 
 def _parse_schema_row_from_db_row(d: dict[str, Any], ftype: str) -> dict[str, Any]:
+    """SQLite 行 → 2.4 parse_schema 对象：payload_json 全量 + 库列非空值覆盖（含富化回写）。"""
+    keys = OPENVESSEL_FIELD_KEYS if ftype == "openvessel" else CARGO_FIELD_KEYS
+    out: dict[str, Any] = {}
     pj = d.get("payload_json")
     if pj:
         try:
             parsed = json.loads(pj)
             if isinstance(parsed, dict):
-                return parsed
+                out = dict(parsed)
         except json.JSONDecodeError:
             pass
-    out: dict[str, Any] = {}
-    keys = OPENVESSEL_FIELD_KEYS if ftype == "openvessel" else CARGO_FIELD_KEYS
     for k in keys:
-        if k in d and d[k] not in (None, ""):
-            out[k] = d[k]
+        v = d.get(k)
+        if v not in (None, ""):
+            out[k] = v
+    if ftype == "openvessel":
+        g = normalize_geared_for_storage(out.get("是否有船吊"))
+        if g is None and out.get("吊机数量") not in (None, ""):
+            try:
+                g = 1 if int(float(str(out.get("吊机数量")).strip())) > 0 else 0
+            except (TypeError, ValueError):
+                pass
+        if g is not None:
+            out["是否有船吊"] = g
     return out
 
 

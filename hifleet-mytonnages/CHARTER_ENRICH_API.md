@@ -44,6 +44,8 @@
 
 **船盘请求体示例**（`IMO` 可 null，靠 lookup 补齐）：
 
+**`row` 须为 2.4 完整对象**（与 `PARSE_SCHEMA.md` / SQLite `payload_json` 一致），含 tags 所需全部字段（`是否有船吊`、`吊机数量`、`是否可装危险品`、CIS/BH/AUS/RS 等）。`charter_facts_tool.py enrich` 从库中合并 `payload_json` + 列值后整包提交；**禁止**只传船名/载重吨/OPEN 等少量字段。
+
 ```json
 {
   "kind": "vessel",
@@ -65,7 +67,8 @@
 
 > **常见误用**：`row.IMO` 填错误/占位 IMO（如 `9123456`）→ `tags` 为空、`archive` 失败、`data.dwt` 等为 null，但 `ok` 仍为 true（因返回了错误 IMO）。**无 IMO 时应传 `null` 并确保 Query 带 `api_key`。**
 
-> **船名**：传入 enrich 前须去掉 **`MV` / `M.V.` / `MT`** 等前缀（如 `MV WILSON NEWPORT` → `WILSON NEWPORT`）；skill CLI 与 `charter_enrich_helpers` 会自动处理。
+> **船名**：传入 enrich 前须去掉 **`MV` / `M.V.` / `MT`** 等前缀（如 `MV WILSON NEWPORT` → `WILSON NEWPORT`）；skill CLI 与 `charter_enrich_helpers` 会自动处理。  
+> **无空格船名**：连写中文拼音（如 `WANGDA`、`ZHONGHUAMEN`）会按**汉语拼音音节表**自动切分后重查（`WANG DA`、`ZHONG HUA MEN`）；与 API 返回名另做去空格紧凑比对。纯英文船名仍用启发式切分。解析阶段尽量保留空格最稳。
 
 **船盘成功响应**：
 
@@ -112,7 +115,7 @@
 
 - **IMO 来源**：优先 **§0** 补齐后的 **`IMO`**；须为 7 位数字；无 IMO **跳过**本接口。  
 - **成功**（`status` 为 `"1"`、`msg` 为 `SUCCESS`）：`data.list[]` 每项含 `ShipName`、`imo`、`callsign`、`YearOfBuild`、`dwt`、`flagname`、`flagcode`、`Length`、`width`、`draught`、`GrossTonnage`、`Shipbuilder`、`type`、`registeredOwner`、`operator`、`shipManager`、`minotype` 等。  
-- **落库**：按 **`imo`** 匹配 `openvessel_plate` 行，将档案字段写入 **`ship_archive_json`**（完整 JSON 备份），并同步写入分列（见 **`WORKFLOW_2_MAIL.md` §2.4.2**）：`档案_船名`、`档案_呼号`、`档案_建造年`、`档案_dwt`、`档案_船旗`、`档案_船长`、`档案_船宽`、`档案_吃水`、`档案_总吨`、`档案_造船厂`、`档案_船型`、`档案_船东`、`档案_经营人`、`档案_管理公司`、`档案_细分船型`。邮件已有同义字段且档案非空时，**以档案 API 为准覆盖**对应展示列（如 `载重吨`、`建造年份`、`船型`）。  
+- **落库**：按 **`imo`** 匹配 `openvessel_plate` 行，将档案字段写入 **`ship_archive_json`**（完整 JSON 备份），并同步写入分列（见 **`WORKFLOW_2_MAIL.md` §2.4.2**）：`档案_船名`、`档案_呼号`、`档案_建造年`、`档案_dwt`、`档案_船旗`、`档案_船长`、`档案_船宽`、`档案_吃水`、`档案_总吨`、`档案_造船厂`、`档案_船型`、`档案_船东`、`档案_经营人`、`档案_管理公司`、`档案_细分船型`。邮件已有同义字段且档案非空时，**以档案 API 为准覆盖**对应展示列（如 `载重吨`、`建造年份`）；**`船型` 列写入六类归一结果**（`档案_细分船型`/`档案_船型` 经映射），**禁止**用 raw IHS `type` 直接覆盖。`是否有船吊` 可经档案/IHS 补全，供 tags 生成 Geared/Gearless。  
 - **失败**：单批 IMO 失败时记录错误、**不**伪造档案；其余行继续。
 
 ---

@@ -1,4 +1,4 @@
-﻿# 技能清单 / Skills Index
+# 技能清单 / Skills Index
 
 中英双语。
 

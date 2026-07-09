@@ -1,4 +1,4 @@
-﻿# First setup
+# First setup
 
 ## A. Capabilities (this skill)
 

@@ -6,8 +6,8 @@ This skill queries **HiFleet liner schedules** only (general/bulk, Ro-Ro, contai
 
 ## Distribution
 
-1. Data from **`api.hifleet.com`** via HTTPS; never substitute mail/SQLite or fabricated rows.  
-2. **Full list mandatory**: **`FULL_LIST_POLICY.md`**.  
+1. Data from **`api.hifleet.com`** via HTTPS; never substitute mail/SQLite or fabricated rows.
+2. **Full list mandatory**: **`FULL_LIST_POLICY.md`**.
 3. Key: `hifleet_api_key` / `HIFLEET_API_KEY`; never expose full key in chat.
 
 ## Schedule types (user wording)
@@ -28,7 +28,7 @@ Same API endpoints for all; filter by ports/dates in `params`. If API returns a 
 |------|---------|
 | `{base}` | `https://api.hifleet.com/openclaw/vessel/charter/liner` |
 
-Resolve: `hifleet_liner_api_base` → `HIFLEET_LINER_API_BASE` → default.
+Resolve: `hifleet_liner_api_base` -> `HIFLEET_LINER_API_BASE` -> default.
 
 ---
 
@@ -48,7 +48,7 @@ Also documented in **`references/charter_port_suggest.md`**. **Do not** use `por
 | Query `size` | `1` |
 | Query `api_key` | same as header |
 
-Take **`data[0].portId`** for load/discharge. If user names two ports, call §1 **twice** and pass both IDs in one `POST /schedules` (see §2).
+Take **`data[0].portId`** for load/discharge. If user names two ports, call section 1 **twice** and pass both IDs in one `POST /schedules` (see section 2).
 
 **Do not** filter results by port name string after fetch.
 
@@ -58,17 +58,180 @@ Take **`data[0].portId`** for load/discharge. If user names two ports, call §1 
 
 **`POST {base}/schedules?sk={url-encoded api_key}`**
 
-| Field | Notes |
-|-------|--------|
-| `offset` / `limit` | Paginate per **`FULL_LIST_POLICY.md`** |
-| `params.portid` | Load port ID from §1 |
-| `params.dischargingPortid` | Discharge port ID when user asked both ports |
-| `params.isPublic` | e.g. `true` |
-| `params.openDateStart` / `openDateEnd` | `yyyy-MM-dd` laycan window |
+Content-Type: `application/json`
 
-**“Recent”**: wide window from tomorrow if user did not specify dates.
+### Request body
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `offset` | Yes | number | Page offset (1-based) |
+| `limit` | Yes | number | Page size |
+| `filterLabels` | Yes | object | Filter criteria; keys with values filter data, empty keys mean no filter |
+| `params` | Yes | object | Query parameters |
+
+### `filterLabels` fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `filterLabels.type` | array[string] | Vessel type filter |
+| `filterLabels.LENGTH` | array[string] | Vessel length filter |
+| `filterLabels.sjdraught` | array[string] | Draught filter |
+| `filterLabels.dwt` | array[string] | Deadweight filter |
+| `filterLabels.holdCapacityCbm` | array[string] | Hold capacity (cbm) filter |
+| `filterLabels.tradingArea` | array[string] | Trading area / route filter |
+| `filterLabels.openDateDays` | array[string] | Open date days from today (negative = past, positive = future) |
+| `filterLabels.openEndDateDays` | array[string] | Open end date days from today |
+| `filterLabels.openPort` | array[string] | Open port filter |
+| `filterLabels.dischargingPort` | array[string] | Discharging port filter |
+
+### `params` fields
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `params.portid` | Yes | string | Load port ID from section 1 |
+| `params.dischargingPortid` | No | string | Discharge port ID when user asked both ports |
+| `params.isPublic` | No | boolean | e.g. `true` |
+| `params.dataId` | No | string | Query single record by dataId |
+| `params.openPort` | No | string | Open port name filter |
+| `params.keyword` | No | string | Keyword search: vessel name / callsign / MMSI / IMO (Chinese or English) |
+| `params.sortcolumn` | No | string | Sort column name |
+| `params.sorttype` | No | string | Sort order: `asc` or `desc` |
+
+### Request example
+
+```json
+{
+  "offset": 1,
+  "limit": 10,
+  "filterLabels": {},
+  "params": {
+    "portid": "27999",
+    "dischargingPortid": "25523",
+    "isPublic": true
+  }
+}
+```
+
+**Recent**: wide window from tomorrow if user did not specify dates.
 
 Each item in `data` must have top-level **`id`** for unlock (`dataId`).
+
+### Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `total` | number | Total record count |
+| `data` | array | Schedule list (see fields below) |
+| `stat` | object | Filter statistics for sidebar (see below) |
+
+### Response `data[]` fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Record ID (for unlock) |
+| `ShipName` | string | Vessel name |
+| `tradingArea` | string | Trading area / route |
+| `openPort` | string | Load port name (English) |
+| `dischargingPort` | string | Discharge port name (English) |
+| `dischargingPortid` | string | Discharge port ID |
+| `portid` | string | Load port ID |
+| `openDate` | string | Open date (yyyy-MM-dd) |
+| `openEndDate` | string | Cancel date (yyyy-MM-dd) |
+| `openDateDays` | number | Days from today to open date |
+| `openEndDateDays` | number | Days from today to cancel date |
+| `openPortEta` | string | Next port ETA (yyyy-MM-dd) |
+| `dischargingPortEta` | string | Discharge port ETA (yyyy-MM-dd) |
+| `eta` | string | ETA |
+| `portRegion` | string | Port region |
+| `destination` | string | Destination |
+| `dist` | number | Distance |
+| `dischargingDist` | number | Discharge distance |
+| `dwtLabel` | string | Deadweight label |
+| `holdCapacityCbm` | string/null | Hold capacity (cbm) |
+| `hatchSize` | string/null | Hatch size |
+| `holdsCount` | string/null | Number of holds |
+| `hatchCoverType` | string/null | Hatch cover type |
+| `craneType` | string/null | Crane type |
+| `craneCount` | string/null | Crane count |
+| `isGeared` | string | Geared status |
+| `deckStrength` | string/null | Deck strength |
+| `sprinklerSystem` | string | Sprinkler system |
+| `dgApproved` | string | DG approved |
+| `reeferPlugs` | string/null | Reefer plugs |
+| `fuelType` | string/null | Fuel type |
+| `speedKnots` | string/null | Speed (knots) |
+| `vesselAge` | string/null | Vessel age |
+| `imo` | string/null | IMO number |
+| `mmsi` | string | MMSI |
+| `flagcode` | string | Flag code |
+| `flagname` | string | Flag name |
+| `flagnameCN` | string | Flag name (Chinese) |
+| `vesselOwner` | string | Vessel owner (masked if locked) |
+| `registeredOwner` | string | Registered owner (masked if locked) |
+| `shipManager` | string | Ship manager (masked if locked) |
+| `operator` | string | Operator (masked if locked) |
+| `Shipbuilder` | string | Shipbuilder (masked if locked) |
+| `particularShipName` | string | Particular ship name (masked if locked) |
+| `userId` | string | User ID |
+| `senderFlag` | string | Sender flag |
+| `senderName` | string | Sender name (masked if locked) |
+| `senderEmail` | string | Sender email (masked if locked) |
+| `telephone` | string | Telephone (masked if locked) |
+| `instantMessaging` | string | Instant messaging (masked if locked) |
+| `senderInfoList` | array | Contact info list (masked if locked) |
+| `senderInfoList[].senderName` | string | Contact name |
+| `senderInfoList[].senderEmail` | string | Contact email |
+| `senderInfoList[].telephone` | string | Contact phone |
+| `senderInfoList[].instantMessaging` | string | Contact IM |
+| `senderInfoList[].receivedTime` | string | Received time |
+| `emailBody` | string | Email body (masked if locked) |
+| `receivedTime` | string | Record received time (yyyy-MM-dd HH:mm) |
+| `isPublic` | number | Public flag (1 = public) |
+| `isOwner` | boolean | Is owner |
+| `isDuplicate` | boolean | Is duplicate |
+| `purchased` | boolean | Is purchased |
+| `requireUnLock` | boolean | Requires unlock (true = contact masked) |
+| `openType` | string | Open type (e.g. LINE) |
+| `duration` | string/null | Duration |
+| `tags` | array | Tags |
+| `matchCount` | number | Match count |
+| `matcheIds` | array | Matched IDs |
+| `shipCargoMatchBo` | object | Cargo match info |
+| `shipCargoMatchBo.matched` | boolean | Cargo matched |
+| `shipCargoMatchBo.count` | number | Match count |
+| `shipCargoMatchBo.ids` | array/null | Matched IDs |
+| `imoEquipmentClass` | string/null | IMO equipment class |
+| `cargoEquipment` | string/null | Cargo equipment |
+| `dwt` | string/null | Deadweight |
+
+### Response `stat` fields
+
+The `stat` object contains filter statistics for the sidebar. Each key corresponds to a `filterLabels` field:
+
+| Stat key | Label | Description |
+|----------|-------|-------------|
+| `stat.openPort` | 装货港 | Open port statistics |
+| `stat.dischargingPort` | 卸货港 | Discharging port statistics |
+| `stat.openDateDays` | 受载日 | Open date days statistics |
+| `stat.openEndDateDays` | 解约日 | Cancel date days statistics |
+| `stat.type` | 船型 | Vessel type statistics |
+| `stat.LENGTH` | 船长 | Vessel length statistics |
+| `stat.sjdraught` | 吃水 | Draught statistics |
+| `stat.dwt` | 载重吨 | Deadweight statistics |
+| `stat.holdCapacityCbm` | 舱容 | Hold capacity statistics |
+| `stat.tradingArea` | 航线意向 | Trading area statistics |
+
+Each stat entry contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `stat.{key}.label` | string | Display label |
+| `stat.{key}.total` | number | Total count |
+| `stat.{key}.statistics[]` | array | Filter options |
+| `stat.{key}.statistics[].label` | string | Option label |
+| `stat.{key}.statistics[].count` | number | Count for this option |
+| `stat.{key}.statistics[].filter` | boolean | Whether this option is currently filtered |
+| `stat.{key}.statistics[].countFilter` | number | Count after filter applied |
 
 ---
 
@@ -81,19 +244,19 @@ Each item in `data` must have top-level **`id`** for unlock (`dataId`).
 | `dataId` | Top-level **`id`** from schedule list row |
 | `typeCode` | Fixed **`product_vessel_liner_charter`** |
 
-**User-facing wording**: **获取联系方式** — not 「解锁」. All four charter `typeCode` values: **`references/charter_contact_unlock.md`**.
+**User-facing wording**: **获取联系方式** -- not 解锁. All four charter `typeCode` values: **`references/charter_contact_unlock.md`**.
 
 ### Single row
 
-User gives record id or picks a row → one `POST /unlock`.
+User gives record id or picks a row -> one `POST /unlock`.
 
 ### All rows (batch)
 
-User says **all** / **全部联系方式** → loop **`dataId`** for **each** `id` from the last schedule list (confirm API points if many rows).
+User says **all** / **全部联系方式** -> loop **`dataId`** for **each** `id` from the last schedule list (confirm API points if many rows).
 
 Do not call unlock again for the same `id` in the same session unless the user asks.
 
-**Contact dedup (mandatory)**: after unlock, merge rows with identical **email + phone + instant messaging**; keep **latest date** — **`references/charter_contact_unlock.md`** § Contact dedup.
+**Contact dedup (mandatory)**: after unlock, merge rows with identical **email + phone + instant messaging**; keep **latest date** -- `references/charter_contact_unlock.md` section Contact dedup.
 
 Show unlocked fields per **`WORKFLOW_OUTPUT.md`**.
 
@@ -107,4 +270,4 @@ See **`WORKFLOW_OUTPUT.md`**: full list, Laycan one line, empty fields omitted, 
 
 ## Errors
 
-On HTTP/API errors, show a **short** message in the **user’s locale** (`LOCALIZATION.md` / `scripts/i18n_messages.py`). Do not paste full `api_key` or stack traces.
+On HTTP/API errors, show a **short** message in the **user locale** (`LOCALIZATION.md` / `scripts/i18n_messages.py`). Do not paste full `api_key` or stack traces.
