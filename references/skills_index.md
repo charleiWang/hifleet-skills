@@ -165,10 +165,15 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 账户与用量 / Account & Usage |
-| 描述 | OpenClaw **api_key** 自助查询：**积分概览**（`openclaw/account/summary`）、**调用汇总**（`usage`）、**调用明细**（`usage/details`）、**积分流水**（`transactions`）。查询不扣积分。响应含 **`agentSummary`** 供 Agent 直接转述。 |
-| 触发词 | 积分、余额、还剩多少、用了多少、调用记录、扣费、消费、流水、account balance、usage、credits、billing |
+| 描述 | **全链路**（已实现）：[FIRST_SETUP.md](../FIRST_SETUP.md) 引导注册并配置；`summary` / `usage` / `transactions`；充值与发票见 [billing_api.md](billing_api.md)。 |
+| 触发词 | 积分、余额、注册、开户、充值、付费、发票、报销、api_key、还剩多少、调用记录、扣费、流水、account balance、usage、credits、billing、invoice、signup |
 
-**Agent 必守**：余额只强调 **`availablePoints`**；真正扣款看 **`transactions`**；调用明细与流水勿混谈。详见 [account_api.md](account_api.md)。
+**Agent 必守**：
+
+- 无 `api_key` → [FIRST_SETUP.md](../FIRST_SETUP.md) → [account_onboarding_api.md](account_onboarding_api.md)  
+- 余额只强调 **`availablePoints`**；`availablePoints <= 0` 或 `code=4021` → [billing_api.md](billing_api.md)  
+- 真正扣款看 **`transactions`**；调用明细与流水勿混谈  
+- 详见 [account_api.md](account_api.md)、[billing_api.md](billing_api.md)（均已实现）
 
 ---
 

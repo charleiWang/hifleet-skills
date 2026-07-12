@@ -31,13 +31,15 @@ source: https://api.hifleet.com
 | 气象海况 Weather | 待实现 | 风浪、台风、能见度 |
 | 船队 Fleet | 待实现 | 多船监控、船队报表 |
 | AIS | 待实现 | AIS 报文、轨迹回放 |
-| 账户与用量 Account & Usage | ✅ 已实现 | api_key 积分余额、调用汇总/明细、入账出账流水 |
+| 账户与用量 Account & Usage | ✅ 已实现 | 注册/登录/Key、充值/发票、积分余额与调用流水 |
 
 ---
 
 ## api_key 配置（必填）
 
 船位、档案、PSC、港口等已实现功能依赖 HiFleet API 鉴权：优先读取环境变量 `HIFLEET_API_KEY`，项目/ClawHub 内统一按 `api_key` 传入。
+
+**用户尚无 api_key 时**：按 [FIRST_SETUP.md](FIRST_SETUP.md) 引导 **发验证码 →（按需人机）→ 验证码登录/注册（免密码）→ 配置 Key**；积分不足时引导 **充值 → 开票**，见 [references/account_onboarding_api.md](references/account_onboarding_api.md) 与 [references/billing_api.md](references/billing_api.md)（后端：`hifleet.data.api`）。
 
 ## 常用定义
 
@@ -275,20 +277,31 @@ source: https://api.hifleet.com
 
 ### 账户与用量 / Account & Usage
 
-用户询问**积分余额、调用记录、扣费流水**时使用（与业务查询共用同一 `api_key`）。**查询本身不扣积分**。
+用户询问**积分余额、调用记录、扣费流水**，或需 **注册、充值、开发票** 时使用（与业务查询共用同一 `api_key`）。账户查询**本身不扣积分**。
 
-- **触发**：积分、余额、还剩多少、用了多少、调用记录、扣费、消费、流水、account balance、usage、credits、billing
-- **输入**：`api_key` 从 `HIFLEET_API_KEY` 读取；可选时间范围（见分册）
-- **API 详情**：[references/account_api.md](references/account_api.md)
+- **触发**：积分、余额、还剩多少、用了多少、调用记录、扣费、消费、流水、注册、开户、充值、付费、发票、account balance、usage、credits、billing、invoice、signup
+- **入门**：[FIRST_SETUP.md](FIRST_SETUP.md)（无 Key 时必读）
+- **注册与 Key**：[references/account_onboarding_api.md](references/account_onboarding_api.md)（已实现）
+- **充值与发票**：[references/billing_api.md](references/billing_api.md)（已实现）
+- **用量查询**：[references/account_api.md](references/account_api.md)（已实现）
 
 **Agent 路由（必守）**：
 
-| 用户意图 | 接口 |
-|----------|------|
+| 用户意图 | 接口 / 文档 |
+|----------|-------------|
+| 没有 api_key、怎么开始、注册 | [FIRST_SETUP.md](FIRST_SETUP.md) → `send-code` → `register`（402 时打开 `register-capture.html`） |
 | 还能用多少积分 | `GET/POST {base}/openclaw/account/summary` → 只向用户强调 **`availablePoints`** |
+| 积分不足、充值、买单 | [billing_api.md](references/billing_api.md) → `billing/packages` → `billing/orders` |
+| 付了吗、到账了吗 | `billing/orders/{orderId}` + `account/summary` + `transactions` |
+| 发票、开票、报销 | [billing_api.md](references/billing_api.md) §4 |
 | 最近调了哪些接口 | `{base}/openclaw/account/usage/details` |
 | 什么时候真正扣款 | `{base}/openclaw/account/transactions` |
 | 按小时统计 | `{base}/openclaw/account/usage` |
+
+**积分不足（业务调用失败时）**：
+
+1. 业务接口返回 `code=4021` 或 `summary.availablePoints <= 0` → 先确认余额，再引导充值（勿伪造付款链接）。  
+2. 充值成功后用 `summary` + `transactions`（`direction=IN`）确认到账，再重试原业务请求。
 
 **回答规则**：
 
@@ -296,7 +309,7 @@ source: https://api.hifleet.com
 2. 余额问题**只引用 `availablePoints`**，勿自行对 `accountBalance` 与 `pendingDeduction` 做加减。  
 3. **调用明细 ≠ 积分流水**：明细是每次请求；流水是账户真正入账/出账。用户问「扣了没有」而流水暂无 → 说明可能**待入账**（小时结算后出现在 `transactions`）。  
 4. 勿向用户解释内部结算、unsettled 等运维术语；`pendingDeduction` 出现时按 `balanceHint` / `agentSummary` 简述即可。  
-5. 勿伪造积分、调用次数或流水。
+5. 勿伪造积分、调用次数、流水、支付链接或发票。完整 **api_key 仅注册/轮换时展示一次**，后续对话只显示前缀与末 4 位。
 
 ---
 
@@ -321,7 +334,10 @@ source: https://api.hifleet.com
 | [references/psc_anomaly_api.md](references/psc_anomaly_api.md) | PSC 统计异常 API（openclaw/anomalies*，api_key，可选 HIFLEET_API_BASE） |
 | [references/psc_openclaw_stats_api.md](references/psc_openclaw_stats_api.md) | PSC 宏观统计（openclaw/stats/compare、defects/top、mix/compare） |
 | [references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md) | PSC 多表字段语义：`authority`=检查国、`ship_type`=检查类型（非船型） |
-| [references/account_api.md](references/account_api.md) | 账户与用量：summary / usage / usage/details / transactions（需 `api_key`） |
+| [FIRST_SETUP.md](FIRST_SETUP.md) | 首次配置：注册、api_key、充值、发票全链路 |
+| [references/account_onboarding_api.md](references/account_onboarding_api.md) | 账户入门：注册、登录、api_key 发放（已实现） |
+| [references/billing_api.md](references/billing_api.md) | 计费与发票：套餐、下单、支付、开票（已实现） |
+| [references/account_api.md](references/account_api.md) | 账户与用量：summary / usage / usage/details / transactions（需 `api_key`，已实现） |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST `{base}/position/statisticzonetraffic`）；可选 `HIFLEET_API_BASE` |
