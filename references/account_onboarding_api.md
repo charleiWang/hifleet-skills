@@ -1,6 +1,6 @@
 # 账户入门 API / Account Onboarding API
 
-> **状态**：**已在 `hifleet.data.api` 实现**（`OpenclawAccountOnboardingController` / `OpenclawAccountOnboardingService`）。注册写入 `ais41.allusers` + `user_roles` + `user_function`（与 HiFleetOLWeb03 `RegisterUserAccountAction` 一致），并自动调用 `AiOpenApiService.createToken` 发放 `sk_` Key 与赠送积分。
+> **状态**：**已实现**
 
 **API 基址**：`{base}`（默认 `https://api.hifleet.com`）；见 [api_base.md](api_base.md)。
 
@@ -53,11 +53,12 @@ flowchart TD
 | 注册、开户、新用户、申请 api_key | 先 **send-code**；`existingUser=true` 时校验后直接登录；否则 **register**（免密码） |
 | 登录、已有账户 | 先 **send-code**，再 **login** 或 **register** 携带 `verificationCode`（免密码） |
 | 我的 api_key、查看密钥 | 本文 **§2**；**禁止**在对话中粘贴完整 Key，仅展示 `tokenPrefix` + `tokenLast4` |
-| 没积分、余额不足、充值、付费、买票 | [billing_api.md](billing_api.md) |
+| 没积分、余额不足、充值、订阅、付费、买票 | [billing_api.md](billing_api.md) |
 | 发票、开票、报销 | [billing_api.md](billing_api.md) §4 |
 | 还剩多少积分、调用记录 | [account_api.md](account_api.md)（已实现） |
+| 打开控制台、看用量页、钱包、用 api_key 登录 | [console_sso_api.md](console_sso_api.md)（换票，勿再走验证码登录） |
 
-**禁止**：伪造注册结果、api_key、支付链接或发票信息。接口未上线时如实说明「功能即将开放，请暂至 [mytonnages.hifleet.com](https://mytonnages.hifleet.com) 完成注册与充值」。
+**禁止**：伪造注册结果、api_key、支付链接或发票信息。
 
 ---
 
@@ -70,21 +71,21 @@ flowchart TD
 | 通道 | 发码接口 | 说明 |
 |------|----------|------|
 | 邮箱 | `POST /openclaw/account/register/send-code` Body: `{ "channel":"email", "email":"..." }` | 发邮件验证码 |
-| 手机 | 同上 Body: `{ "channel":"phone", "phone":"138..." }` | 发 253 短信（对齐 OLWeb `sendRegisterMessage` / `sendVerifyMessage`） |
-| 手机（兼容） | `GET/POST /openclaw/account/sms/register?phone=...` 或 `?encryptedPhone=...` | AES-256-GCM 加密手机号（Skills 专用，见下文） |
+| 手机 | 同上 Body: `{ "channel":"phone", "phone":"138..." }` | 发短信验证码 |
+| 手机（兼容） | `GET/POST /openclaw/account/sms/register?phone=...` | 同发短信；一般直接传明文 `phone` 即可 |
 
 ```mermaid
 sequenceDiagram
     participant U as 用户/Agent
-    participant API as hifleet.data.api
+    participant API as HiFleet API
     participant Mail as 邮箱
-    participant TC as 腾讯云验证码
+    participant Cap as 人机校验页
 
     U->>API: POST /openclaw/account/register/send-code {email}
     alt 请求过于频繁
         API-->>U: status=402 + captchaPageUrl
-        U->>TC: 打开人机页 TJCaptcha.js
-        TC->>API: POST /openclaw/account/register/capture/verify
+        U->>Cap: 打开 captchaPageUrl 完成校验
+        Cap->>API: POST /openclaw/account/register/capture/verify
         API-->>U: 校验成功，重新 send-code
     else 正常
         API->>Mail: 发送 6 位验证码
@@ -102,30 +103,10 @@ sequenceDiagram
 | 步骤 | 接口 | 说明 |
 |------|------|------|
 | ① 发码 | `POST /openclaw/account/register/send-code` | **邮箱或手机号**；返回 `channel`、`existingUser`；超限 **402** |
-| ② 人机（按需） | `GET /openclaw/register-capture.html?email=...` | 前端接入 [腾讯云验证码 2.0 TJCaptcha.js](https://cloud.tencent.com/document/product/1110/36334)；校验后调 `POST /openclaw/account/register/capture/verify` |
-| ③ 校验 | `POST /openclaw/account/register` 或 `/login` | 仅须 `email` + `verificationCode`；已是网站用户 → **登录**，否则 → **注册** |
+| ② 人机（按需） | 打开响应中的 `captchaPageUrl` | 用户在页面完成校验后，再重新调 send-code |
+| ③ 校验 | `POST /openclaw/account/register` 或 `/login` | 仅须 `email`/`phone` + `verificationCode`；已是网站用户 → **登录**，否则 → **注册** |
 
-**防刷规则**（可配置，默认见 `application.properties`）：
-
-| 维度 | 人机阈值 | 硬上限/日 |
-|------|----------|-----------|
-| 同邮箱 | 第 3 次起 | 5 次 |
-| 同 IP | 第 5 次起 | 10 次 |
-
-人机校验后端对齐 **shipdetail** `CaptureController` → 腾讯云 `DescribeCaptchaResult`；Redis Key 规则 `CAPTURE:OPENCLAW_REGISTER:{identifier}`。
-
-### 1.0.2 手机号密文传输（`encryptedPhone`）
-
-与 OLWeb `n4113`/SM4 **独立**，Skills 使用 **AES-256-GCM**：
-
-| 项目 | 说明 |
-|------|------|
-| 算法 | AES-256-GCM |
-| 密钥 | `openclaw.phone-cipher.secret`（服务端配置，客户端需持有同一密钥） |
-| 密文格式 | `Base64URL(12-byte IV ‖ ciphertext+tag)`，无 padding |
-| 传参 | JSON Body `encryptedPhone`，或 Query `?encryptedPhone=...` |
-
-明文手机号仍可直接传 `phone` / `mobile`（HTTPS 下推荐生产环境使用密文）。
+**防刷提示**（Agent 侧）：同一邮箱/手机或同一出口 IP 发码过频时，接口会返回 `status=402` 并带 `captchaPageUrl`；请引导用户打开该页完成校验，**不要**自行绕过或伪造校验结果。
 
 ---
 
@@ -144,7 +125,7 @@ sequenceDiagram
 |------|------|------|
 | `channel` | 否 | `email`（默认）或 `phone` |
 | `email` | 邮箱通道必填 | 邮箱 |
-| `phone` / `mobile` / `encryptedPhone` | 手机通道必填 | 明文手机号，或 `encryptedPhone` 密文（见 §1.0.2） |
+| `phone` / `mobile` | 手机通道必填 | 明文手机号（推荐） |
 
 **成功响应** `status=1`
 
@@ -161,22 +142,20 @@ sequenceDiagram
 | 字段 | 说明 |
 |------|------|
 | `data.captchaRequired` | `true` |
-| `data.captchaPageUrl` | 如 `/openclaw/register-capture.html?email=...` |
-| `data.captchaVerifyUrl` | `/openclaw/account/register/capture/verify` |
-| `data.authItemCode` | `OPENCLAW_REGISTER` |
+| `data.captchaPageUrl` | 人机校验页地址（须引导用户打开） |
+| `data.captchaVerifyUrl` | 校验完成页回调用（页面内使用，Agent 一般无需直接调） |
 | `data.agentSummary` | 引导用户打开人机页，完成后重新 send-code |
 
-**Agent 话术（402）**：请用户打开 `captchaPageUrl` 完成腾讯云人机校验，成功后再调用 send-code。
+**Agent 话术（402）**：请用户打开 `captchaPageUrl` 完成人机校验，成功后再调用 send-code。
 
 ---
 
 ### 1.1 验证码注册 / 登录（免密码）
 
-提交验证码后，后端自动判断：
+提交验证码后，接口根据 `existingUser` 自动走登录或注册：
 
-- **`existingUser=false`**：创建 `ais41.allusers` 账户，发放默认 `api_key` 与新手赠送积分（`action=register`）。
+- **`existingUser=false`**：注册新账户，发放默认 `api_key` 与新手赠送积分（`action=register`）。
 - **`existingUser=true`**：不重复注册，直接登录并返回 `accessToken`（`action=login`）；若无有效 `api_key` 则自动发放（不重复赠送积分）。
-
 | 项目 | 值 |
 |------|-----|
 | URL | `{base}/openclaw/account/register`（新用户）或 `{base}/openclaw/account/login`（已有用户，二选一） |
@@ -190,7 +169,7 @@ sequenceDiagram
 |------|------|------|------|
 | `channel` | 否 | string | `email` 或 `phone` |
 | `email` | 邮箱通道必填 | string | 邮箱 |
-| `phone` / `mobile` / `encryptedPhone` | 手机通道必填 | string | 手机号或 AES-GCM 密文 |
+| `phone` / `mobile` | 手机通道必填 | string | 明文手机号 |
 | `verificationCode` | 是 | string | 验证码 |
 | `companyName` | 否 | string | 公司/组织名称（仅新用户，发票抬头可复用） |
 | `contactName` | 否 | string | 联系人姓名（仅新用户） |
@@ -211,7 +190,7 @@ sequenceDiagram
 
 **请求示例（手机号新用户）**
 
-> 手机号注册时，`ais41.allusers.email` **直接使用手机号**（如 `13800138000`），不生成虚拟邮箱。
+> 手机通道下，账户标识即为手机号本身（如 `13800138000`）。
 
 ```json
 {
@@ -393,7 +372,7 @@ sequenceDiagram
 curl -s "{base}/openclaw/account/summary" -H "x-api-key: $HIFLEET_API_KEY"
 ```
 
-当 **`availablePoints <= 0`**（或用户明确问余额）→ 进入充值引导，见 [billing_api.md](billing_api.md)。
+当 **`availablePoints <= 0`**（或用户明确问余额）→ 先调 `GET /openclaw/billing/subscription` 判断是否为订阅周期额度用尽，再进入充值或续订引导，见 [billing_api.md](billing_api.md)。
 
 ### 3.2 业务接口错误码（待统一）
 
@@ -408,7 +387,7 @@ curl -s "{base}/openclaw/account/summary" -H "x-api-key: $HIFLEET_API_KEY"
 
 **Agent 话术（积分不足）**
 
-> 您当前可用积分为 **{availablePoints}**，不足以完成本次查询。我可以帮您查看充值套餐并生成付款链接，充值成功后积分会立即到账。需要现在充值吗？
+> 您当前可用积分为 **{availablePoints}**，不足以完成本次查询。我可以帮您查看积分充值或订阅套餐并生成收银台付款链接，支付成功后即可继续使用。需要现在查看套餐吗？
 
 然后按 [billing_api.md](billing_api.md) §1～§3 执行。
 
@@ -454,13 +433,3 @@ curl -s "{base}/openclaw/account/summary" -H "x-api-key: $HIFLEET_API_KEY"
 | `4111`～`4115` | 注册验证码/人机/限流 |
 
 ---
-
-## 6. 实现检查清单（供后端）
-
-- [ ] 注册成功自动创建 `pointUserId` 积分账户  
-- [ ] 注册成功自动发放默认 `api_key` 并绑定 `pointUserId`  
-- [ ] 注册赠送积分写入 `transactions`（`direction=IN`，`remark=注册赠送`）  
-- [ ] 完整 Key 仅在注册/创建/轮换响应中出现一次  
-- [ ] 登录返回 `accessToken`，用于 Key 管理与 billing  
-- [ ] 业务接口积分不足统一返回 `402` + `code=4021`  
-- [ ] 所有响应含 `agentSummary` 供 Agent 直接转述  

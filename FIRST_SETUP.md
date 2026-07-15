@@ -9,7 +9,9 @@ HiFleet 技能使用前须持有 **`api_key`**（环境变量 `HIFLEET_API_KEY` 
 ```
 发验证码 →（如需）人机校验 → 验证码登录/注册（免密码）→ 获得 api_key → 配置环境 → 调用业务接口
                               ↓
-                    积分不足 → 充值 → 可选开发票
+              积分/额度不足 → 积分充值 或 订阅套餐 → 收银台付款 → 可选开发票
+                              ↓
+              订阅将到期 → 邮件提醒（7/3/1天）→ 手动续费（非自动扣款）
 ```
 
 | 步骤 | 做什么 | 文档 |
@@ -18,10 +20,11 @@ HiFleet 技能使用前须持有 **`api_key`**（环境变量 `HIFLEET_API_KEY` 
 | 2 | 保存 api_key（仅显示一次） | 本文 §B |
 | 3 | 验证配置、查余额 | [account_api.md](references/account_api.md) |
 | 4 | 使用船位、PSC、租船等技能 | [SKILL.md](SKILL.md) |
-| 5 | 积分不足时充值 | [billing_api.md](references/billing_api.md) |
-| 6 | 付费后索取发票 | [billing_api.md](references/billing_api.md) §4 |
+| 5 | 积分不足时充值或订阅 | [billing_api.md](references/billing_api.md) |
+| 6 | 付费后索取发票 | [billing_api.md](references/billing_api.md) §7 |
+| 7 | 查看/取消订阅、续费 | [billing_api.md](references/billing_api.md) §5 |
 
-> **接口状态**：注册、充值、发票接口已在 **`api.hifleet.com`（`hifleet.data.api`）** 实现；短信验证码可暂用 OLWeb `/sendRegisterMessage`。
+> **接口状态**：注册、充值、发票等接口默认基址为 **`https://api.hifleet.com`**（可用 `HIFLEET_API_BASE`）。
 
 ---
 
@@ -32,7 +35,7 @@ HiFleet 技能使用前须持有 **`api_key`**（环境变量 `HIFLEET_API_KEY` 
 1. 说明：船位、档案、PSC、港口、租船富化等能力需要 HiFleet `api_key`。  
 2. 询问用户邮箱或手机号（**无需区分新老用户**）：
    - `POST {base}/openclaw/account/register/send-code`，Body 带 `channel` + `email` 或 `phone`
-   - 手机也可走 `.../sms/register?phone=...` 或 `?encryptedPhone=...`  
+   - 手机也可走 `.../sms/register?phone=...`  
 3. 成功后：**强调完整 api_key 仅显示一次**（若本次返回），请用户立即保存。
 
 **用户需提供**：
@@ -81,14 +84,19 @@ curl -s "https://api.hifleet.com/openclaw/account/summary" \
 
 ---
 
-## C. 积分不足怎么办
+## C. 积分不足 / 订阅与付费
 
 当业务接口报错、或 `availablePoints <= 0` 时：
 
-1. Agent 调用 `openclaw/account/summary` 确认余额。  
-2. 调用 `openclaw/billing/packages` 展示套餐。  
-3. 用户选定后 `POST openclaw/billing/orders` 获取付款链接。  
-4. 支付完成后查订单状态与 `transactions` 确认到账。  
+1. Agent 调用 `openclaw/account/summary` 确认余额；若有订阅，再调 `openclaw/billing/subscription` 看是否为**周期额度用尽**。  
+2. 调用 `openclaw/billing/token-plans` 展示**积分充值**与**连续包月/包年**套餐（价格以接口为准，勿编造）。  
+3. 用户选定后 `POST openclaw/billing/orders`：
+   - 积分：`{ "orderType": "POINTS", "packageId": "pkg_advanced" }`
+   - 订阅：`{ "orderType": "SUBSCRIPTION", "planId": "plan_max", "billingCycle": "MONTHLY" }`  
+4. 将响应中的 **`paymentPageUrl`** 拼成完整链接发给用户（如 `https://api.hifleet.com/openclaw/payment.html?orderId=...`），用户在页内选微信或支付宝。  
+5. 支付完成后查订单状态；积分单核对 `transactions`，订阅单核对 `billing/subscription`。  
+
+**续费**：订阅到期前会收到邮件提醒（7/3/1 天），须**手动下单续费**，系统不会自动扣款。
 
 详见 [billing_api.md](references/billing_api.md)。
 
@@ -96,13 +104,13 @@ curl -s "https://api.hifleet.com/openclaw/account/summary" \
 
 ## D. 开发票
 
-仅 **已支付（PAID）** 的充值订单可开票：
+仅 **已支付（PAID）** 的订单（积分充值或订阅）可开票：
 
 1. 确认/设置发票抬头：`PUT openclaw/billing/invoice-profile`  
 2. 申请开票：`POST openclaw/billing/invoices` Body `{ "orderId": "..." }`  
 3. 下载 PDF：`GET openclaw/billing/invoices/{id}/download`  
 
-详见 [billing_api.md](references/billing_api.md) §4。
+详见 [billing_api.md](references/billing_api.md) §7。
 
 ---
 

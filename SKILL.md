@@ -7,7 +7,7 @@ version: 0.3.12
 requiredEnv:
   - HIFLEET_API_KEY
 # 来源与联系（便于安全审核）
-homepage: https://www.hifleet.com
+homepage: https://skills.hifleet.com
 source: https://api.hifleet.com
 ---
 
@@ -31,7 +31,7 @@ source: https://api.hifleet.com
 | 气象海况 Weather | 待实现 | 风浪、台风、能见度 |
 | 船队 Fleet | 待实现 | 多船监控、船队报表 |
 | AIS | 待实现 | AIS 报文、轨迹回放 |
-| 账户与用量 Account & Usage | ✅ 已实现 | 注册/登录/Key、充值/发票、积分余额与调用流水 |
+| 账户与用量 Account & Usage | ✅ 已实现 | 注册/登录/Key、积分充值/订阅/发票、混合计费额度；已有 Key 可换票打开 Skills 控制台 |
 
 ---
 
@@ -39,7 +39,7 @@ source: https://api.hifleet.com
 
 船位、档案、PSC、港口等已实现功能依赖 HiFleet API 鉴权：优先读取环境变量 `HIFLEET_API_KEY`，项目/ClawHub 内统一按 `api_key` 传入。
 
-**用户尚无 api_key 时**：按 [FIRST_SETUP.md](FIRST_SETUP.md) 引导 **发验证码 →（按需人机）→ 验证码登录/注册（免密码）→ 配置 Key**；积分不足时引导 **充值 → 开票**，见 [references/account_onboarding_api.md](references/account_onboarding_api.md) 与 [references/billing_api.md](references/billing_api.md)（后端：`hifleet.data.api`）。
+**用户尚无 api_key 时**：按 [FIRST_SETUP.md](FIRST_SETUP.md) 引导 **发验证码 →（按需人机）→ 验证码登录/注册（免密码）→ 配置 Key**；积分或订阅额度不足时引导 **充值/订阅 → 收银台付款 → 开票**，见 [references/account_onboarding_api.md](references/account_onboarding_api.md) 与 [references/billing_api.md](references/billing_api.md)。
 
 ## 常用定义
 
@@ -277,22 +277,28 @@ source: https://api.hifleet.com
 
 ### 账户与用量 / Account & Usage
 
-用户询问**积分余额、调用记录、扣费流水**，或需 **注册、充值、开发票** 时使用（与业务查询共用同一 `api_key`）。账户查询**本身不扣积分**。
+用户询问**积分余额、调用记录、扣费流水**，或需 **注册、充值、订阅、开发票** 时使用（与业务查询共用同一 `api_key`）。账户查询**本身不扣积分**。
 
-- **触发**：积分、余额、还剩多少、用了多少、调用记录、扣费、消费、流水、注册、开户、充值、付费、发票、account balance、usage、credits、billing、invoice、signup
+- **触发**：积分、余额、还剩多少、用了多少、调用记录、扣费、消费、流水、注册、开户、充值、订阅、包月、Token Plan、付费、发票、控制台、打开控制台、用 api_key 登录、account balance、usage、credits、billing、invoice、signup、console SSO
 - **入门**：[FIRST_SETUP.md](FIRST_SETUP.md)（无 Key 时必读）
 - **注册与 Key**：[references/account_onboarding_api.md](references/account_onboarding_api.md)（已实现）
+- **换票进控制台**：[references/console_sso_api.md](references/console_sso_api.md)（已有 Key 时打开用量/钱包，无需再验证码登录）
 - **充值与发票**：[references/billing_api.md](references/billing_api.md)（已实现）
 - **用量查询**：[references/account_api.md](references/account_api.md)（已实现）
+- **脚本**：`scripts/open_console.py`（换票并打开 `consoleUrl`）
 
 **Agent 路由（必守）**：
 
 | 用户意图 | 接口 / 文档 |
 |----------|-------------|
 | 没有 api_key、怎么开始、注册 | [FIRST_SETUP.md](FIRST_SETUP.md) → `send-code` → `register`（402 时打开 `register-capture.html`） |
-| 还能用多少积分 | `GET/POST {base}/openclaw/account/summary` → 只向用户强调 **`availablePoints`** |
-| 积分不足、充值、买单 | [billing_api.md](references/billing_api.md) → `billing/packages` → `billing/orders` |
-| 付了吗、到账了吗 | `billing/orders/{orderId}` + `account/summary` + `transactions` |
+| 打开控制台、看用量页、钱包、用 api_key 登录 | [console_sso_api.md](references/console_sso_api.md) → 换票 → 打开 `consoleUrl`（skills.hifleet.com） |
+| 介绍 Skills / 产品页 | `https://skills.hifleet.com/`（无需换票） |
+| 还能用多少积分 | `GET/POST {base}/openclaw/account/summary` → 只向用户强调 **`availablePoints`**（含混合计费可调用量） |
+| 我的订阅、周期额度 | `GET {base}/openclaw/billing/subscription` 或 `token-plans` 中的 `quota` |
+| 积分不足、充值、订阅、买单 | [billing_api.md](references/billing_api.md) → `token-plans` → `billing/orders` → `paymentPageUrl` |
+| 付了吗、到账了吗 | `billing/orders/{orderId}` + `account/summary` 或 `billing/subscription` |
+| 取消订阅、超额用积分 | `billing/subscription/cancel`、`billing/subscription/over-quota` |
 | 发票、开票、报销 | [billing_api.md](references/billing_api.md) §4 |
 | 最近调了哪些接口 | `{base}/openclaw/account/usage/details` |
 | 什么时候真正扣款 | `{base}/openclaw/account/transactions` |
@@ -300,8 +306,9 @@ source: https://api.hifleet.com
 
 **积分不足（业务调用失败时）**：
 
-1. 业务接口返回 `code=4021` 或 `summary.availablePoints <= 0` → 先确认余额，再引导充值（勿伪造付款链接）。  
-2. 充值成功后用 `summary` + `transactions`（`direction=IN`）确认到账，再重试原业务请求。
+1. 业务接口返回 `code=4021` 或 `summary.availablePoints <= 0` → 先 `billing/subscription` 区分周期额度用尽还是无充值积分，再引导充值或续订（勿伪造付款链接）。  
+2. 下单成功后发送 **`paymentPageUrl`** 完整链接，让用户在收银台选微信/支付宝；勿硬编码支付渠道。  
+3. 支付成功后：积分单用 `summary` + `transactions`（`direction=IN`）确认；订阅单用 `billing/subscription` 确认额度。
 
 **回答规则**：
 
@@ -336,8 +343,10 @@ source: https://api.hifleet.com
 | [references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md) | PSC 多表字段语义：`authority`=检查国、`ship_type`=检查类型（非船型） |
 | [FIRST_SETUP.md](FIRST_SETUP.md) | 首次配置：注册、api_key、充值、发票全链路 |
 | [references/account_onboarding_api.md](references/account_onboarding_api.md) | 账户入门：注册、登录、api_key 发放（已实现） |
-| [references/billing_api.md](references/billing_api.md) | 计费与发票：套餐、下单、支付、开票（已实现） |
+| [references/console_sso_api.md](references/console_sso_api.md) | Skills 控制台 SSO：api_key 换票打开 skills.hifleet.com 控制台 |
+| [references/billing_api.md](references/billing_api.md) | 计费与发票：积分包、订阅、收银台、混合额度、开票（已实现） |
 | [references/account_api.md](references/account_api.md) | 账户与用量：summary / usage / usage/details / transactions（需 `api_key`，已实现） |
+| scripts/open_console.py | 用 `HIFLEET_API_KEY` 换票并打开控制台 `consoleUrl` |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST `{base}/position/statisticzonetraffic`）；可选 `HIFLEET_API_BASE` |

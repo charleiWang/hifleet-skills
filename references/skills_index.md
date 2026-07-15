@@ -165,15 +165,18 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 中文 | 英文 |
 |------|------|
 | 名称 | 账户与用量 / Account & Usage |
-| 描述 | **全链路**（已实现）：[FIRST_SETUP.md](../FIRST_SETUP.md) 引导注册并配置；`summary` / `usage` / `transactions`；充值与发票见 [billing_api.md](billing_api.md)。 |
-| 触发词 | 积分、余额、注册、开户、充值、付费、发票、报销、api_key、还剩多少、调用记录、扣费、流水、account balance、usage、credits、billing、invoice、signup |
+| 描述 | **全链路**（已实现）：[FIRST_SETUP.md](../FIRST_SETUP.md) 引导注册；`summary` / `usage` / `transactions`；充值/订阅/发票见 [billing_api.md](billing_api.md)；**已有 Key 换票进控制台**见 [console_sso_api.md](console_sso_api.md)。 |
+| 触发词 | 积分、余额、注册、开户、充值、订阅、包月、Token Plan、付费、发票、报销、api_key、还剩多少、调用记录、扣费、流水、控制台、打开控制台、用 api_key 登录、account balance、usage、credits、billing、invoice、signup、console SSO |
 
 **Agent 必守**：
 
 - 无 `api_key` → [FIRST_SETUP.md](../FIRST_SETUP.md) → [account_onboarding_api.md](account_onboarding_api.md)  
-- 余额只强调 **`availablePoints`**；`availablePoints <= 0` 或 `code=4021` → [billing_api.md](billing_api.md)  
+- **已有 Key 要打开控制台** → [console_sso_api.md](console_sso_api.md)（api 换票 → 打开 skills.hifleet.com 的 `consoleUrl`）  
+- 余额只强调 **`availablePoints`**；`availablePoints <= 0` 或 `code=4021` → 先查 `billing/subscription` 再引导 [billing_api.md](billing_api.md)  
+- 付费优先发 **`paymentPageUrl`** 收银台链接，勿只给二维码或编造渠道  
+- 订阅到期为**邮件提醒 + 手动续费**，勿称自动扣款  
 - 真正扣款看 **`transactions`**；调用明细与流水勿混谈  
-- 详见 [account_api.md](account_api.md)、[billing_api.md](billing_api.md)（均已实现）
+- 详见 [account_api.md](account_api.md)、[billing_api.md](billing_api.md)、[console_sso_api.md](console_sso_api.md)
 
 ---
 
