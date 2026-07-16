@@ -10,6 +10,8 @@
 - 港口：尽量 UN/LOCODE；多港用 `+`。  
 - **船型（openvessels）**：只能填以下六类之一：`散货船`、`集装箱船`、`石油化学品船`、`杂货船`、`油船`、`滚装船`。邮件中的 GC/CONT、MPP、SMAX 等代号或 IHS 细分类型须映射到上述六类；**禁止**将 Geared/Gearless、G'LESS 等吊机描述写入 `船型`。  
 - **是否有船吊（openvessels）**：`1`=有吊（Geared）、`0`=无吊（Gearless / G'LESS）；也可在解析阶段保留原文 `geared`/`gearless`，入库时会归一为 `1`/`0`。未提及为 `null`。`吊机数量`>0 时视同有吊。  
+- **制裁 / sanctioned（openvessels）**：邮件写明 `sanctioned` / `sanctions` / `制裁` 时，写入 **`O/A其他附加信息`**（原文短语即可）。无船名/IMO 时 enrich 无法调船级制裁接口，但仍会据此打上 **`High Sanction Risk`**。  
+- **其它原文 tags**：`geared`/`gearless`、`MPP`、`DG approved`、`box hold`、`CIS`/`BH`/`AUS`、`rightship`/`RS-n`、`eco`、`heavy lift`、`sprinkler` 等，只要邮件/`O/A`/`_email_body` 明确提到，即使无 IMO/船名也会在 enrich/`generate_vessel_tags` 中补上并去重（与接口 tags 合并）。  
 - **联系方式**：送大模型前正文须脱敏；**落库前**从原文 `body_text` 抽取 `联系电话`、`即时通讯` 写入 SQLite（见 **`WORKFLOW_2_MAIL.md` §2.3.5**）。  
 - **对用户展示（路由 A）**：货盘「装港消约期开始日期」「装港消约期结束日期」、船盘「OPEN开始日期」「OPEN结束日期」在对话中**合并为一行 `Laycan：yyyy/MM/dd~yyyy/MM/dd`**，**不要**分两行写开始/结束；本 JSON **键名不变**，便于 `charter_facts_tool` 入库。
 

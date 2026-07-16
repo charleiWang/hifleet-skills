@@ -82,6 +82,7 @@
 - 写入 **2.4.1** SQLite 的 `from_addr`、`subject` 以及向量库 metadata **仍可使用**邮箱/IMAP 提供的原始值（便于本地去重与检索）；**仅「发往大模型的那段文本」须脱敏**。  
 - 用户要求在回复中展示「发件人、时间、主题」时，仍可按本地保存的元数据展示（勿在对话里复述用户密码）。  
 - **联系方式入库（硬性）**：大模型输入须脱敏，但 **`联系电话`、`即时通讯` 须从【未脱敏】邮件正文 `body_text` 抽取后写入 SQLite**（`scripts/extract_contacts.py` → `merge_contacts_into_parsed`）。`mail_parse_loop` 与 `save` 在落库前自动执行；助手手工解析时 JSON 须带 **`body_text`**（原文正文）。仅当模型字段为空或含 `***` 占位时由原文覆盖。  
+- **tags 邮件兜底**：`save` 同时把 `body_text` 写入每条船/货 `payload_json._email_body`；enrich-row 带回服务端，与 `O/A其他附加信息` 一并扫描（如 `sanctioned` → **High Sanction Risk**），**勿**在客户端单独拼 tags。  
 - 向用户展示船货盘时，**可正常输出**已入库的 `联系电话`、`即时通讯`（明文）；送模脱敏与展示无关。
 
 ### 2.4 解析邮件内容并结构化提取船盘/船期/货盘信息

@@ -296,8 +296,8 @@ def _save_parsed_doc(db_path: Path, doc: dict[str, Any]) -> None:
     conn = db.connect()
     try:
         parsed = doc.get("parsed") or doc
+        body = str(doc.get("body_text") or "")
         if isinstance(parsed, dict):
-            body = str(doc.get("body_text") or "")
             if body:
                 merge_contacts_into_parsed(parsed, body)
         db.save_parsed(
@@ -307,6 +307,7 @@ def _save_parsed_doc(db_path: Path, doc: dict[str, Any]) -> None:
             from_addr=str(doc.get("from_addr") or ""),
             subject=str(doc.get("subject") or ""),
             parsed=parsed if isinstance(parsed, dict) else {},
+            body_text=body,
         )
     finally:
         conn.close()

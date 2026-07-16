@@ -44,23 +44,24 @@
 
 **船盘请求体示例**（`IMO` 可 null，靠 lookup 补齐）：
 
-**`row` 须为 2.4 完整对象**（与 `PARSE_SCHEMA.md` / SQLite `payload_json` 一致），含 tags 所需全部字段（`是否有船吊`、`吊机数量`、`是否可装危险品`、CIS/BH/AUS/RS 等）。`charter_facts_tool.py enrich` 从库中合并 `payload_json` + 列值后整包提交；**禁止**只传船名/载重吨/OPEN 等少量字段。
+**`row` 须为 2.4 完整对象**（与 `PARSE_SCHEMA.md` / SQLite `payload_json` 一致），含 tags 所需全部字段（`是否有船吊`、`吊机数量`、`是否可装危险品`、CIS/BH/AUS/RS、`O/A其他附加信息` 等）。`charter_facts_tool.py enrich` 从库中合并 `payload_json` + 列值后整包提交；**禁止**只传船名/载重吨/OPEN 等少量字段。
+
+可选顶层 **`email_body` / `body_text`**（与 `row._email_body` 等价）：落库时 `save` 会把原文写入 `payload_json._email_body`，enrich 再带回本接口。**tags 统一由服务端生成**：有 IMO 走制裁/PSC/档案等接口；无 IMO 或接口未命中时，扫描邮件/`O/A` 中明确出现的词并补齐（`sanctioned`→**High Sanction Risk**，以及 `geared`/`gearless`、`MPP`、`DG approved`、`box hold`、`CIS`/`BH`/`AUS`、`RS-n`、`eco`、`heavy lift`、`sprinkler` 等），与结构化字段 tags **同次生成并去重**（客户端勿再单独 merge）。
 
 ```json
 {
   "kind": "vessel",
   "source": "parse_schema",
   "include_archive": true,
+  "email_body": "We have mv TANKER, 40k dwt, sanctioned, opening at Mersin...",
   "row": {
-    "船名": "ZHONG XING MEN",
+    "船名": null,
     "IMO": null,
-    "载重吨": 55408,
-    "船型": "杂货船",
-    "OPEN位置": "Singapore",
-    "是否有船吊": 1,
-    "吊机数量": 4,
-    "是否可装危险品": 0,
-    "租船类型": "OPEN"
+    "载重吨": 40000,
+    "船型": "油船",
+    "OPEN位置": "Mersin",
+    "OPEN开始日期": "2026-07-18",
+    "O/A其他附加信息": "sanctioned"
   }
 }
 ```

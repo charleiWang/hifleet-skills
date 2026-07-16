@@ -391,6 +391,7 @@ class CharterFactsDB:
         from_addr: str,
         subject: str,
         parsed: dict[str, Any],
+        body_text: str = "",
     ) -> None:
         self.init(conn)
         cur = conn.cursor()
@@ -398,6 +399,7 @@ class CharterFactsDB:
         data = parsed.get("data") or {}
         cargo_list = data.get("cargo") if isinstance(data.get("cargo"), list) else []
         opv_list = data.get("openvessels") if isinstance(data.get("openvessels"), list) else []
+        body_blob = (body_text or "").strip()
 
         cur.execute("DELETE FROM cargo_plate WHERE message_id = ?", (message_id,))
         cur.execute("DELETE FROM openvessel_plate WHERE message_id = ?", (message_id,))
@@ -415,10 +417,13 @@ class CharterFactsDB:
         for idx, raw in enumerate(cargo_list):
             if not isinstance(raw, dict):
                 continue
+            store = dict(raw)
+            if body_blob and not str(store.get("_email_body") or store.get("email_body") or "").strip():
+                store["_email_body"] = body_blob
             row_vals: dict[str, Any] = {}
             for k in CARGO_FIELD_KEYS:
-                row_vals[k] = coerce_field(k, raw.get(k), CARGO_INT_KEYS, set())
-            payload = json.dumps(raw, ensure_ascii=False)
+                row_vals[k] = coerce_field(k, store.get(k), CARGO_INT_KEYS, set())
+            payload = json.dumps(store, ensure_ascii=False)
             st = _search_parts(subject, from_addr, row_vals, CARGO_FIELD_KEYS)
             vals: list[Any] = [
                 message_id,
@@ -441,11 +446,14 @@ class CharterFactsDB:
         for idx, raw in enumerate(opv_list):
             if not isinstance(raw, dict):
                 continue
+            store = dict(raw)
+            if body_blob and not str(store.get("_email_body") or store.get("email_body") or "").strip():
+                store["_email_body"] = body_blob
             row_vals = {}
             for k in OPENVESSEL_FIELD_KEYS:
-                row_vals[k] = coerce_field(k, raw.get(k), OPENVESSEL_INT_KEYS, OPENVESSEL_REAL_KEYS)
+                row_vals[k] = coerce_field(k, store.get(k), OPENVESSEL_INT_KEYS, OPENVESSEL_REAL_KEYS)
             _normalize_openvessel_row_vals(row_vals)
-            payload = json.dumps(raw, ensure_ascii=False)
+            payload = json.dumps(store, ensure_ascii=False)
             st = _search_parts(subject, from_addr, row_vals, OPENVESSEL_FIELD_KEYS)
             vals = [message_id, email_date_utc, from_addr, subject, idx]
             vals.extend(row_vals[k] for k in OPENVESSEL_FIELD_KEYS)
@@ -690,6 +698,7 @@ def _fetch_enrich_row(
     imo: Any = None,
     mmsi: Any = None,
     charter_api_base: str | None = None,
+    email_body: str | None = None,
 ) -> dict[str, Any]:
     """单次调用 enrich-row：船盘返回 imo/mmsi/data/archive；货盘返回 data。"""
     q = _enrich_auth_query(api_key, enrich_url)
@@ -717,6 +726,14 @@ def _fetch_enrich_row(
         body["mmsi"] = body_mmsi
     if charter_api_base:
         body["charter_api_base"] = charter_api_base
+    blob = (email_body or "").strip() or str(
+        mapped_row.get("_email_body")
+        or mapped_row.get("email_body")
+        or mapped_row.get("body_text")
+        or ""
+    ).strip()
+    if blob:
+        body["email_body"] = blob
     try:
         resp = _http_post_json_url(url, body)
     except (urllib.error.URLError, json.JSONDecodeError, TimeoutError) as e:
@@ -1307,8 +1324,8 @@ def cmd_save(args: argparse.Namespace) -> int:
         raw = sys.stdin.read()
     doc = json.loads(raw)
     parsed = doc.get("parsed") or doc
+    body = str(doc.get("body_text") or "")
     if isinstance(parsed, dict) and merge_contacts_into_parsed:
-        body = str(doc.get("body_text") or "")
         if body:
             merge_contacts_into_parsed(parsed, body)
     db = CharterFactsDB(Path(args.db) if args.db else default_db_path())
@@ -1321,6 +1338,7 @@ def cmd_save(args: argparse.Namespace) -> int:
             from_addr=doc.get("from_addr") or "",
             subject=doc.get("subject") or "",
             parsed=parsed if isinstance(parsed, dict) else {},
+            body_text=body,
         )
     finally:
         conn.close()
