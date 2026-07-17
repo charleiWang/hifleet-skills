@@ -90,6 +90,16 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 
 **API**：[voyage_api.md](voyage_api.md)
 
+## 8b. 航次方案快算 / Voyage Scenario Estimator ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 航次方案快算 / Voyage Scenario Estimator |
+| 描述 | 分册 **`hifleet-voyage-scenario-estimator/`**：根据货量、装卸港、运价、油价、船速、港使费估算航程天数、燃油成本、港口成本、TCE，支持滞期/速遣敏感性和经苏伊士/好望角/绕航方案对比。 |
+| 触发词 | 航次预算、航程天数、燃油成本、港口成本、TCE、滞期、速遣、苏伊士、好望角、绕航方案对比 / voyage estimation, voyage scenario, voyage days, bunker cost, port cost, TCE, demurrage, despatch, Suez, Cape of Good Hope, detour |
+
+**路由**：用户要方案级测算或路线对比时使用 `hifleet-voyage-scenario-estimator/SKILL.md`；测试口径见 `hifleet-voyage-scenario-estimator/TEST_CASES.md`。
+
 ## 9. 航线 / Route
 
 | 中文 | 英文 |
@@ -172,4 +182,4 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 
 ---
 
-建议实现顺序：船位 → AIS → 档案 → PSC → 港口指南 → 租船 → 航程 → 航线 → 性能 → 气象海况 → 船队 → 航运 → 账户与用量。
+建议实现顺序：船位 → AIS → 档案 → PSC → 港口指南 → 租船 → 航程 → 航次预算 → 航线 → 性能 → 气象海况 → 船队 → 航运 → 账户与用量。

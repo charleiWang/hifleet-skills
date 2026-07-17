@@ -1,8 +1,8 @@
 ---
 name: hifleet-skills
 description: >-
-  HiFleet 综合技能：船位、档案、轨迹/航程/航次、PSC、区域通航、港口、租船船货盘、港距排序、船期、航线、气象、船队、AIS。Position, track, voyage, PSC, port, charter, fleet, weather, AIS.
-version: 0.3.11
+  HiFleet 综合技能：船位、档案、轨迹/航程/航次、航次预算/方案测算、PSC、区域通航、港口、租船船货盘、港距排序、船期、航线、气象、船队、AIS。Position, track, voyage, voyage estimation, PSC, port, charter, fleet, weather, AIS.
+version: 0.3.12
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
   - HIFLEET_API_KEY
@@ -26,6 +26,7 @@ source: https://api.hifleet.com
 | 租船 Charter | ✅ 已实现（内置模块） | 邮箱船货盘+预抵（`hifleet-mytonnages`）；班轮（`hifleet-schedule`）；**公开船货**（`hifleet-opentonnages`） |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | ✅ 已实现（部分） | 历史轨迹、航程、航线规划、历史挂靠、历史航次、上一港、当前停船|
+| 航次预算 Voyage Estimation | ✅ 已实现（分册） | 航次方案快算与苏伊士/好望角/绕航对比（`hifleet-voyage-scenario-estimator`） |
 | 航线 Route | 待实现 | 推荐航线、航路点 |
 | 航运 Shipping | 待实现 | 运价、市场、新闻 |
 | 气象海况 Weather | 待实现 | 风浪、台风、能见度 |
@@ -155,6 +156,13 @@ source: https://api.hifleet.com
 - **响应**：`message=ok` 时 `data[]` 含 `portcode`、`enportname`/`cnportname`、`encountry`/`cncountry`、`lat`/`lon`、`stoptime`、`starttime`、`accumulatetime`（累计停船时长描述）
 
 **调用流程**：检查 `api_key` → 若无 MMSI 则 `shipSearch` → 按上表选接口 → 解析并展示；无数据时如实说明（`result=failed` / `empty` / `data` 或轨迹 `ship[]` 为空），勿伪造轨迹点、挂靠或航次。
+
+### 航次预算 / Voyage Estimation
+
+航次预算能力由分册 **`hifleet-voyage-scenario-estimator/`** 提供：基于货量、装卸港、运价、油价、船速、港使费估算航程天数、燃油成本、港口成本、TCE，并对比苏伊士/好望角/绕航方案。
+
+- **触发**：航次预算、航程天数、TCE、滞期/速遣敏感性、苏伊士/好望角/绕航对比 / voyage estimation, TCE, demurrage/despatch sensitivity
+- **执行入口**：`hifleet-voyage-scenario-estimator/SKILL.md`
 
 ### 红海与波斯湾海峡通航 / Strait Traffic
 
@@ -322,6 +330,7 @@ source: https://api.hifleet.com
 | [references/psc_openclaw_stats_api.md](references/psc_openclaw_stats_api.md) | PSC 宏观统计（openclaw/stats/compare、defects/top、mix/compare） |
 | [references/psc_stats_field_semantics.md](references/psc_stats_field_semantics.md) | PSC 多表字段语义：`authority`=检查国、`ship_type`=检查类型（非船型） |
 | [references/account_api.md](references/account_api.md) | 账户与用量：summary / usage / usage/details / transactions（需 `api_key`） |
+| hifleet-voyage-scenario-estimator/SKILL.md | 航次方案快算与路线对比分册 |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST `{base}/position/statisticzonetraffic`）；可选 `HIFLEET_API_BASE` |
