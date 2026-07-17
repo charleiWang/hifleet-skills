@@ -2,7 +2,7 @@
 name: hifleet-skills
 description: >-
   HiFleet 综合技能：船位、档案、轨迹/航程/航次、PSC、区域通航、港口、租船船货盘、港距排序、船期、航线、气象、船队、AIS。Position, track, voyage, PSC, port, charter, fleet, weather, AIS.
-version: 0.3.15
+version: 0.3.16
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
   - HIFLEET_API_KEY
@@ -19,6 +19,7 @@ source: https://api.hifleet.com
 |------|------|------|
 | 船位 Ship Position | ✅ 已实现 | 获取最新船舶位置 |
 | 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
+| 船舶档案统计 Ship Archive Statistics | ✅ 已实现 | 船旗、船型、公司船队等预聚合统计，以及船舶档案明细分页查询 |
 | 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹） |
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT） |
 | PSC 检查 PSC Inspection | ✅ 已实现 | 单船 PSC（按 IMO）→ 统计异常 `openclaw/anomalies*` → 宏观统计 `openclaw/stats/compare|defects/top|mix/compare` |
@@ -85,6 +86,16 @@ source: https://api.hifleet.com
 - **脚本**：`scripts/get_archive.py`（支持 IMO 或 MMSI，MMSI 直接传 mmsi 参数，需 `api_key`）
 
 **调用流程**：检查 `api_key` → 按 **IMO** 或 **MMSI** 调用档案接口（内贸船无 IMO 可传 MMSI）→ 解析 data，按 labelZh 分块展示。
+
+### 船舶档案统计 / Ship Archive Statistics（OpenClaw）
+
+查询船舶档案日批预聚合统计和当前批次的船舶档案明细，可回答特定船旗、船型、公司船队、建造年份、载重吨区间、船厂交付、证书到期或登记国的数量与分布问题；也可按条件分页检索船舶档案。该能力是**批次快照统计**，不是实时 AIS 数据或单船完整档案。
+
+- **触发**：船旗船舶数量、某国船旗统计、船型分布、船队规模、公司有多少船、船龄分布、新造船趋势、载重吨分布、船厂交付、证书到期、船籍登记国、船舶档案统计、船舶档案明细 / ship archive statistics, fleet statistics, flag statistics, ship type distribution, company fleet, newbuild trend, DWT distribution, certificate expiry
+- **输入**：统计查询需 `intent`；可选 `statDate`（`yyyy-MM-dd`）或 `batchNo` 以指定统计批次，二者均不传时取最近成功全量批次；可选 `filters`。明细列表额外支持 `page`、`pageSize` 和 IMO、MMSI、船旗、船型、船东、船名关键字等筛选。`api_key` 从配置读取。
+- **API 详情**：[references/ship_archive_stats_api.md](references/ship_archive_stats_api.md)
+
+**Agent 路由**：用户问“某船”本身的详细档案时，优先使用上方 **档案 / Archive**；用户问“多少艘、分布、趋势、排行、某公司船队规模”等聚合问题时使用本能力的 `/query`。用户需要满足条件的船舶逐条结果时使用 `/list`。调用前如需要确认数据批次或数据更新时间，先调用 `/meta`；不要把不同批次的结果混在一起比较。
 
 ### 航程 / Voyage（OpenClaw）
 
@@ -333,6 +344,7 @@ source: https://api.hifleet.com
 | [references/skills_index.md](references/skills_index.md) | 技能清单（中英双语、触发词） |
 | [references/position_api.md](references/position_api.md) | 船位 API 完整说明与响应字段 |
 | [references/archive_api.md](references/archive_api.md) | 档案 API 说明与 data 分类 |
+| [references/ship_archive_stats_api.md](references/ship_archive_stats_api.md) | 船舶档案统计 API：聚合统计、档案明细分页和批次元信息（OpenClaw） |
 | [references/voyage_api.md](references/voyage_api.md) | 航程 API：历史挂靠、历史航次、上一港、当前停船（OpenClaw） |
 | [references/strait_traffic_api.md](references/strait_traffic_api.md) | 红海/波斯湾海峡通航 API（oid、时间范围） |
 | [references/area_traffic_api.md](references/area_traffic_api.md) | 区域船舶 API（bbox、areaId、polygon、api_key） |
