@@ -71,7 +71,7 @@ $env:HIFLEET_API_KEY="sk_live_xxxxxxxx"
 }
 ```
 
-参考各分册：`hifleet-mytonnages/CONFIG.example.md`、`hifleet-schedule/CONFIG.example.md`。
+参考各分册：`hifleet-schedule/CONFIG.example.md`、`hifleet-opentonnages/CONFIG.example.md`。
 
 ### 验证是否配置成功
 
@@ -118,7 +118,6 @@ curl -s "https://api.hifleet.com/openclaw/account/summary" \
 
 | 能力 | 除 api_key 外还需 |
 |------|-------------------|
-| 邮件船盘/货盘（mytonnages 路由 A） | 邮箱 IMAP，见 `hifleet-mytonnages/FIRST_SETUP.md` |
 | 班轮船期 | 仅 api_key，见 `hifleet-schedule/FIRST_SETUP.md` |
 | 公开船货盘 | 仅 api_key，见 `hifleet-opentonnages/FIRST_SETUP.md` |
 

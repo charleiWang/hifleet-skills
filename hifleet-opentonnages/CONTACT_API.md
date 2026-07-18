@@ -5,7 +5,7 @@ When the user **asks for contact details**, call **`POST /unlock`** with the row
 
 **User-facing wording**: say **「获取联系方式」** / **get contact details** — **do not** say 「解锁」/ unlock (see **`USER_WORDING.md`**).
 
-**All four charter unlock types** (schedule, open vessel, open cargo, pre-arrival): **`references/charter_contact_unlock.md`**.
+**All charter unlock types** (schedule, open vessel, open cargo): **`references/charter_contact_unlock.md`**.
 
 ---
 
@@ -28,7 +28,6 @@ When the user **asks for contact details**, call **`POST /unlock`** with the row
 |-------|-------------|------------|
 | **V** Open vessel | `POST {charter}/vessels/search` | **`product_vessel_charter`** |
 | **G** Open cargo | `POST {charter}/cargo/search` | **`product_cargo_charter`** |
-| **C** Pre-arrival | `POST {charter}/destination/search` | **`product_will_arrive_charter`** (`hifleet-mytonnages/CONTACT_API.md`) |
 | **B** Liner schedule | `POST {liner}/schedules` | **`product_vessel_liner_charter`** (`hifleet-schedule/SCHEDULE_API.md` §3) |
 
 `{charter}` = `hifleet_charter_api_base` (same as search).

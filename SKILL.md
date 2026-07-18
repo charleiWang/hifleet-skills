@@ -1,7 +1,7 @@
 ---
 name: hifleet-skills
 description: >-
-  HiFleet 综合技能：船位、档案、轨迹/航程/航次、PSC、区域通航、港口、租船船货盘、港距排序、船期、航线、气象、船队、AIS。Position, track, voyage, PSC, port, charter, fleet, weather, AIS.
+  HiFleet 综合技能：船位、档案、轨迹/航程/航次、PSC、区域通航、港口、公开船货盘、港距排序、班轮船期、航线、气象、船队、AIS。Position, track, voyage, PSC, port, public tonnage, liner schedule, fleet, weather, AIS.
 version: 0.3.17
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
@@ -24,7 +24,7 @@ source: https://api.hifleet.com
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT） |
 | PSC 检查 PSC Inspection | ✅ 已实现 | 单船 PSC（按 IMO）→ 统计异常 `openclaw/anomalies*` → 宏观统计 `openclaw/stats/compare|defects/top|mix/compare` |
 | 进港指南 Port guide | ✅ 已实现 | 进港指南港口列表/检索（港名或代码）、单港详情 |
-| 租船 Charter | ✅ 已实现（内置模块） | 邮箱船货盘+预抵（`hifleet-mytonnages`）；班轮（`hifleet-schedule`）；**公开船货**（`hifleet-opentonnages`） |
+| 租船 Charter | ✅ 已实现（内置模块） | 班轮（`hifleet-schedule`）；**公开船货**（`hifleet-opentonnages`） |
 | 性能 Performance | 待实现 | 油耗、能效、主机性能 |
 | 航程 Voyage | ✅ 已实现（部分） | 历史轨迹、航程、航线规划、历史挂靠、历史航次、上一港、当前停船|
 | 航线 Route | 待实现 | 推荐航线、航路点 |
@@ -204,17 +204,15 @@ source: https://api.hifleet.com
 
 ### 租船 / Charter
 
-租船能力拆为**四个**分册：
+租船能力拆为**两个**分册：
 
 | 分册 | 能力 | 说明 |
 |------|------|------|
-| **`hifleet-mytonnages/`** | 邮箱船货盘 + 预抵 | 需邮箱（A）与 `hifleet_api_key`（C + 富化）；预抵联系方式按需 unlock |
 | **`hifleet-schedule/`** | 班轮船期 | 散杂货/滚装/集装箱；联系方式按需 unlock |
 | **`hifleet-opentonnages/`** | **公开船盘 + 公开货盘** | 列表查船货信息；**联系方式按需**（记录 id + unlock）；可选 enrich |
-| （综合） | 船位/档案/航程等 | 本仓库 `hifleet-skills` 其它模块 |
 
-- **触发**：租船、船盘、货盘、预抵、**公开船盘/公开货盘/平台船货** / charter, open vessel, cargo, public tonnage, public cargo, marketplace
-- **执行入口**：邮箱/预抵 → `hifleet-mytonnages/SKILL.md`；班轮 → `hifleet-schedule/SKILL.md`；**公开船货** → `hifleet-opentonnages/SKILL.md`
+- **触发**：租船、船盘、货盘、**公开船盘/公开货盘/平台船货**、班轮船期 / charter, open vessel, cargo, public tonnage, public cargo, marketplace, liner schedule
+- **执行入口**：班轮 → `hifleet-schedule/SKILL.md`；**公开船货** → `hifleet-opentonnages/SKILL.md`
 
 ### 集装箱红海饶航 / Container ship Red Sea detour
 

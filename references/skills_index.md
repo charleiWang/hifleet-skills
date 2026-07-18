@@ -90,16 +90,6 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 
 **API**：[voyage_api.md](voyage_api.md)
 
-## 8b. 航次方案快算 / Voyage Scenario Estimator ✅
-
-| 中文 | 英文 |
-|------|------|
-| 名称 | 航次方案快算 / Voyage Scenario Estimator |
-| 描述 | 分册 **`hifleet-voyage-scenario-estimator/`**：根据货量、装卸港、运价、油价、船速、港使费估算航程天数、燃油成本、港口成本、TCE，支持滞期/速遣敏感性和经苏伊士/好望角/绕航方案对比。 |
-| 触发词 | 航次预算、航程天数、燃油成本、港口成本、TCE、滞期、速遣、苏伊士、好望角、绕航方案对比 / voyage estimation, voyage scenario, voyage days, bunker cost, port cost, TCE, demurrage, despatch, Suez, Cape of Good Hope, detour |
-
-**路由**：用户要方案级测算或路线对比时使用 `hifleet-voyage-scenario-estimator/SKILL.md`；测试口径见 `hifleet-voyage-scenario-estimator/TEST_CASES.md`。
-
 ## 9. 航线 / Route
 
 | 中文 | 英文 |
@@ -108,17 +98,7 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 描述 | 推荐航线、航路点、距离与航时、历史航线对比。 |
 | 触发词 | 航线、航路、推荐航线、距离、航时、航路点 / route, shipping route, recommended route, distance, sailing time, waypoint |
 
-## 10. 租船 / Charter ✅
-
-| 中文 | 英文 |
-|------|------|
-| 名称 | 租船 / Charter（邮箱船货盘 + 预抵） |
-| 描述 | 分册 **`hifleet-mytonnages/`**：**A** 邮件船货盘；**C** 预抵船舶（全量列表见 `FULL_LIST_POLICY.md`）；联系方式按需 **`CONTACT_API.md`**（`product_will_arrive_charter`）。需邮箱（A）与 `hifleet_api_key`（C + 富化）。班轮船期见下条 **`hifleet-schedule`**。 |
-| 触发词 | 租船、船盘、货盘、预抵、即将到港、ETA、我的邮件 / charter, open vessel, cargo, pre-arrival, in my mail |
-
-**路由**：A=邮件；C=预抵。详见 `hifleet-mytonnages/ROUTING_AND_WHEN.md`。
-
-## 10b. 班轮船期 / Liner schedule ✅
+## 10. 班轮船期 / Liner schedule ✅
 
 | 中文 | 英文 |
 |------|------|
@@ -126,9 +106,9 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 | 描述 | 分册 **`hifleet-schedule/`**：散杂货、滚装、集装箱班轮船期；需 `hifleet_api_key`；**须全量返回**（`FULL_LIST_POLICY.md`）；联系方式按需 unlock（`product_vessel_liner_charter`）。 |
 | 触发词 | 班轮船期、船期表、航线班轮、散杂货船期、滚装船期、集装箱船期 / liner schedule, line schedule, bulk schedule, Ro-Ro schedule, container schedule |
 
-**API**：`hifleet-schedule/SCHEDULE_API.md`；四类产品 unlock 对照 **`references/charter_contact_unlock.md`**。
+**API**：`hifleet-schedule/SCHEDULE_API.md`；三类产品 unlock 对照 **`references/charter_contact_unlock.md`**。
 
-## 10c. 公开船货盘 / Public open market ✅
+## 10b. 公开船货盘 / Public open market ✅
 
 | 中文 | 英文 |
 |------|------|
@@ -190,4 +170,4 @@ OpenClaw **不得**据此断言「无 PSC 风险」；应说明仅为「异常�
 
 ---
 
-建议实现顺序：船位 → AIS → 档案 → PSC → 港口指南 → 租船 → 航程 → 航次预算 → 航线 → 性能 → 气象海况 → 船队 → 航运 → 账户与用量。
+建议实现顺序：船位 → AIS → 档案 → PSC → 港口指南 → 租船 → 航程 → 航线 → 性能 → 气象海况 → 船队 → 航运 → 账户与用量。

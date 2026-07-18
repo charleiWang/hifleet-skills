@@ -1,8 +1,8 @@
 # Port ID resolution (`GET {liner}/ports/suggest`)
 
-**Mandatory** for **`hifleet-schedule`**, **`hifleet-opentonnages`**, and **`hifleet-mytonnages`** (route C pre-arrival) when the user names a port and the list API needs **`portid`**.
+**Mandatory** for **`hifleet-schedule`** and **`hifleet-opentonnages`** when the user names a port and the list API needs **`portid`**.
 
-**Do not** use `portguide/getPort/token` or other port-guide APIs for these three skills — use **`ports/suggest`** only.
+**Do not** use `portguide/getPort/token` or other port-guide APIs for these skills — use **`ports/suggest`** only.
 
 ---
 
@@ -23,7 +23,7 @@
 | Query `size` | `1` (use `5` if user must pick among hits) |
 | Query `api_key` | same as header |
 
-**Take `data[0].portId`** (string) → **`params.portid`** (schedule, pre-arrival, open cargo load port) or **`params.dischargingPortid`** (open cargo discharge port).
+**Take `data[0].portId`** (string) → **`params.portid`** (schedule, open cargo load port) or **`params.dischargingPortid`** (open cargo discharge port).
 
 If user names **two** ports (e.g. schedule load + discharge), call suggest **twice** with separate keywords.
 
@@ -35,7 +35,6 @@ Multiple hits → ask user to confirm; **never** guess portid.
 
 | Skill | Command |
 |-------|---------|
-| Pre-arrival | `hifleet-mytonnages/scripts/destination_tool.py ports-suggest --keyword Tianjin` |
 | Open vessel/cargo | `hifleet-opentonnages/scripts/opentonnages_tool.py ports-suggest --keyword Tianjin` |
 
 Schedule: agent calls HTTP directly (see **`hifleet-schedule/SCHEDULE_API.md`** §1).
@@ -49,4 +48,3 @@ Schedule: agent calls HTTP directly (see **`hifleet-schedule/SCHEDULE_API.md`** 
 | `hifleet-schedule` | `params.portid`, `params.dischargingPortid` |
 | `hifleet-opentonnages` (vessel) | `params.portid` and/or `params.openPort` per API |
 | `hifleet-opentonnages` (cargo) | `params.portid`, `params.dischargingPortid` |
-| `hifleet-mytonnages` (pre-arrival C) | `params.portid` |

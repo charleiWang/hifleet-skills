@@ -18,7 +18,7 @@ All use the same **`SCHEDULE_API.md`** (`{liner}/ports/suggest`, `{liner}/schedu
 
 **Live position / AIS ETA / destination** (when user asks beyond schedule list fields): cross-call parent **`hifleet-skills`** → **`references/position_api.md`** (use row **`mmsi`**); see **`SCHEDULE_API.md`** §5.
 
-**Not in this skill**: mailbox open tonnage/cargo (**`hifleet-mytonnages`**), ETA / pre-arrival search (**`hifleet-mytonnages`** route C).
+**Not in this skill**: public open tonnage/cargo (**`hifleet-opentonnages`**).
 
 ## Requirements
 
