@@ -20,6 +20,26 @@
 | 描述 | 船舶与公司档案：船籍、船型、建造年份、船东、管理公司等。按 IMO 查询。 |
 | 触发词 | 档案、船舶信息、船籍、船型、船东、管理公司 / archive, vessel profile, ship info, flag, ship type, owner, manager |
 
+## 2b. 事故事件 / Casualty & Events ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 事故事件 / Casualty & Events |
+| 描述 | 按 IMO 查船舶事故/事件列表，再按 eventId 查详情（描述、位置、航次、货物、关联事件）。需 `api_key`。 |
+| 触发词 | 事故、事件、casualty、碰撞、搁浅、海事事故、事故记录 / casualty, marine casualty, incident, collision, grounding |
+
+**API**：[casualty_api.md](casualty_api.md)。**脚本**：`scripts/get_casualty.py list <IMO>`、`detail <eventId>`。
+
+## 2c. 制裁 / Sanction ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 制裁 / Sanction Risk |
+| 描述 | 按 IMO 评估船舶制裁风险（US/EU/UK/Canada/UN/CN）。需 `api_key`。 |
+| 触发词 | 制裁、制裁风险、OFAC、SDN、是否被制裁 / sanction, sanction risk, OFAC, SDN |
+
+**API**：[sanction_api.md](sanction_api.md)。**脚本**：`scripts/get_sanction.py <IMO>`。
+
 ## 3. 红海/波斯湾海峡通航 / Strait Traffic ✅
 
 | 中文 | 英文 |

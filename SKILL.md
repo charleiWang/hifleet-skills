@@ -1,8 +1,8 @@
 ---
 name: hifleet-skills
 description: >-
-  HiFleet 综合技能：船位、档案、轨迹/航程/航次、PSC、区域通航、港口、公开船货盘、港距排序、班轮船期、航线、气象、船队、AIS。Position, track, voyage, PSC, port, public tonnage, liner schedule, fleet, weather, AIS.
-version: 0.3.17
+  HiFleet 综合技能：船位、档案、事故事件、制裁、轨迹/航程/航次、PSC、区域通航、港口、公开船货盘、港距排序、班轮船期、航线、气象、船队、AIS。Position, track, voyage, casualty, sanction, PSC, port, public tonnage, liner schedule, fleet, weather, AIS.
+version: 0.3.20
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
   - HIFLEET_API_KEY
@@ -19,6 +19,8 @@ source: https://api.hifleet.com
 |------|------|------|
 | 船位 Ship Position | ✅ 已实现 | 获取最新船舶位置 |
 | 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
+| 事故事件 Casualty & Events | ✅ 已实现 | 按 IMO 查事故/事件列表，按 eventId 查详情 |
+| 制裁 Sanction | ✅ 已实现 | 按 IMO 评估船舶制裁风险（US/EU/UK/Canada/UN/CN） |
 | 船舶档案统计 Ship Archive Statistics | ✅ 已实现 | 船旗、船型、公司船队等预聚合统计，以及船舶档案明细分页查询 |
 | 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹） |
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT） |
@@ -86,6 +88,28 @@ source: https://api.hifleet.com
 - **脚本**：`scripts/get_archive.py`（支持 IMO 或 MMSI，MMSI 直接传 mmsi 参数，需 `api_key`）
 
 **调用流程**：检查 `api_key` → 按 **IMO** 或 **MMSI** 调用档案接口（内贸船无 IMO 可传 MMSI）→ 解析 data，按 labelZh 分块展示。
+
+### 事故事件 / Casualty & Events
+
+查询船舶事故与海事事件（碰撞、搁浅、火灾等）：先按 **IMO** 取列表，再用列表中的 **eventId** 查详情（描述、位置、船舶、航次、货物、关联事件）。与网站船舶档案页「事故和事件」同源；**勿与** MSA 事故报告、海盗事件混用。
+
+- **触发**：事故、事件、casualty、collision、grounding、海事事故、事故记录、事故详情 / casualty, marine casualty, incident, collision, grounding
+- **输入**：列表需 **IMO**（7 位）；仅有船名时先 `shipSearch` 取 IMO；详情需 **eventId**（来自列表）。`api_key` 从配置读取
+- **API 详情**：[references/casualty_api.md](references/casualty_api.md)
+- **脚本**：`scripts/get_casualty.py list <IMO>`、`scripts/get_casualty.py detail <eventId>`
+
+**调用流程**：检查 `api_key` →（无 IMO 则 shipSearch）→ `GET {base}/casualty/list/token?imo=...&api_key=...` → 展示列表 → 用户选定后 `GET {base}/casualty/detail/token?eventId=...&api_key=...`。无记录时如实说明，勿伪造。
+
+### 制裁 / Sanction
+
+按 **IMO** 评估船舶制裁风险（US SDN → EU → UK → Canada → UN → CN 依次命中），返回风险等级、来源、制裁对象与明细。与网站档案页「制裁信息」同源。
+
+- **触发**：制裁、制裁风险、OFAC、SDN、是否被制裁、制裁名单 / sanction, sanction risk, OFAC, SDN, sanctioned vessel
+- **输入**：`imonumber`（IMO）；仅有船名时先 `shipSearch`。`api_key` 从配置读取
+- **API 详情**：[references/sanction_api.md](references/sanction_api.md)
+- **脚本**：`scripts/get_sanction.py <IMO>`
+
+**调用流程**：检查 `api_key` →（无 IMO 则 shipSearch）→ `GET {base}/sanction/assess/shiprisk/token?imonumber=...&api_key=...` → 按 `riskLevel`（HIGH/MEDIUM/LOW）展示；高风险看 `data`，中风险看 `otherships`。
 
 ### 船舶档案统计 / Ship Archive Statistics（OpenClaw）
 
@@ -342,6 +366,8 @@ source: https://api.hifleet.com
 | [references/skills_index.md](references/skills_index.md) | 技能清单（中英双语、触发词） |
 | [references/position_api.md](references/position_api.md) | 船位 API 完整说明与响应字段 |
 | [references/archive_api.md](references/archive_api.md) | 档案 API 说明与 data 分类 |
+| [references/casualty_api.md](references/casualty_api.md) | 事故事件 API：按 IMO 列表、按 eventId 详情 |
+| [references/sanction_api.md](references/sanction_api.md) | 制裁风险评估 API：按 IMO（US/EU/UK/Canada/UN/CN） |
 | [references/ship_archive_stats_api.md](references/ship_archive_stats_api.md) | 船舶档案统计 API：聚合统计、档案明细分页和批次元信息（OpenClaw） |
 | [references/voyage_api.md](references/voyage_api.md) | 航程 API：历史挂靠、历史航次、上一港、当前停船（OpenClaw） |
 | [references/strait_traffic_api.md](references/strait_traffic_api.md) | 红海/波斯湾海峡通航 API（oid、时间范围） |
@@ -359,6 +385,8 @@ source: https://api.hifleet.com
 | scripts/open_console.py | 用 `HIFLEET_API_KEY` 换票并打开控制台 `consoleUrl` |
 | scripts/get_position.py | 按关键字或 MMSI 获取船位（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（需 `api_key`；可选 `HIFLEET_API_BASE`） |
+| scripts/get_casualty.py | 事故事件：`list <IMO>` / `detail <eventId>`（需 `api_key`；可选 `HIFLEET_API_BASE`） |
+| scripts/get_sanction.py | 制裁风险评估：`<IMO>`（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST `{base}/position/statisticzonetraffic`）；可选 `HIFLEET_API_BASE` |
 | scripts/get_avoidredsea_traffic.py | 集装箱红海饶航（POST `{base}/routerisk/getAvoidRedSeaDetail/token`）；可选 `HIFLEET_API_BASE` |
 | scripts/get_areas.py | 区域清单（`{base}/position/areas/token`）；可选 `HIFLEET_API_BASE` |
