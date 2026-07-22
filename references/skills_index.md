@@ -40,6 +40,16 @@
 
 **API**：[sanction_api.md](sanction_api.md)。**脚本**：`scripts/get_sanction.py <IMO>`。
 
+## 2d. 海事处罚 / Maritime Penalty ✅
+
+| 中文 | 英文 |
+|------|------|
+| 名称 | 海事处罚 / Maritime Administrative Penalty |
+| 描述 | 按船名/MMSI/时间查询海事行政处罚公示（案号、案由、处罚结果）。需 `api_key`。 |
+| 触发词 | 海事处罚、行政处罚、海事局处罚、案号、案由 / maritime penalty, administrative penalty, MSA penalty |
+
+**API**：[maritime_penalty_api.md](maritime_penalty_api.md)。**脚本**：`scripts/get_maritime_penalty.py --ship-name ...`。
+
 ## 3. 红海/波斯湾海峡通航 / Strait Traffic ✅
 
 | 中文 | 英文 |

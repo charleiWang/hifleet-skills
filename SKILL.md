@@ -1,8 +1,8 @@
 ---
 name: hifleet-skills
 description: >-
-  HiFleet 综合技能：船位、档案、事故事件、制裁、轨迹/航程/航次、PSC、区域通航、港口、公开船货盘、港距排序、班轮船期、航线、气象、船队、AIS。Position, track, voyage, casualty, sanction, PSC, port, public tonnage, liner schedule, fleet, weather, AIS.
-version: 0.3.20
+  HiFleet 综合技能：船位、档案、事故事件、制裁、海事处罚、轨迹/航程/航次、PSC、区域通航、港口、公开船货盘、港距排序、班轮船期、航线、气象、船队、AIS。Position, track, voyage, casualty, sanction, maritime penalty, PSC, port, public tonnage, liner schedule, fleet, weather, AIS.
+version: 0.3.21
 # 必选：本技能依赖鉴权，需先配置环境变量后再使用
 requiredEnv:
   - HIFLEET_API_KEY
@@ -21,6 +21,7 @@ source: https://api.hifleet.com
 | 档案 Archive | ✅ 已实现 | 船舶/公司档案 |
 | 事故事件 Casualty & Events | ✅ 已实现 | 按 IMO 查事故/事件列表，按 eventId 查详情 |
 | 制裁 Sanction | ✅ 已实现 | 按 IMO 评估船舶制裁风险（US/EU/UK/Canada/UN/CN） |
+| 海事处罚 Maritime Penalty | ✅ 已实现 | 按船名/MMSI/时间查海事行政处罚公示 |
 | 船舶档案统计 Ship Archive Statistics | ✅ 已实现 | 船旗、船型、公司船队等预聚合统计，以及船舶档案明细分页查询 |
 | 红海/波斯湾通航 Strait Traffic | ✅ 已实现 | 海峡通航统计（曼德、苏伊士、好望角、霍尔木兹） |
 | 区域船舶 Area Traffic | ✅ 已实现 | 查询指定区域内的当前船舶：支持 bbox、areaId（区域清单 id）或 polygon（WKT） |
@@ -110,6 +111,17 @@ source: https://api.hifleet.com
 - **脚本**：`scripts/get_sanction.py <IMO>`
 
 **调用流程**：检查 `api_key` →（无 IMO 则 shipSearch）→ `GET {base}/sanction/assess/shiprisk/token?imonumber=...&api_key=...` → 按 `riskLevel`（HIGH/MEDIUM/LOW）展示；高风险看 `data`，中风险看 `otherships`。
+
+### 海事处罚 / Maritime Penalty
+
+查询中国海事局**行政处罚**公示（案号、案由、处罚对象、处罚结果等）。数据为爬取入库的公示信息，**不是** PSC 或制裁名单。
+
+- **触发**：海事处罚、行政处罚、海事局处罚、案号、案由 / maritime penalty, administrative penalty, MSA penalty
+- **输入**：优先 `shipName`（中文船名/主体名）；可选 `mmsi`、`startTime`/`endTime`、分页。`api_key` 从配置读取
+- **API 详情**：[references/maritime_penalty_api.md](references/maritime_penalty_api.md)
+- **脚本**：`scripts/get_maritime_penalty.py --ship-name ...`（或 `--mmsi` / 时间范围）
+
+**调用流程**：检查 `api_key` → `GET {base}/maritime/penalty/list/token?shipName=...&api_key=...` → 展示 `list[].details`（案号、案由、处罚结果）。无记录如实说明。
 
 ### 船舶档案统计 / Ship Archive Statistics（OpenClaw）
 
@@ -368,6 +380,7 @@ source: https://api.hifleet.com
 | [references/archive_api.md](references/archive_api.md) | 档案 API 说明与 data 分类 |
 | [references/casualty_api.md](references/casualty_api.md) | 事故事件 API：按 IMO 列表、按 eventId 详情 |
 | [references/sanction_api.md](references/sanction_api.md) | 制裁风险评估 API：按 IMO（US/EU/UK/Canada/UN/CN） |
+| [references/maritime_penalty_api.md](references/maritime_penalty_api.md) | 海事行政处罚 API：按船名/MMSI/时间 |
 | [references/ship_archive_stats_api.md](references/ship_archive_stats_api.md) | 船舶档案统计 API：聚合统计、档案明细分页和批次元信息（OpenClaw） |
 | [references/voyage_api.md](references/voyage_api.md) | 航程 API：历史挂靠、历史航次、上一港、当前停船（OpenClaw） |
 | [references/strait_traffic_api.md](references/strait_traffic_api.md) | 红海/波斯湾海峡通航 API（oid、时间范围） |
@@ -387,6 +400,7 @@ source: https://api.hifleet.com
 | scripts/get_archive.py | 按 IMO 或 MMSI 获取船舶档案（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_casualty.py | 事故事件：`list <IMO>` / `detail <eventId>`（需 `api_key`；可选 `HIFLEET_API_BASE`） |
 | scripts/get_sanction.py | 制裁风险评估：`<IMO>`（需 `api_key`；可选 `HIFLEET_API_BASE`） |
+| scripts/get_maritime_penalty.py | 海事行政处罚：`--ship-name` / `--mmsi` / 时间（需 `api_key`） |
 | scripts/get_strait_traffic.py | 海峡通航统计（POST `{base}/position/statisticzonetraffic`）；可选 `HIFLEET_API_BASE` |
 | scripts/get_avoidredsea_traffic.py | 集装箱红海饶航（POST `{base}/routerisk/getAvoidRedSeaDetail/token`）；可选 `HIFLEET_API_BASE` |
 | scripts/get_areas.py | 区域清单（`{base}/position/areas/token`）；可选 `HIFLEET_API_BASE` |
