@@ -21,7 +21,7 @@ import json
 
 
 def api_base():
-    return (os.environ.get("HIFLEET_API_BASE") or "http://112.126.23.236:8234/").rstrip("/")
+    return (os.environ.get("HIFLEET_API_BASE") or "https://api.hifleet.com").rstrip("/")
 
 
 def get_api_key():
