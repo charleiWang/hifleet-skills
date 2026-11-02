@@ -121,4 +121,5 @@ CLI：`opentonnages_tool.py enrich --kind vessel --file row.json`
 
 ## Reference
 
-Detailed enrich semantics align with **`hifleet-mytonnages/CHARTER_ENRICH_API.md`** (portid decoupling, archive columns) — reuse field names when merging into replies.
+Enrich semantics: portid decoupling and archive column names — reuse field names when merging into replies.
+

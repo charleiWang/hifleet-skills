@@ -1,6 +1,6 @@
 # Charter contact unlock (`POST /unlock`)
 
-Four HiFleet charter list types share the **same unlock endpoint**; only **`typeCode`** differs.
+HiFleet charter list types share the **same unlock endpoint**; only **`typeCode`** differs.
 
 **User-facing wording** (all skills): say **「获取联系方式」** / get contact details — **do not** say 「解锁」/ unlock.
 
@@ -26,17 +26,15 @@ Four HiFleet charter list types share the **same unlock endpoint**; only **`type
 | **班轮船期** Liner schedule | `hifleet-schedule` | `POST {liner}/schedules` | **`product_vessel_liner_charter`** |
 | **公开船盘** Open vessel | `hifleet-opentonnages` | `POST {charter}/vessels/search` | **`product_vessel_charter`** |
 | **公开货盘** Open cargo | `hifleet-opentonnages` | `POST {charter}/cargo/search` | **`product_cargo_charter`** |
-| **预抵船舶** Pre-arrival | `hifleet-mytonnages` (route C) | `POST {charter}/destination/search` | **`product_will_arrive_charter`** |
 
 Detail per skill:
 
 - Schedule → **`hifleet-schedule/SCHEDULE_API.md`** §3  
-- Open vessel / cargo → **`hifleet-opentonnages/CONTACT_API.md`**  
-- Pre-arrival → **`hifleet-mytonnages/CONTACT_API.md`**
+- Open vessel / cargo → **`hifleet-opentonnages/CONTACT_API.md`**
 
 ---
 
-## Agent flow (all four)
+## Agent flow
 
 ### 1. List (default)
 
@@ -59,7 +57,7 @@ Detail per skill:
 
 ## Contact dedup (mandatory after unlock)
 
-Applies to **schedule**, **open tonnage/cargo**, and **pre-arrival** — all skills that call **`POST /unlock`**.
+Applies to **schedule** and **open tonnage/cargo** — all skills that call **`POST /unlock`**.
 
 After unlock (or when showing **`senderInfoList`** plaintext from list/unlock):
 
@@ -77,7 +75,6 @@ CLI tools attach **`contacts_deduped`** on fetch-contacts output. Agents must ap
 | Skill | Command |
 |-------|---------|
 | Open vessel/cargo | `hifleet-opentonnages/scripts/opentonnages_tool.py fetch-contacts` |
-| Pre-arrival | `hifleet-mytonnages/scripts/destination_tool.py fetch-contacts` |
 
 Schedule: agent calls HTTP directly per **`SCHEDULE_API.md`** (no bundled CLI).
 

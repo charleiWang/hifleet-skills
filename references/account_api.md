@@ -8,7 +8,7 @@ OpenClaw **api_key** 用户自助查询：当前可用积分、调用汇总、�
 |------|------|------|
 | [FIRST_SETUP.md](../FIRST_SETUP.md) | 无 Key 时入门：注册 → 配置 → 充值 → 发票 | 流程指南 |
 | [account_onboarding_api.md](account_onboarding_api.md) | 注册、登录、api_key 发放 | **已实现** |
-| [billing_api.md](billing_api.md) | 充值套餐、下单、支付、发票 | **已实现** |
+| [billing_api.md](billing_api.md) | 积分充值、订阅套餐、收银台支付、混合额度、发票 | **已实现** |
 | 本文 | 积分余额、调用记录、流水查询 | **已实现** |
 
 **API 基址**：默认 `https://api.hifleet.com`（`{base}`）；其它部署可设 **`HIFLEET_API_BASE`**（无末尾 `/`）。见 [api_base.md](api_base.md)。
@@ -208,8 +208,8 @@ curl -s -G "{base}/openclaw/account/transactions" \
 | 未传 `api_key` | `status=0`，提示 `api_key is required` | 引导 [FIRST_SETUP.md](../FIRST_SETUP.md) 注册或配置 Key |
 | Key 无效/禁用/过期 | HTTP 401/403，`code=4004` | 引导重新登录或轮换 Key |
 | 未绑定积分账户 | `summary` 余额可能为 0；`transactions` 为空并带说明性 `agentSummary` | 说明账户未初始化，联系支持或重新注册 |
-| **积分不足**（业务接口） | HTTP 402，`code=4021` | 先调本文 `summary` 确认 → 引导 [billing_api.md](billing_api.md) 充值 |
-| `availablePoints <= 0` | `summary` 返回 0 | 同上，引导充值 |
+| **积分不足**（业务接口） | HTTP 402，`code=4021` | 先调本文 `summary` 与 `billing/subscription` → 引导 [billing_api.md](billing_api.md) 充值或续订 |
+| `availablePoints <= 0` | `summary` 返回 0 | 同上；若有订阅可能是周期额度用尽 |
 
 ---
 
